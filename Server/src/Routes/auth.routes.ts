@@ -6,6 +6,7 @@ const router: Router = express.Router();
 router.post("/register", authController.register);
 router.post("/verify-otp", authController.verifyOtp);
 router.post("/login", authController.login);
+router.post("/google-auth", authController.googleAuth);
 router.post("/refresh-token", authController.refreshToken);
 router.post("/logout", authController.logout);
 

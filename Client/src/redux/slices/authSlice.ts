@@ -109,7 +109,20 @@ const authSlice = createSlice({
           setLocalStorage("token", accessToken);
           setLocalStorage("refreshToken", refreshToken);
         }
+      )
+      .addMatcher(
+        authApi.endpoints.googleAuth.matchFulfilled,
+        (state, { payload }) => {
+          const { accessToken, refreshToken, user } = payload.data;
+          state.user = user;
+          state.token = accessToken;
+          state.refreshToken = refreshToken;
+          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("token", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+        }
       );
+
   },
 });
 

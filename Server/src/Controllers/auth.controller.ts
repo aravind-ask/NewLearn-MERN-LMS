@@ -36,6 +36,22 @@ export const authController = {
     }
   },
 
+  async googleAuth(req: Request, res: Response) {
+    try {
+      const { token } = req.body;
+      const authData = await authService.authenticateGoogleUser(token);
+
+      res.json({
+        success: true,
+        message: "Google Login Successful",
+        ...authData,
+      });
+    } catch (error) {
+      console.error("Google Auth Error:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  },
+
   async refreshToken(req: Request, res: Response) {
     try {
       const { refreshToken } = req.body;

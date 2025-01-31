@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password: string;
   role: "student" | "instructor" | "admin";
   isVerified?: boolean;
+  googleId?: string;
   otp: string;
   otpExpires: Date;
   enrolledCourses?: string[];

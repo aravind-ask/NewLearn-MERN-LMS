@@ -62,6 +62,28 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    googleAuth: builder.mutation<
+      { 
+        data: {
+          user: {
+            id: string;
+            name: string;
+            email: string;
+            role: 'student' | 'instructor' | 'admin';
+            photoUrl: string;
+          };
+          accessToken: string;
+          refreshToken: string;
+        }
+      },
+      { token: string }
+    >({
+      query: (body) => ({
+        url: "/auth/google-auth",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -72,4 +94,5 @@ export const {
   useLogoutMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useGoogleAuthMutation,
 } = authApi;

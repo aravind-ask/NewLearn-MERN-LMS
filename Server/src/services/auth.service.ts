@@ -4,6 +4,9 @@ import { IUser } from "../models/User";
 import { tokenUtils } from "../utils/tokenUtils";
 import { comparePassword, hashPassword } from "..//utils/hashUtils";
 import { sendOTPEmail } from "../utils/emailUtils";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const authService = {
   async register(
@@ -66,7 +69,17 @@ export const authService = {
 
     await userRepository.updateRefreshToken(user._id, refreshToken);
 
-    const data = {
+    const data: {
+      accessToken: string;
+      refreshToken: string;
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        photoUrl?: string;
+      };
+    } = {
       accessToken,
       refreshToken,
       user: {
@@ -76,7 +89,67 @@ export const authService = {
         role: user.role,
         photoUrl: user.photoUrl,
       },
+    };
+
+    return data;
+  },
+
+  async verifyGoogleToken(token: string) {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    return ticket.getPayload();
+  },
+
+  async authenticateGoogleUser(token: string) {
+    const payload = await this.verifyGoogleToken(token);
+    if (!payload) throw new Error("Invalid Google Token");
+
+    const { sub, email, name, picture } = payload;
+
+    let user = await userRepository.findUserByEmail(email!);
+    if (!user) {
+      user = await userRepository.createUser({
+        googleId: sub,
+        email,
+        name,
+        photoUrl: picture,
+        role: "student",
+      });
     }
+
+    const accessToken = tokenUtils.generateAccessToken({
+      userId: user._id,
+      role: user.role,
+    });
+    
+    const refreshToken = tokenUtils.generateRefreshToken({ userId: user._id });
+
+    await userRepository.updateRefreshToken(user._id, refreshToken);
+
+    const data: {
+      accessToken: string;
+      refreshToken: string;
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        photoUrl?: string;
+      };
+    } = {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        photoUrl: user.photoUrl,
+      },
+    };
 
     return data;
   },

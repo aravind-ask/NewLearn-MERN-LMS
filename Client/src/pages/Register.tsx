@@ -13,6 +13,7 @@ import { useState } from "react";
 import { OTPModal } from "@/components/otpModal";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import GoogleAuth from "@/components/OAuth";
 
 export default function Component() {
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -72,7 +73,7 @@ export default function Component() {
               <Input
                 name="name"
                 value={form.name}
-                placeholder="John Doe"
+                placeholder="Enter your Full Name"
                 required
                 onChange={handleChange}
               />
@@ -85,7 +86,7 @@ export default function Component() {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="me@example.com"
+                placeholder="Enter your Email"
                 required
               />
             </div>
@@ -95,6 +96,7 @@ export default function Component() {
                 id="password"
                 type="password"
                 name="password"
+                placeholder="Enter your Password"
                 value={form.password}
                 onChange={handleChange}
                 required
@@ -106,6 +108,7 @@ export default function Component() {
                 <Input
                   type={showPassword ? "text" : "password"}
                   name="confirmPassword"
+                  placeholder="Confirm your Password"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   required
@@ -127,6 +130,7 @@ export default function Component() {
             <Button className="w-full mt-5" disabled={isLoading}>
               Register
             </Button>
+            <GoogleAuth/>
             {error && (
               <p className="text-red-500">
                 {(error as any).data?.message || "Registration failed"}

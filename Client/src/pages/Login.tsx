@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import GoogleAuth from "@/components/OAuth";
 
 export default function Component() {
   const dispatch = useDispatch();
@@ -62,7 +63,7 @@ export default function Component() {
                 type="email"
                 name="email"
                 value={form.email}
-                placeholder="m@example.com"
+                placeholder="Enter your Email"
                 required
                 onChange={handleChange}
               />
@@ -74,6 +75,7 @@ export default function Component() {
                   type={showPassword ? "text" : "password"}
                   required
                   name="password"
+                  placeholder="Enter your Password"
                   value={form.password}
                   onChange={handleChange}
                 />
@@ -94,6 +96,9 @@ export default function Component() {
             <Button type="submit" disabled={isLoading} className="w-full">
               Login
             </Button>
+            <div className="w-full">
+              <GoogleAuth />
+            </div>
             {error && (
               <p className="text-red-500">
                 {(error as any).data?.message || "Login failed"}
