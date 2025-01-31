@@ -15,12 +15,30 @@ type AuthState = {
   refreshToken: string | null;
 };
 
-const getLocalStorage = (key: string) => {
-  return typeof window !== "undefined" ? localStorage.getItem(key) : null;
+const getLocalStorage = (key: string): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(key);
+};
+
+const setLocalStorage = (key: string, value: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(key, value);
+  }
+};
+
+const removeLocalStorage = (key: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(key);
+  }
+};
+
+const getStoredUser = (): User | null => {
+  const userData = getLocalStorage("user");
+  return userData ? JSON.parse(userData) : null;
 };
 
 const initialState: AuthState = {
-  user: null,
+  user: getStoredUser(),
   token: getLocalStorage("token"),
   refreshToken: getLocalStorage("refreshToken"),
 };
@@ -33,22 +51,25 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.refreshToken = null;
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-      }
+      removeLocalStorage("user");
+      removeLocalStorage("token");
+      removeLocalStorage("refreshToken");
     },
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string; refreshToken: string }>
+      action: PayloadAction<{
+        user: User;
+        accessToken: string;
+        refreshToken: string;
+      }>
     ) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.refreshToken = action.payload.refreshToken;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("token", action.payload.token);
-        localStorage.setItem("refreshToken", action.payload.refreshToken);
-      }
+      const { user, accessToken, refreshToken } = action.payload;
+      state.user = user;
+      state.token = accessToken;
+      state.refreshToken = refreshToken;
+      setLocalStorage("user", JSON.stringify(user));
+      setLocalStorage("token", accessToken);
+      setLocalStorage("refreshToken", refreshToken);
     },
   },
   extraReducers: (builder) => {
@@ -56,37 +77,37 @@ const authSlice = createSlice({
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
         (state, { payload }) => {
-          state.user = payload.user;
-          state.token = payload.accessToken;
-          state.refreshToken = payload.refreshToken;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", payload.accessToken);
-            localStorage.setItem("refreshToken", payload.refreshToken);
-          }
+          const { accessToken, refreshToken, user } = payload.data;
+          state.user = user;
+          state.token = accessToken;
+          state.refreshToken = refreshToken;
+          setLocalStorage("user", JSON.stringify(user));
+          setLocalStorage("token", accessToken);
+          setLocalStorage("refreshToken", refreshToken);
         }
       )
       .addMatcher(
         authApi.endpoints.register.matchFulfilled,
         (state, { payload }) => {
-          state.user = payload.user;
-          state.token = payload.accessToken;
-          state.refreshToken = payload.refreshToken;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", payload.accessToken);
-            localStorage.setItem("refreshToken", payload.refreshToken);
-          }
+          const { accessToken, refreshToken, user } = payload.data;
+          state.user = user;
+          state.token = accessToken;
+          state.refreshToken = refreshToken;
+          setLocalStorage("user", JSON.stringify(user));
+          setLocalStorage("token", accessToken);
+          setLocalStorage("refreshToken", refreshToken);
         }
       )
       .addMatcher(
         authApi.endpoints.verifyOtp.matchFulfilled,
         (state, { payload }) => {
-          state.user = payload.user;
-          state.token = payload.accessToken;
-          state.refreshToken = payload.refreshToken;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", payload.accessToken);
-            localStorage.setItem("refreshToken", payload.refreshToken);
-          }
+          const { accessToken, refreshToken, user } = payload.data;
+          state.user = user;
+          state.token = accessToken;
+          state.refreshToken = refreshToken;
+          setLocalStorage("user", JSON.stringify(user));
+          setLocalStorage("token", accessToken);
+          setLocalStorage("refreshToken", refreshToken);
         }
       );
   },

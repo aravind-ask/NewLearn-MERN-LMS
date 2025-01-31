@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import SearchBar from "./SearchBar";
+import { AvatarDropdown } from "./AvatarDropDown";
 
 export default function Component() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -93,13 +94,14 @@ export default function Component() {
           Contact
         </Link>
         {user ? (
-          <Avatar>
-            <AvatarImage
-              src={user?.photoUrl || "https://github.com/shadcn.png"}
-              alt="@shadcn"
-            />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
+          // <Avatar>
+          //   <AvatarImage
+          //     src={user?.photoUrl || "https://github.com/shadcn.png"}
+          //     alt="@shadcn"
+          //   />
+          //   <AvatarFallback>CN</AvatarFallback>
+          // </Avatar>
+          <AvatarDropdown />
         ) : (
           <div className="flex gap-4">
             <Link to={"/login"} className="p-2 rounded-2xl">

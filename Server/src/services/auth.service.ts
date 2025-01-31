@@ -66,7 +66,19 @@ export const authService = {
 
     await userRepository.updateRefreshToken(user._id, refreshToken);
 
-    return { accessToken, refreshToken };
+    const data = {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        photoUrl: user.photoUrl,
+      },
+    }
+
+    return data;
   },
 
   async refreshAccessToken(
