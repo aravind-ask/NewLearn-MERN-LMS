@@ -9,16 +9,31 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Link, useNavigate } from "react-router-dom";
 import { logout } from "@/redux/slices/authSlice";
+import { useLogoutMutation } from "@/redux/services/authApi";
 
 export function AvatarDropdown() {
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const [logoutMutation] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      if (!user) {
+        throw new Error('No user found');
+      }
+      await logoutMutation({ userId: user.id });
+      dispatch(logout());
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <HoverCard>
@@ -26,8 +41,8 @@ export function AvatarDropdown() {
         <Button variant="link">
           <Avatar>
             <AvatarImage
-              src={user?.photoUrl || "https://github.com/shadcn.png"}
-              alt={user?.name}
+              src={user.photoUrl || "https://github.com/shadcn.png"}
+              alt={user.name}
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
@@ -37,14 +52,14 @@ export function AvatarDropdown() {
         <div className="flex items-center space-x-4 p-4">
           <Avatar>
             <AvatarImage
-              src={user?.photoUrl || "https://github.com/shadcn.png"}
+              src={user.photoUrl || "https://github.com/shadcn.png"}
             />
             <AvatarFallback>VC</AvatarFallback>
           </Avatar>
           <div className="space-y-1">
-            <h4 className="text-sm font-semibold">{user?.name}</h4>
+            <h4 className="text-sm font-semibold">{user.name}</h4>
             <p className="text-sm text-gray-500">
-              {user?.role === "admin" ? "Admin" : "Student"}
+              {user.role === "admin" ? "Admin" : "Student"}
             </p>
           </div>
         </div>

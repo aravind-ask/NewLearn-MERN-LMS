@@ -35,6 +35,14 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    logout: builder.mutation<{ message: string }, { userId: string }>({
+      query: (body) => ({
+        url: "/auth/logout",
+        method: "POST",
+        body,
+      }),
+    }),
+
     forgotPassword: builder.mutation<{ message: string }, { email: string }>({
       query: (body) => ({
         url: "/auth/forgot-password",
@@ -53,6 +61,7 @@ export const authApi = api.injectEndpoints({
         body,
       }),
     }),
+
   }),
 });
 
@@ -60,6 +69,7 @@ export const {
   useRegisterMutation,
   useVerifyOtpMutation,
   useLoginMutation,
+  useLogoutMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
 } = authApi;

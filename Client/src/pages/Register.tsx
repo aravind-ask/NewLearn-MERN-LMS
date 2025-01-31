@@ -12,6 +12,7 @@ import { useRegisterMutation } from "@/redux/services/authApi";
 import { useState } from "react";
 import { OTPModal } from "@/components/otpModal";
 import { Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Component() {
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -23,10 +24,15 @@ export default function Component() {
   });
   const [formErrors, setFormErrors] = useState("");
   const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,19 +102,35 @@ export default function Component() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowPassword}
+                  className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
-            <Button className="w-full" disabled={isLoading}>
+            <Button className="w-full mt-5" disabled={isLoading}>
               Register
             </Button>
             {error && (
-              <p>{(error as any).data?.message || "Registration failed"}</p>
+              <p className="text-red-500">
+                {(error as any).data?.message || "Registration failed"}
+              </p>
             )}
             {formErrors && <p className="text-red-500">{formErrors}</p>}
             <span>
