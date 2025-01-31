@@ -1,70 +1,3 @@
-// import { useState } from "react";
-// import { useRegisterMutation } from "../redux/services/authApi";
-
-// const Register = () => {
-//   const [register, { isLoading, error }] = useRegisterMutation();
-//   const [form, setForm] = useState({
-//     email: "",
-//     password: "",
-//     role: "student",
-//   });
-
-//   const handleChange = (
-//     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-//   ) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     try {
-//       await register(form).unwrap();
-//       console.log("Registration successful, check email for OTP");
-//     } catch (err) {
-//       console.error("Registration failed", err);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <h2>Register</h2>
-//       <form onSubmit={handleSubmit}>
-//         <input
-//           type="email"
-//           name="email"
-//           placeholder="Email"
-//           value={form.email}
-//           onChange={handleChange}
-//           required
-//         />
-//         <input
-//           type="password"
-//           name="password"
-//           placeholder="Password"
-//           value={form.password}
-//           onChange={handleChange}
-//           required
-//         />
-//         <select name="role" value={form.role} onChange={handleChange}>
-//           <option value="student">Student</option>
-//           <option value="instructor">Instructor</option>
-//         </select>
-//         <button type="submit" disabled={isLoading}>
-//           Register
-//         </button>
-//       </form>
-//       {error && <p>{(error as any).data?.message || "Registration failed"}</p>}
-//     </div>
-//   );
-// };
-
-// export default Register;
-
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/s8piKtHJmrC
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
 import {
   Card,
   CardHeader,
@@ -78,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useRegisterMutation } from "@/redux/services/authApi";
 import { useState } from "react";
 import { OTPModal } from "@/components/otpModal";
+import { Link } from "react-router-dom";
 
 export default function Component() {
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -178,7 +112,7 @@ export default function Component() {
             )}
             {formErrors && <p className="text-red-500">{formErrors}</p>}
             <span>
-              Already have an account? <a href="/login">Login</a>
+              Already have an account? <Link to={"/login"}>Login</Link>
             </span>
           </form>
         </CardContent>

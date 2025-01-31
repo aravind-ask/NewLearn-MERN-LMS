@@ -2,10 +2,16 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MenuIcon, MountainIcon } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import SearchBar from "./SearchBar";
 
 export default function Component() {
+  const { user } = useSelector((state: RootState) => state.auth);
+  console.log(user);
   return (
-    <header className="flex h-20 w-full shrink-0 items-center px-4 md:px-6">
+    <header className="flex h-20 w-full shrink-0 items-center px-8  md:px-6">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="lg:hidden">
@@ -19,6 +25,16 @@ export default function Component() {
             <span className="sr-only">Acme Inc</span>
           </Link>
           <div className="grid gap-2 py-6">
+            {user && (
+              <Avatar>
+                <AvatarImage
+                  src={user?.photoUrl || "https://github.com/shadcn.png"}
+                  alt="@shadcn"
+                />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            )}
+
             <Link
               to="#"
               className="flex w-full items-center py-2 text-lg font-semibold"
@@ -50,6 +66,7 @@ export default function Component() {
         <MountainIcon className="h-6 w-6" />
         <span className="sr-only">Acme Inc</span>
       </Link>
+      <SearchBar />
       <nav className="ml-auto hidden lg:flex gap-6">
         <Link
           to="#"
@@ -75,6 +92,24 @@ export default function Component() {
         >
           Contact
         </Link>
+        {user ? (
+          <Avatar>
+            <AvatarImage
+              src={user?.photoUrl || "https://github.com/shadcn.png"}
+              alt="@shadcn"
+            />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="flex gap-4">
+            <Link to={"/login"} className="p-2 rounded-2xl">
+              Login
+            </Link>
+            <Link to={"/signup"} className="p-2 rounded-2xl">
+              Signup
+            </Link>
+          </div>
+        )}
       </nav>
     </header>
   );

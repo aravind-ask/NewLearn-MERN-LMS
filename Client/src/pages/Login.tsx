@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { useLoginMutation } from "@/redux/services/authApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Component() {
   const dispatch = useDispatch();
@@ -70,10 +71,11 @@ export default function Component() {
             </Button>
             {error && <p>{(error as any).data?.message || "Login failed"}</p>}
             <span>
-              Don't have an account? <a href="/register">Register</a>
-            </span><br></br>
+              Don't have an account? <Link to={"/signup"}>Register</Link>
+            </span>
+            <br></br>
             <span>
-              Forgot password? <a href="/forgot-password">Reset Password</a>
+              Forgot password? <a href="">Reset Password</a>
             </span>
           </div>
         </form>
