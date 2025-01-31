@@ -13,6 +13,7 @@ import { useLogoutMutation } from "@/redux/services/authApi";
 
 export function AvatarDropdown() {
   const { user } = useSelector((state: RootState) => state.auth);
+  console.log(user?.photoUrl)
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -41,7 +42,7 @@ export function AvatarDropdown() {
         <Button variant="link">
           <Avatar>
             <AvatarImage
-              src={user.photoUrl || "https://github.com/shadcn.png"}
+              src={user.photoUrl as string || "https://github.com/shadcn.png"}
               alt={user.name}
             />
             <AvatarFallback>CN</AvatarFallback>
@@ -52,7 +53,7 @@ export function AvatarDropdown() {
         <div className="flex items-center space-x-4 p-4">
           <Avatar>
             <AvatarImage
-              src={user.photoUrl || "https://github.com/shadcn.png"}
+              src={user.photoUrl as string || "https://github.com/shadcn.png"}
             />
             <AvatarFallback>VC</AvatarFallback>
           </Avatar>

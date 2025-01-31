@@ -39,12 +39,12 @@ export const authController = {
   async googleAuth(req: Request, res: Response) {
     try {
       const { token } = req.body;
-      const authData = await authService.authenticateGoogleUser(token);
+      const data = await authService.authenticateGoogleUser(token);
 
       res.json({
         success: true,
         message: "Google Login Successful",
-        ...authData,
+        data,
       });
     } catch (error) {
       console.error("Google Auth Error:", error);

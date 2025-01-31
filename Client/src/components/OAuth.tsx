@@ -3,11 +3,12 @@ import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/slices/authSlice";
 import { useGoogleAuthMutation } from "../redux/services/authApi";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function GoogleAuth() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [googleAuth, { isLoading }] = useGoogleAuthMutation();
-
   const handleSuccess = async (response: CredentialResponse) => {
     if (!response.credential) {
       toast.error("No credentials received from Google");
@@ -17,7 +18,6 @@ export default function GoogleAuth() {
     try {
       const result = await googleAuth({ token: response.credential }).unwrap();
 
-      // Dispatch user info to Redux
       dispatch(
         setCredentials({
           user: {
@@ -33,6 +33,7 @@ export default function GoogleAuth() {
       );
 
       toast.success("Successfully logged in with Google!");
+      navigate("/");
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       if (error && typeof error === "object" && "data" in error) {
