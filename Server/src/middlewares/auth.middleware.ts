@@ -1,25 +1,31 @@
-// --- middlewares/authMiddleware.ts ---
+// --- middlewares/auth.middleware.ts ---
 import { Request, Response, NextFunction } from "express";
-import { tokenUtils } from "@/utils/tokenUtils";
+import { tokenUtils } from "../utils/tokenUtils";
+
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
 
 export const authMiddleware = {
-  async verifyAccessToken(req: Request, res: Response, next: NextFunction) {
+  async verifyAccessToken(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log("req.headers", req.headers);
       const authHeader = req.headers.authorization;
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res
-          .status(401)
-          .json({ message: "Access token missing or malformed" });
+        res.status(401).json({ message: "Access token missing or malformed" });
+        return;
       }
 
-      const token = authHeader.split(" ")[1]; // Extract the token
-      const decoded = tokenUtils.verifyAccessToken(token); // Verify the token
+      const token = authHeader.split(" ")[1];
+      const decoded = tokenUtils.verifyAccessToken(token);
+      console.log("decoded", decoded);
 
-      req.user = decoded;
+      req.user = { id: decoded.userId };
       next();
     } catch (error) {
-      res.status(401).json({ message: "Invalid or expired access token" });
+      console.error("Error verifying access token:", error);
+      res.status(400).json({ message: "Invalid or expired access token" });
     }
   },
 };

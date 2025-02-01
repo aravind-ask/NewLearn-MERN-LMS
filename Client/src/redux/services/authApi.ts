@@ -63,24 +63,44 @@ export const authApi = api.injectEndpoints({
     }),
 
     googleAuth: builder.mutation<
-      { 
+      {
         data: {
           user: {
             id: string;
             name: string;
             email: string;
-            role: 'student' | 'instructor' | 'admin';
+            role: "student" | "instructor" | "admin";
             photoUrl: string;
           };
           accessToken: string;
           refreshToken: string;
-        }
+        };
       },
       { token: string }
     >({
       query: (body) => ({
         url: "/auth/google-auth",
         method: "POST",
+        body,
+      }),
+    }),
+    getPresignedUrl: builder.mutation<
+      { url: string; key: string },
+      { fileName: string }
+    >({
+      query: (body) => ({
+        url: "/user/upload-url",
+        method: "POST",
+        body,
+      }),
+    }),
+    updateProfile: builder.mutation<
+      { message: string },
+      { name: string; email: string; password?: string; profilePic?: string }
+    >({
+      query: (body) => ({
+        url: "/user/update-profile",
+        method: "PUT",
         body,
       }),
     }),
@@ -95,4 +115,6 @@ export const {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useGoogleAuthMutation,
+  useUpdateProfileMutation,
+  useGetPresignedUrlMutation,
 } = authApi;

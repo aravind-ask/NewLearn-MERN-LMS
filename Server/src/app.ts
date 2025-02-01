@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import { connectDB } from "./config/db";
 import authRoutes from "./Routes/auth.routes";
+import userRoutes from "./Routes/user.routes";
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ app.use(morgan("dev"));
 connectDB();
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 app.use(
   (

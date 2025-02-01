@@ -94,13 +94,6 @@ export default function Component() {
           Contact
         </Link>
         {user ? (
-          // <Avatar>
-          //   <AvatarImage
-          //     src={user?.photoUrl || "https://github.com/shadcn.png"}
-          //     alt="@shadcn"
-          //   />
-          //   <AvatarFallback>CN</AvatarFallback>
-          // </Avatar>
           <AvatarDropdown />
         ) : (
           <div className="flex gap-4">
