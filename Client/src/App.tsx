@@ -5,20 +5,20 @@ import Register from "./pages/Register";
 import DashBoard from "./pages/DashBoard";
 import Navbar from "./components/NavBar";
 import AuthGuard from "./components/AuthGuard";
-// import ProtectedRoute from "./components/ProctedRoute";
+import ProtectedRoute from "./components/ProctedRoute";
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route element={<AuthGuard />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Register />} />
         </Route>
         {/* <Route element={<ProtectedRoute />}> */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/profile" element={<DashBoard />} />
+          <Route path="/profile" element={<DashBoard />} />
         {/* </Route> */}
       </Routes>
     </Router>

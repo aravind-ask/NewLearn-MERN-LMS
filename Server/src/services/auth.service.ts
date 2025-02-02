@@ -124,7 +124,7 @@ export const authService = {
       userId: user._id,
       role: user.role,
     });
-    
+
     const refreshToken = tokenUtils.generateRefreshToken({ userId: user._id });
 
     await userRepository.updateRefreshToken(user._id, refreshToken);
@@ -156,7 +156,7 @@ export const authService = {
 
   async refreshAccessToken(
     refreshToken: string
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string, refreshToken: string }> {
     try {
       const decoded = tokenUtils.verifyRefreshToken(refreshToken);
       const user = await userRepository.findUserById(decoded.userId);
@@ -169,7 +169,11 @@ export const authService = {
         userId: user._id,
         role: user.role,
       });
-      return { accessToken };
+      const res = {
+        accessToken,
+        refreshToken,
+      }
+      return res;
     } catch (error) {
       throw new Error("Invalid refresh token");
     }

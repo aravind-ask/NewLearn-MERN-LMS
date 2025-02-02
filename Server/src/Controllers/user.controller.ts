@@ -56,7 +56,15 @@ export const updateProfile = async (
     //   message: "Profile updated successfully!",
     //   user: updatedUser,
     // });
-    successResponse(res, updatedUser, "Profile updated successfully!", 200);
+    const user = {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      photoUrl: updatedUser.photoUrl,
+
+    }
+    successResponse(res, user, "Profile updated successfully!", 200);
   } catch (error) {
     console.error("Update Profile Error:", error);
     // return res.status(500).json({ message: "Profile update failed" }); // ✅ Return to prevent further execution

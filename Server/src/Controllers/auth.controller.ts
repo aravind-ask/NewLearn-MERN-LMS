@@ -19,7 +19,8 @@ export const authController = {
     try {
       const { email, otp } = req.body;
       const data = await authService.verifyOtp(email, otp);
-      res.status(200).json(data);
+      // res.status(200).json(data);
+      successResponse(res, data, "otp verified successfully", 200);
     } catch (error: any) {
       console.log(error);
       res.status(400).json({ message: error.message });
@@ -41,24 +42,28 @@ export const authController = {
       const { token } = req.body;
       const data = await authService.authenticateGoogleUser(token);
 
-      res.json({
-        success: true,
-        message: "Google Login Successful",
-        data,
-      });
+      // res.json({
+      //   success: true,
+      //   message: "Google Login Successful",
+      //   data,
+      // });
+      successResponse(res, data, "Google Login Successful", 200);
     } catch (error) {
       console.error("Google Auth Error:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      // res.status(500).json({ message: "Internal Server Error" });
+      errorResponse(res, "Internal Server Error", 500);
     }
   },
 
   async refreshToken(req: Request, res: Response) {
     try {
       const { refreshToken } = req.body;
-      const token = await authService.refreshAccessToken(refreshToken);
-      res.status(200).json(token);
+      const tokens = await authService.refreshAccessToken(refreshToken);
+      // res.status(200).json(token);
+      successResponse(res, tokens, "Token Refreshed Successfully", 200);
     } catch (error: any) {
-      res.status(401).json({ message: error.message });
+      // res.status(401).json({ message: error.message });
+      errorResponse(res, error.message, 401);
     }
   },
 
@@ -66,9 +71,11 @@ export const authController = {
     try {
       const { userId } = req.body;
       const result = await authService.logout(userId);
-      res.status(200).json(result);
+      // res.status(200).json(result);
+      successResponse(res, result, "Logged out successfully", 200);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      // res.status(400).json({ message: error.message });
+      errorResponse(res, error.message, 400);
     }
   },
 };

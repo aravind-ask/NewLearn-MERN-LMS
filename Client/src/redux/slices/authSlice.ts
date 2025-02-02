@@ -121,8 +121,24 @@ const authSlice = createSlice({
           localStorage.setItem("token", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
         }
+      )
+      .addMatcher(
+        authApi.endpoints.updateProfile.matchFulfilled,
+        (state, { payload }) => {
+          console.log("Update:", payload);
+          state.user = payload.data;
+          setLocalStorage("user", JSON.stringify(payload.data));
+        }
+      )
+      .addMatcher(
+        authApi.endpoints.refreshAccessToken.matchFulfilled,
+        (state, { payload }) => {
+          state.token = payload.data.accessToken;
+          state.refreshToken = payload.data.refreshToken;
+          setLocalStorage("token", payload.data.accessToken);
+          setLocalStorage("refreshToken", payload.data.refreshToken);
+        }
       );
-
   },
 });
 

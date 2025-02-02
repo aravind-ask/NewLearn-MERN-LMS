@@ -95,12 +95,31 @@ export const authApi = api.injectEndpoints({
       }),
     }),
     updateProfile: builder.mutation<
-      { message: string },
+      {
+        message: string;
+        data: {
+          id: string;
+          name: string;
+          email: string;
+          role: "student" | "instructor" | "admin";
+          photoUrl: string;
+        };
+      },
       { name: string; email: string; password?: string; profilePic?: string }
     >({
       query: (body) => ({
         url: "/user/update-profile",
         method: "PUT",
+        body,
+      }),
+    }),
+    refreshAccessToken: builder.mutation<
+      { data: { accessToken: string; refreshToken: string } },
+      { refreshToken: string }
+    >({
+      query: (body) => ({
+        url: "/auth/refresh-token",
+        method: "POST",
         body,
       }),
     }),
@@ -117,4 +136,5 @@ export const {
   useGoogleAuthMutation,
   useUpdateProfileMutation,
   useGetPresignedUrlMutation,
+  useRefreshAccessTokenMutation,
 } = authApi;
