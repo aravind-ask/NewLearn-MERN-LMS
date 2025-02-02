@@ -13,6 +13,17 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
+    sendOTP: builder.mutation<
+      { message: string },
+      { email: string | undefined }
+    >({
+      query: (body) => ({
+        url: "/auth/send-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
     verifyOtp: builder.mutation<
       { token: string },
       { email: string; otp: string }
@@ -43,7 +54,10 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    forgotPassword: builder.mutation<{ message: string }, { email: string }>({
+    forgotPassword: builder.mutation<
+      { message: string },
+      { email: string | undefined; otp: string; newPassword: string }
+    >({
       query: (body) => ({
         url: "/auth/forgot-password",
         method: "POST",
@@ -53,7 +67,7 @@ export const authApi = api.injectEndpoints({
 
     resetPassword: builder.mutation<
       { message: string },
-      { email: string; otp: string; newPassword: string }
+      { curPassword: string; newPassword: string }
     >({
       query: (body) => ({
         url: "/auth/reset-password",
@@ -128,6 +142,7 @@ export const authApi = api.injectEndpoints({
 
 export const {
   useRegisterMutation,
+  useSendOTPMutation,
   useVerifyOtpMutation,
   useLoginMutation,
   useLogoutMutation,

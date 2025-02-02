@@ -6,21 +6,24 @@ import DashBoard from "./pages/DashBoard";
 import Navbar from "./components/NavBar";
 import AuthGuard from "./components/AuthGuard";
 import ProtectedRoute from "./components/ProctedRoute";
+import ToastProvider from "./components/ToastProvider";
 
 function App() {
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route element={<AuthGuard />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Register />} />
-        </Route>
-        {/* <Route element={<ProtectedRoute />}> */}
+      <ToastProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route element={<AuthGuard />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Register />} />
+          </Route>
+          {/* <Route element={<ProtectedRoute />}> */}
           <Route path="/profile" element={<DashBoard />} />
-        {/* </Route> */}
-      </Routes>
+          {/* </Route> */}
+        </Routes>
+      </ToastProvider>
     </Router>
   );
 }

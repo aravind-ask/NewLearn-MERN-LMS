@@ -47,6 +47,18 @@ export const authService = {
     return { message: "Email verified successfully" };
   },
 
+  async sendOtp(email: string) {
+    const user = await userRepository.findUserByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await userRepository.updateUser(user.id, { otp, otpExpires });
+    await sendOTPEmail(email, otp);
+    return { message: "OTP sent successfully" };
+  },
+
   async login(
     email: string,
     password: string
@@ -156,7 +168,7 @@ export const authService = {
 
   async refreshAccessToken(
     refreshToken: string
-  ): Promise<{ accessToken: string, refreshToken: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const decoded = tokenUtils.verifyRefreshToken(refreshToken);
       const user = await userRepository.findUserById(decoded.userId);
@@ -172,11 +184,38 @@ export const authService = {
       const res = {
         accessToken,
         refreshToken,
-      }
+      };
       return res;
     } catch (error) {
       throw new Error("Invalid refresh token");
     }
+  },
+
+  async changePassword({ ...data }) {
+    const { userId, curPassword, newPassword, otp } = data;
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (otp) {
+      if (user.otp !== otp || new Date() > user.otpExpires) {
+        throw new Error("Invalid or expired OTP");
+      }
+    } else {
+      const isPasswordValid = await comparePassword(curPassword, user.password);
+      if (!isPasswordValid) {
+        throw new Error("Invalid current password");
+      }
+    }
+    const hashedPassword = await hashPassword(newPassword);
+    user.password = hashedPassword;
+    await userRepository.updateUser(user._id, {
+      password: hashedPassword,
+      otp: undefined,
+      otpExpires: undefined,
+    });
+    return { message: "Password updated successfully" };
   },
 
   async logout(userId: string) {

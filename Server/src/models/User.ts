@@ -8,7 +8,7 @@ export interface IUser extends Document {
   role: "student" | "instructor" | "admin";
   isVerified?: boolean;
   googleId?: string;
-  otp: string;
+  otp: string | undefined;
   otpExpires: Date;
   enrolledCourses?: string[];
   photoUrl?: string;

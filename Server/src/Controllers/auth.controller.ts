@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
+
 export const authController = {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
@@ -9,6 +13,17 @@ export const authController = {
       const { name, email, password } = req.body;
       const user = await authService.register(name, email, password);
       successResponse(res, user, "otp send successfully", 201);
+    } catch (error: any) {
+      console.log(error);
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async sendOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      const data = await authService.sendOtp(email);
+      successResponse(res, data, "otp send successfully", 200);
     } catch (error: any) {
       console.log(error);
       res.status(400).json({ message: error.message });
@@ -64,6 +79,44 @@ export const authController = {
     } catch (error: any) {
       // res.status(401).json({ message: error.message });
       errorResponse(res, error.message, 401);
+    }
+  },
+
+  async resetPassword(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { curPassword, newPassword } = req.body;
+      if (!req.user) {
+        errorResponse(res, "Unauthorized", 401);
+        return;
+      }
+      const userId = req.user.id;
+      const result = await authService.changePassword({
+        userId: userId,
+        curPassword: curPassword,
+        newPassword: newPassword,
+      });
+      successResponse(res, null, "Password Changed Successfully", 200);
+    } catch (error: any) {
+      errorResponse(res, error.message, 401);
+    }
+  },
+
+  async forgotPassword(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { email, otp, newPassword } = req.body;
+      if (!req.user) {
+        errorResponse(res, "Unauthorized", 401);
+        return;
+      }
+      const userId = req.user.id;
+      const result = await authService.changePassword({
+        userId: userId,
+        otp: otp,
+        newPassword: newPassword,
+      });
+      successResponse(res, result, "Password Changed Successfully", 200);
+    } catch (error: any) {
+      errorResponse(res, error.message, 400);
     }
   },
 

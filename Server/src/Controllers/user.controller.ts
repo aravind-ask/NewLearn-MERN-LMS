@@ -32,7 +32,6 @@ export const updateProfile = async (
     const { name, email, password, profilePic } = req.body;
 
     if (!req.user) {
-      // return res.status(401).json({ message: "Unauthorized" });
       errorResponse(res, "Unauthorized", 401);
       return;
     }
@@ -47,27 +46,20 @@ export const updateProfile = async (
     );
 
     if (!updatedUser) {
-      // return res.status(404).json({ message: "User not found" }); // ✅ Return to prevent further execution
       errorResponse(res, "User not found", 404);
       return;
     }
 
-    // return res.json({
-    //   message: "Profile updated successfully!",
-    //   user: updatedUser,
-    // });
     const user = {
       id: updatedUser.id,
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
       photoUrl: updatedUser.photoUrl,
-
-    }
+    };
     successResponse(res, user, "Profile updated successfully!", 200);
   } catch (error) {
     console.error("Update Profile Error:", error);
-    // return res.status(500).json({ message: "Profile update failed" }); // ✅ Return to prevent further execution
     errorResponse(res, "Profile update failed", 500);
   }
 };

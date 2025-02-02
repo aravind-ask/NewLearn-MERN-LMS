@@ -1,6 +1,6 @@
-// --- middlewares/auth.middleware.ts ---
 import { Request, Response, NextFunction } from "express";
 import { tokenUtils } from "../utils/tokenUtils";
+import { errorResponse } from "../utils/responseHandler";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string };
@@ -9,11 +9,10 @@ interface AuthenticatedRequest extends Request {
 export const authMiddleware = {
   async verifyAccessToken(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      console.log("req.headers", req.headers);
       const authHeader = req.headers.authorization;
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ message: "Access token missing or malformed" });
+        errorResponse(res, "Access token missing or malformed", 401);
         return;
       }
 
@@ -25,7 +24,7 @@ export const authMiddleware = {
       next();
     } catch (error) {
       console.error("Error verifying access token:", error);
-      res.status(400).json({ message: "Invalid or expired access token" });
+      errorResponse(res, "Invalid or expired access token", 400);
     }
   },
 };
