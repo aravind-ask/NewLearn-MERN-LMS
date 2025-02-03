@@ -11,7 +11,18 @@ export const authApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    blockUser: builder.mutation<
+      { message: string },
+      { userId: string; isBlocked: boolean }
+    >({
+      query: ({ userId, isBlocked }) => ({
+        url: "/user/block",
+        method: "POST",
+        body: { userId, isBlocked },
+      }),
+    }),
+
   }),
 });
 
-export const { useGetUsersQuery } = authApi;
+export const { useGetUsersQuery, useBlockUserMutation } = authApi;

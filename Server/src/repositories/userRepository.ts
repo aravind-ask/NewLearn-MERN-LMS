@@ -25,7 +25,7 @@ export const userRepository = {
   async getAllUsers(page: number, limit: number) {
     const skip = (page - 1) * limit;
 
-    const users = await User.find({}, "id name email role profilePic")
+    const users = await User.find({}, "id name email role profilePic isBlocked")
       .skip(skip)
       .limit(limit);
 
@@ -40,5 +40,13 @@ export const userRepository = {
     updateData: Partial<IUser>
   ): Promise<IUser | null> {
     return await User.findByIdAndUpdate(userId, updateData, { new: true });
+  },
+  async toggleBlockUser(userId: string, isBlocked: boolean) {
+    console.log(userId, isBlocked);
+    return await User.findByIdAndUpdate(
+      userId,
+      { isBlocked: isBlocked },
+      { new: true }
+    );
   },
 };

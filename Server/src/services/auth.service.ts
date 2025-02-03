@@ -69,6 +69,10 @@ export const authService = {
       throw new AppError("Invalid credentials", 400);
     }
 
+    if (user.isBlocked) {
+      throw new AppError("User is blocked", 403);
+    }
+
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       throw new AppError("Invalid credentials", 400);
@@ -131,6 +135,10 @@ export const authService = {
         photoUrl: picture,
         role: "student",
       });
+    }
+
+    if (user.isBlocked) {
+      throw new AppError("User is blocked", 403);
     }
 
     const accessToken = tokenUtils.generateAccessToken({

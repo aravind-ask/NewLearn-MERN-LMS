@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { useGetUsersQuery } from "@/redux/services/userApi";
+import {
+  useBlockUserMutation,
+  useGetUsersQuery,
+} from "@/redux/services/userApi";
 import {
   Table,
   TableBody,
@@ -25,14 +28,20 @@ interface User {
   email: string;
   role: "instructor" | "student";
   profilePic?: string;
+  isBlocked: boolean;
 }
 
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const limit = 5; // Users per page
-
-  const { data, isLoading, error } = useGetUsersQuery({ page, limit });
+  const [blockUser] = useBlockUserMutation();
+  const { data, isLoading, error, refetch } = useGetUsersQuery({ page, limit });
   console.log(data?.data.users);
+
+  const handleBlock = async (userId: string, isBlocked: boolean) => {
+    await blockUser({ userId, isBlocked });
+    refetch();
+  };
 
   if (isLoading) return <Skeleton className="h-40 w-full" />;
   if (error)
@@ -54,7 +63,7 @@ export default function AdminUsers() {
         </TableHeader>
         <TableBody>
           {data?.data?.users.map((user) => (
-            <TableRow key={user.id}>
+            <TableRow key={user._id}>
               <TableCell>
                 <img
                   src={user.profilePic || "/default-avatar.png"}
@@ -72,8 +81,15 @@ export default function AdminUsers() {
                 </Badge>
               </TableCell>
               <TableCell className="text-right space-x-2">
-                <Button variant="outline">Edit</Button>
-                <Button variant="destructive">Block</Button>
+                <div className="flex justify-end gap-5">
+                  <Button variant="outline">Edit</Button>
+                  <Button
+                    variant={user.blocked ? "outline" : "destructive"}
+                    onClick={() => handleBlock(user._id, !user.isBlocked)}
+                  >
+                    {user.isBlocked ? "Unblock" : "Block"}
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

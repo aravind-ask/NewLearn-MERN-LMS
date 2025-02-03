@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password: string;
   role: "student" | "instructor" | "admin";
   isVerified?: boolean;
+  isBlocked?: boolean;
   googleId?: string;
   otp: string | undefined;
   otpExpires: Date;
@@ -26,6 +27,7 @@ const UserSchema = new Schema<IUser>(
       default: "student",
     },
     isVerified: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
     enrolledCourses: [{ type: Schema.Types.ObjectId, ref: "Course" }],

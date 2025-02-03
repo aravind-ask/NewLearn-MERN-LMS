@@ -1,4 +1,4 @@
-import {userRepository} from "../repositories/userRepository";
+import { userRepository } from "../repositories/userRepository";
 import bcrypt from "bcryptjs";
 
 class UserService {
@@ -19,6 +19,9 @@ class UserService {
   }
   async getUsers(page: number, limit: number) {
     return await userRepository.getAllUsers(page, limit);
+  }
+  async blockUser(userId: string, isBlocked: boolean) {
+    return await userRepository.toggleBlockUser(userId, isBlocked);
   }
 }
 
