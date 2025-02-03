@@ -5,6 +5,7 @@ import { tokenUtils } from "../utils/tokenUtils";
 import { comparePassword, hashPassword } from "..//utils/hashUtils";
 import { sendOTPEmail } from "../utils/emailUtils";
 import { OAuth2Client } from "google-auth-library";
+import { AppError } from "../utils/appError";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -16,7 +17,7 @@ export const authService = {
   ): Promise<IUser> {
     const existingUser = await userRepository.findUserByEmail(email);
     if (existingUser) {
-      throw new Error("User already exists");
+      throw new AppError("User already exists", 409);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -36,7 +37,7 @@ export const authService = {
   async verifyOtp(email: string, otp: string) {
     const user = await userRepository.findUserByEmail(email);
     if (!user || user.otp !== otp || new Date() > user.otpExpires) {
-      throw new Error("Invalid or expired OTP");
+      throw new AppError("Invalid or expired OTP", 400);
     }
 
     await userRepository.updateUser(user.id, {
@@ -50,7 +51,7 @@ export const authService = {
   async sendOtp(email: string) {
     const user = await userRepository.findUserByEmail(email);
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
@@ -65,12 +66,12 @@ export const authService = {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await userRepository.findUserByEmail(email);
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new AppError("Invalid credentials", 400);
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      throw new Error("Invalid credentials");
+      throw new AppError("Invalid credentials", 400);
     }
 
     const accessToken = tokenUtils.generateAccessToken({
@@ -117,7 +118,7 @@ export const authService = {
 
   async authenticateGoogleUser(token: string) {
     const payload = await this.verifyGoogleToken(token);
-    if (!payload) throw new Error("Invalid Google Token");
+    if (!payload) throw new AppError("Invalid Google Token", 401);
 
     const { sub, email, name, picture } = payload;
 
@@ -192,20 +193,26 @@ export const authService = {
   },
 
   async changePassword({ ...data }) {
-    const { userId, curPassword, newPassword, otp } = data;
-    const user = await userRepository.findUserById(userId);
+    const { userId, email, curPassword, newPassword, otp } = data;
+    let user;
+    if (userId) {
+      user = await userRepository.findUserById(userId);
+    } else {
+      user = await userRepository.findUserByEmail(email);
+    }
+
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     if (otp) {
       if (user.otp !== otp || new Date() > user.otpExpires) {
-        throw new Error("Invalid or expired OTP");
+        throw new AppError("Invalid or expired OTP", 400);
       }
     } else {
       const isPasswordValid = await comparePassword(curPassword, user.password);
       if (!isPasswordValid) {
-        throw new Error("Invalid current password");
+        throw new AppError("Invalid current password", 400);
       }
     }
     const hashedPassword = await hashPassword(newPassword);

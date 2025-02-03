@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "../hooks/use-toast";
-import { Toast } from "./ui/toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,11 +17,13 @@ import {
   useSendOTPMutation,
 } from "@/redux/services/authApi";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export function PasswordChange({ eMail }: { eMail: string | undefined }) {
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const [sendOtp] = useSendOTPMutation();
   const [forgotPassword] = useForgotPasswordMutation();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     curPassword: "",
     newPassword: "",
@@ -38,6 +39,10 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
     useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const { toast } = useToast();
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleForgotPasswordClick = () => {
     setIsChangePasswordModalOpen(false);
@@ -56,11 +61,10 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
         !formData.newPassword ||
         !formData.confPassword
       ) {
-        setErrors({ formError: "Please fill all the fields" });
+        setErrors({ ...errors, formError: "Please fill all the fields" });
         return;
       }
       if (formData.newPassword !== formData.confPassword) {
-        // alert("Passwords do not match!");
         setErrors({ ...errors, confPassword: "Passwords do not match" });
         return;
       }
@@ -77,7 +81,6 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
         confPassword: "",
         otp: "",
       });
-      //   alert("Password changed successfully!");
       toast({ title: "Password changed successfully!" });
     } catch (error) {
       console.error("Error changing password", error);
@@ -88,7 +91,6 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
     try {
       await sendOtp({ email }).unwrap();
       setIsOtpSent(true);
-      //   alert("OTP sent successfully!");
       toast({ title: "OTP sent successfully!" });
     } catch (error) {
       setErrors({ ...errors, otp: "Error sending OTP" });
@@ -99,7 +101,7 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
   const handleSubmitOtp = async () => {
     try {
       if (formData.newPassword !== formData.confPassword) {
-        alert("Passwords do not match!");
+        setErrors({ ...errors, confPassword: "Passwords do not match" });
         return;
       }
       await forgotPassword({
@@ -117,7 +119,6 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
       setIsForgotPasswordModalOpen(false);
       setIsChangePasswordModalOpen(false);
       setIsOtpSent(false);
-      //   alert("OTP submitted successfully!");
       toast({ title: "OTP submitted successfully!" });
     } catch (error) {
       setErrors({ ...errors, otp: "Error submitting OTP" });
@@ -149,14 +150,37 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
               <Label htmlFor="curPassword" className="text-right">
                 Password
               </Label>
-              <Input
+              {/* <Input
                 id="curPassword"
                 type="password"
                 name="curPassword"
                 value={formData.curPassword}
                 onChange={handleChange}
                 className="col-span-3"
-              />
+              /> */}
+              <div className="relative">
+                <Input
+                  id="curPassword"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  name="curPassword"
+                  placeholder="Enter your Current Password"
+                  value={formData.curPassword}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowPassword}
+                  className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.curPassword && (
                 <p className="text-red-500 col-span-4">{errors.curPassword}</p>
               )}
@@ -170,6 +194,7 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                 type="password"
                 name="newPassword"
                 value={formData.newPassword}
+                placeholder="Enter new Password"
                 onChange={handleChange}
                 className="col-span-3"
               />
@@ -181,14 +206,37 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
               <Label htmlFor="confPassword" className="text-right">
                 Confirm Password
               </Label>
-              <Input
+              {/* <Input
                 id="confPassword"
                 type="text"
                 name="confPassword"
                 value={formData.confPassword}
                 onChange={handleChange}
                 className="col-span-3"
-              />
+              /> */}
+              <div className="relative">
+                <Input
+                  id="confPassword"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  name="confPassword"
+                  placeholder="Re-Enter new Password"
+                  value={formData.confPassword}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowPassword}
+                  className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.confPassword && (
                 <p className="text-red-500 col-span-4">{errors.confPassword}</p>
               )}

@@ -1,18 +1,13 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
+import { Outlet, Navigate } from "react-router-dom";
 
-const ProtectedRoute = () => {
-  const location = useLocation();
-  const { token, user } = useSelector((state: RootState) => state.auth);
-
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+export default function ProtectedRoute() {
+  const { user } = useSelector((state: RootState) => state.auth);
+  console.log("Current User: ", user);
+  if (user?.role === "admin") {
+    <Navigate to="/dashboard" />;
   }
+  return user ? <Outlet /> : <Navigate to="/login" />;
+}
 
-  const redirectPath = user?.role === "admin" ? "/dashboard" : "/";
-
-  return <Navigate to={redirectPath} replace />;
-};
-
-export default ProtectedRoute;

@@ -19,12 +19,11 @@ export const authMiddleware = {
       const token = authHeader.split(" ")[1];
       const decoded = tokenUtils.verifyAccessToken(token);
       console.log("decoded", decoded);
-
       req.user = { id: decoded.userId };
       next();
     } catch (error) {
       console.error("Error verifying access token:", error);
-      errorResponse(res, "Invalid or expired access token", 400);
+      errorResponse(res, "Invalid or expired access token", 401);
     }
   },
 };

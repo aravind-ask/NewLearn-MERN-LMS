@@ -15,7 +15,7 @@ export const authController = {
       successResponse(res, user, "otp send successfully", 201);
     } catch (error: any) {
       console.log(error);
-      res.status(400).json({ message: error.message });
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
@@ -26,7 +26,7 @@ export const authController = {
       successResponse(res, data, "otp send successfully", 200);
     } catch (error: any) {
       console.log(error);
-      res.status(400).json({ message: error.message });
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
@@ -34,11 +34,10 @@ export const authController = {
     try {
       const { email, otp } = req.body;
       const data = await authService.verifyOtp(email, otp);
-      // res.status(200).json(data);
       successResponse(res, data, "otp verified successfully", 200);
     } catch (error: any) {
       console.log(error);
-      res.status(400).json({ message: error.message });
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
@@ -48,7 +47,7 @@ export const authController = {
       const data = await authService.login(email, password);
       successResponse(res, data, "login successfully", 200);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
@@ -57,16 +56,10 @@ export const authController = {
       const { token } = req.body;
       const data = await authService.authenticateGoogleUser(token);
 
-      // res.json({
-      //   success: true,
-      //   message: "Google Login Successful",
-      //   data,
-      // });
       successResponse(res, data, "Google Login Successful", 200);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google Auth Error:", error);
-      // res.status(500).json({ message: "Internal Server Error" });
-      errorResponse(res, "Internal Server Error", 500);
+      errorResponse(res, error, error.statusCode || 500);
     }
   },
 
@@ -74,11 +67,9 @@ export const authController = {
     try {
       const { refreshToken } = req.body;
       const tokens = await authService.refreshAccessToken(refreshToken);
-      // res.status(200).json(token);
       successResponse(res, tokens, "Token Refreshed Successfully", 200);
     } catch (error: any) {
-      // res.status(401).json({ message: error.message });
-      errorResponse(res, error.message, 401);
+      errorResponse(res, error, error.statusCode || 401);
     }
   },
 
@@ -97,26 +88,21 @@ export const authController = {
       });
       successResponse(res, null, "Password Changed Successfully", 200);
     } catch (error: any) {
-      errorResponse(res, error.message, 401);
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
-  async forgotPassword(req: AuthenticatedRequest, res: Response) {
+  async forgotPassword(req: Request, res: Response) {
     try {
       const { email, otp, newPassword } = req.body;
-      if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
-        return;
-      }
-      const userId = req.user.id;
       const result = await authService.changePassword({
-        userId: userId,
+        email: email,
         otp: otp,
         newPassword: newPassword,
       });
       successResponse(res, result, "Password Changed Successfully", 200);
     } catch (error: any) {
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 
@@ -124,11 +110,9 @@ export const authController = {
     try {
       const { userId } = req.body;
       const result = await authService.logout(userId);
-      // res.status(200).json(result);
       successResponse(res, result, "Logged out successfully", 200);
     } catch (error: any) {
-      // res.status(400).json({ message: error.message });
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error, error.statusCode || 400);
     }
   },
 };

@@ -17,7 +17,6 @@ router.post(
 );
 router.post(
   "/forgot-password",
-  authMiddleware.verifyAccessToken,
   authController.forgotPassword
 );
 router.post("/logout", authController.logout);

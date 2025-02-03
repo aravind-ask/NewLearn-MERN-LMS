@@ -1,16 +1,22 @@
 import { useState } from "react";
 import { Home, Book, Award, LogOut } from "lucide-react";
-import Profile from "@/components/dashboard/Profile";
-import MyLearnings from "@/components/dashboard/MyLearnings";
-import Certificates from "@/components/dashboard/MyCertificates";
+import Profile from "@/components/profile/Profile";
+import MyLearnings from "@/components/profile/MyLearnings";
+import Certificates from "@/components/profile/MyCertificates";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
+import { useLogoutMutation } from "@/redux/services/authApi";
+import { useNavigate } from "react-router-dom";
+import { RootState } from "@/redux/store";
 
-const Dashboard = () => {
+const ProfilePage = () => {
   const [selectedTab, setSelectedTab] = useState("profile");
+  const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
+  const [logoutMutation] = useLogoutMutation();
+  const navigate = useNavigate();
 
   const tabs = [
     { key: "profile", label: "Profile", icon: <Home size={20} /> },
@@ -21,6 +27,19 @@ const Dashboard = () => {
       icon: <Award size={20} />,
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      if (!user) {
+        throw new Error("No user found");
+      }
+      await logoutMutation({ userId: user.id });
+      dispatch(logout());
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -42,7 +61,7 @@ const Dashboard = () => {
 
         <Button
           variant="destructive"
-          onClick={() => dispatch(logout())}
+          onClick={handleLogout}
           className="flex items-center gap-2 mt-auto"
         >
           <LogOut size={20} />
@@ -62,4 +81,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default ProfilePage;

@@ -36,7 +36,16 @@ export const authApi = api.injectEndpoints({
     }),
 
     login: builder.mutation<
-      { token: string },
+      {
+        token: string;
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          role: "student" | "instructor" | "admin";
+          photoUrl: string;
+        };
+      },
       { email: string; password: string }
     >({
       query: (body) => ({

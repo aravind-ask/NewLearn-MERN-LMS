@@ -28,7 +28,7 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  if (result.error && result.error.status === 400) {
+  if (result.error && result.error.status === 401) {
     console.log("Access token expired, attempting to refresh...");
 
     const refreshToken = (api.getState() as RootState).auth.refreshToken;
