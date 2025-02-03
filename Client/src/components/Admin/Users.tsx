@@ -33,7 +33,7 @@ interface User {
 
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
-  const limit = 5; // Users per page
+  const limit = 2;
   const [blockUser] = useBlockUserMutation();
   const { data, isLoading, error, refetch } = useGetUsersQuery({ page, limit });
   console.log(data?.data.users);
@@ -97,23 +97,23 @@ export default function AdminUsers() {
       </Table>
 
       {/* Pagination */}
-      <Pagination className="mt-4">
+      <Pagination className="mt-4 cursor-pointer">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              disabled={page === 1}
+              className={page === 1 ? "disabled-class" : ""}
             />
           </PaginationItem>
           <PaginationItem>
-            Page {page} of {data?.totalPages}
+            Page {page} of {data?.data?.totalPages}
           </PaginationItem>
           <PaginationItem>
             <PaginationNext
               onClick={() =>
-                setPage((prev) => Math.min(prev + 1, data?.totalPages))
+                setPage((prev) => Math.min(prev + 1, data?.data?.totalPages))
               }
-              disabled={page === data?.totalPages}
+              className={page === data?.data?.totalPages ? "disabled-class" : ""}
             />
           </PaginationItem>
         </PaginationContent>

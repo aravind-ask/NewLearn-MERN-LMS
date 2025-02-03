@@ -39,8 +39,16 @@ export default function GoogleAuth() {
       if (error && typeof error === "object" && "data" in error) {
         const errorData = error as { data?: { message?: string } };
         toast.error(errorData.data?.message || "Failed to login with Google");
+        navigate("/login", {
+          state: {
+            error: errorData.data?.message || "Failed to login with Google",
+          },
+        });
       } else {
         toast.error("Failed to login with Google");
+        navigate("/login", {
+          state: { error: "Failed to login with Google" },
+        });
       }
     }
   };
@@ -48,6 +56,9 @@ export default function GoogleAuth() {
   const handleError = () => {
     console.error("Google Login Failed");
     toast.error("Google login failed. Please try again.");
+    navigate("/login", {
+      state: { error: "Google login failed. Please try again." },
+    });
   };
 
   return (

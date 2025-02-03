@@ -23,7 +23,7 @@ import {
   useLoginMutation,
   useSendOTPMutation,
 } from "@/redux/services/authApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -50,6 +50,12 @@ export default function Component() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (location.state?.error) {
+      setFormErrors(location.state.error);
+    }
+  }, [location.state]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormErrors("");
@@ -160,6 +166,7 @@ export default function Component() {
                   value={form.email}
                   placeholder="Enter your Email"
                   onChange={handleChange}
+                  className={formErrors ? "border-red-500" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -171,6 +178,7 @@ export default function Component() {
                     placeholder="Enter your Password"
                     value={form.password}
                     onChange={handleChange}
+                    className={formErrors ? "border-red-500" : ""}
                   />
                   <button
                     type="button"

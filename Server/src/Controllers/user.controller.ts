@@ -29,8 +29,8 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, email, password, profilePic } = req.body;
-
+    const { name, email, password, photoUrl } = req.body;
+    console.log("photp", req.body.photoUrl);
     if (!req.user) {
       errorResponse(res, "Unauthorized", 401);
       return;
@@ -42,7 +42,7 @@ export const updateProfile = async (
       name,
       email,
       password,
-      profilePic
+      photoUrl
     );
 
     if (!updatedUser) {
@@ -89,12 +89,10 @@ export const blockUser = async (req: Request, res: Response) => {
   try {
     const { userId, isBlocked } = req.body;
     const updatedUser = await UserService.blockUser(userId, isBlocked);
-    res
-      .status(200)
-      .json({
-        message: `User ${isBlocked ? "blocked" : "unblocked"} successfully`,
-        user: updatedUser,
-      });
+    res.status(200).json({
+      message: `User ${isBlocked ? "blocked" : "unblocked"} successfully`,
+      user: updatedUser,
+    });
   } catch (error) {
     console.error("Error updating block status:", error);
     res.status(500).json({ message: "Internal Server Error" });

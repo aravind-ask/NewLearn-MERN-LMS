@@ -15,6 +15,7 @@ const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const [getPresignedUrl] = useGetPresignedUrlMutation();
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -37,6 +38,8 @@ const Profile = () => {
     const fileName = `${user?.id}-${Date.now()}-${file.name}`;
 
     try {
+      setIsUploading(true);
+
       const { url, key } = await getPresignedUrl({ fileName }).unwrap();
 
       await fetch(url, {
@@ -47,14 +50,28 @@ const Profile = () => {
 
       setFormData({ ...formData, photoUrl: key });
       setChange(true);
+      setIsUploading(false);
     } catch (error) {
       console.error("Error uploading file", error);
       setErrors({ ...errors, photoUrl: "Error uploading file" });
+      setIsUploading(false);
     }
   };
 
   const handleSubmit = async () => {
     try {
+      const newErrors: { [key: string]: string } = {};
+      if (!formData.name) {
+        newErrors.name = "Name is required";
+      }
+      if (!formData.email) {
+        newErrors.email = "Email is required";
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
       await updateProfile(formData).unwrap();
       alert("Profile updated successfully!");
       setChange(false);
@@ -72,37 +89,63 @@ const Profile = () => {
   return (
     <Card className="p-6 w-full max-w-lg mx-auto">
       <h2 className="text-xl font-bold mb-4">Profile Settings</h2>
+      {errors.general && <p className="text-red-500 mb-4">{errors.general}</p>}
 
-      <div className="flex items-center space-x-4 mb-4">
-        <img
-          src={formData.photoUrl || "/default-avatar.png"}
-          alt="Profile"
-          className="w-16 h-16 rounded-full border"
+      <div className="flex items-center justify-center space-x-4 mb-4 relative">
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+          id="fileInput"
         />
-        <Input type="file" accept="image/*" onChange={handleFileChange} />
+        <div className="relative">
+          <img
+            src={formData.photoUrl || "/default-avatar.png"}
+            alt="Profile"
+            className="w-32 h-32 rounded-full border cursor-pointer"
+            onClick={() => document.getElementById("fileInput")?.click()}
+          />
+          {isUploading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
         {errors.photoUrl && <p className="text-red-500">{errors.photoUrl}</p>}
       </div>
 
       {/* Name */}
       <div className="mb-4">
         <Label>Name</Label>
-        <Input name="name" value={formData.name} onChange={handleChange} />
+        <Input
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className={errors.name ? "border-red-500" : ""}
+        />
         {errors.name && <p className="text-red-500">{errors.name}</p>}
       </div>
 
       {/* Email */}
       <div className="mb-4">
         <Label>Email</Label>
-        <Input name="email" value={formData.email} onChange={handleChange} />
+        <Input
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          disabled
+        />
         {errors.email && <p className="text-red-500">{errors.email}</p>}
       </div>
 
-      {errors.general && <p className="text-red-500">{errors.general}</p>}
       {/* Save Button */}
-      <Button onClick={handleSubmit} disabled={isLoading || !change}>
-        {isLoading ? "Updating..." : "Update Profile"}
-      </Button>
-      <PasswordChange eMail = {user?.email}/>
+      <div className="flex justify-between">
+        <PasswordChange eMail={user?.email} />
+        <Button onClick={handleSubmit} disabled={isLoading || !change}>
+          {isLoading ? "Updating..." : "Update Profile"}
+        </Button>
+      </div>
     </Card>
   );
 };

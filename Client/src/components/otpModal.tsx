@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useVerifyOtpMutation } from "@/redux/services/authApi";
+import { useSendOTPMutation, useVerifyOtpMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 interface OTPModalProps {
   email: string;
@@ -27,6 +28,7 @@ export function OTPModal({ email, open, onClose }: OTPModalProps) {
   const [timer, setTimer] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const navigate = useNavigate();
+  const [sendOTP] = useSendOTPMutation();
 
   useEffect(() => {
     if (timer > 0) {
@@ -40,21 +42,24 @@ export function OTPModal({ email, open, onClose }: OTPModalProps) {
   }, [timer]);
 
   const handleResend = () => {
+    sendOTP({ email });
     setTimer(60);
     setIsResendDisabled(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       if (!otp) {
         console.log("OTP is required");
         setFormErrors("OTP is required");
         return;
       }
-      verifyOtp({ email, otp }).unwrap();
+      await verifyOtp({ email, otp }).unwrap();
+      toast.success("OTP verified successfully!");
       navigate("/login");
     } catch (err) {
       console.error("Registration failed", err);
+      // setFormErrors("Invalid OTP. Please try again.");
     }
   };
 
@@ -70,6 +75,13 @@ export function OTPModal({ email, open, onClose }: OTPModalProps) {
         </AlertDialogHeader>
         <div className="space-y-4">
           <Label htmlFor="otp">OTP</Label>
+          {formErrors && <div className="text-red-500">{formErrors}</div>}
+          {error && (
+            <p className="text-red-500">
+              {(error as { data?: { message?: string } }).data?.message ||
+                "OTP validation failed"}
+            </p>
+          )}
           <Input
             id="otp"
             type="text"
@@ -84,17 +96,8 @@ export function OTPModal({ email, open, onClose }: OTPModalProps) {
           <Button onClick={handleResend} disabled={isResendDisabled}>
             Resend OTP
           </Button>
-          <AlertDialogAction onClick={handleSubmit} disabled={isLoading}>
-            Submit
-          </AlertDialogAction>
+          <Button onClick={handleSubmit}>Submit</Button>
         </AlertDialogFooter>
-        {formErrors && <div className="text-red-500">{formErrors}</div>}
-        {error && (
-          <p>
-            {(error as { data?: { message?: string } }).data?.message ||
-              "OTP validation failed"}
-          </p>
-        )}
       </AlertDialogContent>
     </AlertDialog>
   );

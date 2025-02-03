@@ -16,7 +16,7 @@ import {
   useResetPasswordMutation,
   useSendOTPMutation,
 } from "@/redux/services/authApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 export function PasswordChange({ eMail }: { eMail: string | undefined }) {
@@ -24,6 +24,7 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
   const [sendOtp] = useSendOTPMutation();
   const [forgotPassword] = useForgotPasswordMutation();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfPassword, setShowConfPassword] = useState(false);
   const [formData, setFormData] = useState({
     curPassword: "",
     newPassword: "",
@@ -32,16 +33,38 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
   });
   const [email, setEmail] = useState(eMail);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+  const [timer, setTimer] = useState(60);
+  const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
     useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const { toast } = useToast();
+  const [sendOTP] = useSendOTPMutation();
+
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setIsResendDisabled(false);
+    }
+  }, [timer]);
+
+  const handleResend = () => {
+    sendOTP({ email });
+    setTimer(60);
+    setIsResendDisabled(true);
+  };
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+  const toggleShowConfPassword = () => {
+    setShowConfPassword(!showConfPassword);
   };
 
   const handleForgotPasswordClick = () => {
@@ -50,18 +73,22 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleChangePassword = async () => {
     try {
-      if (
-        !formData.curPassword ||
-        !formData.newPassword ||
-        !formData.confPassword
-      ) {
-        setErrors({ ...errors, formError: "Please fill all the fields" });
+      if (!formData.curPassword) {
+        setErrors({ ...errors, curPassword: "Current password is required" });
+        return;
+      }
+      if (!formData.newPassword) {
+        setErrors({ ...errors, newPassword: "New password is required" });
+        return;
+      }
+      if (!formData.confPassword) {
+        setErrors({ ...errors, confPassword: "Confirm password is required" });
         return;
       }
       if (formData.newPassword !== formData.confPassword) {
@@ -82,24 +109,46 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
         otp: "",
       });
       toast({ title: "Password changed successfully!" });
-    } catch (error) {
+    } catch (error: any) {
+      setErrors({
+        ...errors,
+        curPassword: error.data?.message || "Error changing password",
+      });
       console.error("Error changing password", error);
     }
   };
 
   const handleSendOtp = async () => {
     try {
+      if (!email) {
+        setErrors({ ...errors, email: "Email is required" });
+        return;
+      }
       await sendOtp({ email }).unwrap();
+      setTimer(60);
+      setIsResendDisabled(true);
       setIsOtpSent(true);
       toast({ title: "OTP sent successfully!" });
-    } catch (error) {
-      setErrors({ ...errors, otp: "Error sending OTP" });
+    } catch (error: any) {
+      setErrors({ ...errors, otp: error.data?.message || "Error sending OTP" });
       console.error("Error sending OTP", error);
     }
   };
 
   const handleSubmitOtp = async () => {
     try {
+      if (!formData.otp) {
+        setErrors({ ...errors, otp: "OTP is required" });
+        return;
+      }
+      if (!formData.newPassword) {
+        setErrors({ ...errors, newPassword: "New password is required" });
+        return;
+      }
+      if (!formData.confPassword) {
+        setErrors({ ...errors, confPassword: "Confirm password is required" });
+        return;
+      }
       if (formData.newPassword !== formData.confPassword) {
         setErrors({ ...errors, confPassword: "Passwords do not match" });
         return;
@@ -120,8 +169,11 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
       setIsChangePasswordModalOpen(false);
       setIsOtpSent(false);
       toast({ title: "OTP submitted successfully!" });
-    } catch (error) {
-      setErrors({ ...errors, otp: "Error submitting OTP" });
+    } catch (error: any) {
+      setErrors({
+        ...errors,
+        otp: error.data?.message || "Error submitting OTP",
+      });
       console.error("Error submitting OTP", error);
     }
   };
@@ -150,15 +202,7 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
               <Label htmlFor="curPassword" className="text-right">
                 Password
               </Label>
-              {/* <Input
-                id="curPassword"
-                type="password"
-                name="curPassword"
-                value={formData.curPassword}
-                onChange={handleChange}
-                className="col-span-3"
-              /> */}
-              <div className="relative">
+              <div className="relative col-span-3">
                 <Input
                   id="curPassword"
                   type={showPassword ? "text" : "password"}
@@ -167,6 +211,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                   placeholder="Enter your Current Password"
                   value={formData.curPassword}
                   onChange={handleChange}
+                  className={`col-span-3 ${
+                    errors.curPassword ? "border-red-500" : ""
+                  }`}
                 />
                 <button
                   type="button"
@@ -196,7 +243,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                 value={formData.newPassword}
                 placeholder="Enter new Password"
                 onChange={handleChange}
-                className="col-span-3"
+                className={`col-span-3 ${
+                  errors.newPassword ? "border-red-500" : ""
+                }`}
               />
               {errors.newPassword && (
                 <p className="text-red-500 col-span-4">{errors.newPassword}</p>
@@ -206,31 +255,26 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
               <Label htmlFor="confPassword" className="text-right">
                 Confirm Password
               </Label>
-              {/* <Input
-                id="confPassword"
-                type="text"
-                name="confPassword"
-                value={formData.confPassword}
-                onChange={handleChange}
-                className="col-span-3"
-              /> */}
-              <div className="relative">
+              <div className="relative col-span-3">
                 <Input
                   id="confPassword"
-                  type={showPassword ? "text" : "password"}
+                  type={showConfPassword ? "text" : "password"}
                   required
                   name="confPassword"
                   placeholder="Re-Enter new Password"
                   value={formData.confPassword}
                   onChange={handleChange}
+                  className={`col-span-3 ${
+                    errors.confPassword ? "border-red-500" : ""
+                  }`}
                 />
                 <button
                   type="button"
-                  onClick={toggleShowPassword}
+                  onClick={toggleShowConfPassword}
                   className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? (
+                  {showConfPassword ? (
                     <EyeOff className="w-5 h-5" />
                   ) : (
                     <Eye className="w-5 h-5" />
@@ -292,6 +336,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                   {errors.email && (
                     <p className="text-red-500 col-span-4">{errors.email}</p>
                   )}
+                  {errors.otp && (
+                    <p className="text-red-500 col-span-4">{errors.otp}</p>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleSendOtp}>Send OTP</Button>
@@ -303,6 +350,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
             ) : (
               <>
                 <div className="grid grid-cols-4 items-center gap-4">
+                  {errors.otp && (
+                    <p className="text-red-500 col-span-4">{errors.otp}</p>
+                  )}
                   <Label htmlFor="otp" className="text-right">
                     OTP
                   </Label>
@@ -312,11 +362,10 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                     name="otp"
                     value={formData.otp}
                     onChange={handleChange}
-                    className="col-span-3"
+                    className={`col-span-3 ${
+                      errors.otp ? "border-red-500" : ""
+                    }`}
                   />
-                  {errors.otp && (
-                    <p className="text-red-500 col-span-4">{errors.otp}</p>
-                  )}
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="newPassword" className="text-right">
@@ -328,7 +377,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleChange}
-                    className="col-span-3"
+                    className={`col-span-3 ${
+                      errors.newPassword ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.newPassword && (
                     <p className="text-red-500 col-span-4">
@@ -346,7 +397,9 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                     name="confPassword"
                     value={formData.confPassword}
                     onChange={handleChange}
-                    className="col-span-3"
+                    className={`col-span-3 ${
+                      errors.confPassword ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.confPassword && (
                     <p className="text-red-500 col-span-4">
@@ -354,7 +407,11 @@ export function PasswordChange({ eMail }: { eMail: string | undefined }) {
                     </p>
                   )}
                 </div>
+                <div>Time remaining: {timer}s</div>
                 <DialogFooter>
+                  <Button onClick={handleResend} disabled={isResendDisabled}>
+                    Resend OTP
+                  </Button>
                   <Button onClick={handleSubmitOtp}>Submit OTP</Button>
                   <Button onClick={() => setIsForgotPasswordModalOpen(false)}>
                     Close

@@ -128,7 +128,7 @@ export const authApi = api.injectEndpoints({
           photoUrl: string;
         };
       },
-      { name: string; email: string; password?: string; profilePic?: string }
+      { name: string; email: string; password?: string; photoUrl?: string }
     >({
       query: (body) => ({
         url: "/user/update-profile",

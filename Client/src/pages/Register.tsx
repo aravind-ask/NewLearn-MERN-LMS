@@ -26,9 +26,11 @@ export default function Component() {
   const [formErrors, setFormErrors] = useState("");
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    setFormErrors("");
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -68,14 +70,20 @@ export default function Component() {
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit}>
+            {formErrors && <p className="text-red-500">{formErrors}</p>}
+            {error && (
+              <p className="text-red-500">
+                {(error as any).data?.message || "Registration failed"}
+              </p>
+            )}
             <div className="space-y-2">
               <Label htmlFor="full-name">Full name</Label>
               <Input
                 name="name"
                 value={form.name}
                 placeholder="Enter your Full Name"
-                required
                 onChange={handleChange}
+                className={formErrors ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
@@ -87,7 +95,7 @@ export default function Component() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Enter your Email"
-                required
+                className={formErrors ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
@@ -99,7 +107,7 @@ export default function Component() {
                 placeholder="Enter your Password"
                 value={form.password}
                 onChange={handleChange}
-                required
+                className={formErrors ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
@@ -111,7 +119,7 @@ export default function Component() {
                   placeholder="Confirm your Password"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  required
+                  className={formErrors ? "border-red-500" : ""}
                 />
                 <button
                   type="button"
@@ -130,13 +138,7 @@ export default function Component() {
             <Button className="w-full mt-5" disabled={isLoading}>
               Register
             </Button>
-            <GoogleAuth/>
-            {error && (
-              <p className="text-red-500">
-                {(error as any).data?.message || "Registration failed"}
-              </p>
-            )}
-            {formErrors && <p className="text-red-500">{formErrors}</p>}
+            <GoogleAuth />
             <span>
               Already have an account? <Link to={"/login"}>Login</Link>
             </span>
