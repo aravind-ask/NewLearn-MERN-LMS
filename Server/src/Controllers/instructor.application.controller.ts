@@ -21,7 +21,6 @@ export class InstructorApplicationController {
       if (!userId) {
         errorResponse(res, "User ID is required.", 400);
       }
-      console.log(req.body);
       const application = await instructorApplicationService.applyForInstructor(
         userId,
         req.body
@@ -40,18 +39,12 @@ export class InstructorApplicationController {
 
   static async getApplications(req: Request, res: Response) {
     const { page = 1, limit = 10 } = req.query;
-
     try {
       const { applications, totalPages } =
         await instructorApplicationService.getInstructorApplications(
           page as number,
           limit as number
         );
-
-      // res.status(200).json({
-      //   applications,
-      //   totalPages,
-      // });
       successResponse(
         res,
         { applications, totalPages },

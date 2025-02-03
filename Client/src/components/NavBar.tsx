@@ -10,7 +10,20 @@ import { AvatarDropdown } from "./AvatarDropDown";
 
 export default function Component() {
   const { user } = useSelector((state: RootState) => state.auth);
+  const role = user?.role;
   console.log(user);
+
+  if (role === "admin") {
+    return (
+      <header className="flex h-20 w-full shrink-0 items-center px-8 md:px-6 bg-gray-500 text-white">
+        <div className="flex items-center justify-between w-full">
+          <h1 className="text-2xl font-bold">Welcome, Admin!</h1>
+          <p className="text-lg">Thank you for managing our platform.</p>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="flex h-20 w-full shrink-0 items-center px-8  md:px-6">
       <Sheet>

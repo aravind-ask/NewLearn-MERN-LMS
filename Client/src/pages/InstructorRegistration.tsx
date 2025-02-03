@@ -16,7 +16,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useEffect, useState } from "react";
-import { uploadToS3 } from "@/utils/s3Upload";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
@@ -104,13 +103,13 @@ const InstructorRegistration = () => {
   const handleProfilePictureUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setIsUploading(true);
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
-      const uploadResult = await uploadToS3(file);
-      setProfilePicture(uploadResult);
-      setIsUploading(false);
-    }
+    // setIsUploading(true);
+    // if (e.target.files?.[0]) {
+    //   const file = e.target.files[0];
+    //   const uploadResult = await uploadToS3(file);
+    //   setProfilePicture(uploadResult);
+    //   setIsUploading(false);
+    // }
   };
 
   const onSubmit = async (data: InstructorFormData) => {
