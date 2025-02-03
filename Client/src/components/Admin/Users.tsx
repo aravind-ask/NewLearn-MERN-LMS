@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useGetUsersQuery } from "@/redux/services/userApi";
 import {
   Table,
   TableBody,
@@ -8,33 +10,33 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: "instructor" | "student";
+  profilePic?: string;
 }
 
-const users: User[] = [
-  {
-    id: "1",
-    name: "Alice Johnson",
-    email: "alice@example.com",
-    role: "student",
-  },
-  { id: "2", name: "John Doe", email: "john@example.com", role: "instructor" },
-  { id: "3", name: "Mary Smith", email: "mary@example.com", role: "student" },
-];
+export default function AdminUsers() {
+  const [page, setPage] = useState(1);
+  const limit = 5; // Users per page
 
-export default function Users() {
-  const handleEdit = (userId: string) => {
-    console.log(`Editing user ${userId}`);
-  };
+  const { data, isLoading, error } = useGetUsersQuery({ page, limit });
+  console.log(data?.data.users);
 
-  const handleBlock = (userId: string) => {
-    console.log(`Blocking user ${userId}`);
-  };
+  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (error)
+    return <p className="text-center text-red-500">Failed to load users</p>;
 
   return (
     <div className="container mx-auto p-6">
@@ -43,6 +45,7 @@ export default function Users() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Profile</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
@@ -50,8 +53,15 @@ export default function Users() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
+          {data?.data?.users.map((user) => (
             <TableRow key={user.id}>
+              <TableCell>
+                <img
+                  src={user.profilePic || "/default-avatar.png"}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              </TableCell>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
@@ -62,20 +72,36 @@ export default function Users() {
                 </Badge>
               </TableCell>
               <TableCell className="text-right space-x-2">
-                <Button variant="outline" onClick={() => handleEdit(user.id)}>
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleBlock(user.id)}
-                >
-                  Block
-                </Button>
+                <Button variant="outline">Edit</Button>
+                <Button variant="destructive">Block</Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+            />
+          </PaginationItem>
+          <PaginationItem>
+            Page {page} of {data?.totalPages}
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                setPage((prev) => Math.min(prev + 1, data?.totalPages))
+              }
+              disabled={page === data?.totalPages}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }

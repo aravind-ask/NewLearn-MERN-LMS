@@ -58,8 +58,24 @@ export const updateProfile = async (
       photoUrl: updatedUser.photoUrl,
     };
     successResponse(res, user, "Profile updated successfully!", 200);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update Profile Error:", error);
-    errorResponse(res, "Profile update failed", 500);
+    errorResponse(res, error, error.statusCode || 500);
+  }
+};
+
+export const getUsers = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    const { users, totalPages } = await UserService.getUsers(page, limit);
+
+    // res.status(200).json({ users, totalPages });
+    successResponse(res, { users, totalPages }, "Users fetched successfully!", 200);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    // res.status(500).json({ message: "Internal Server Error" });
+    errorResponse(res, "Internal Server Error", 500);
   }
 };

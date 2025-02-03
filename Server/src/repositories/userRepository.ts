@@ -21,7 +21,20 @@ export const userRepository = {
       { new: true }
     );
   },
-  
+
+  async getAllUsers(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const users = await User.find({}, "id name email role profilePic")
+      .skip(skip)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    return { users, totalPages };
+  },
+
   async updateUser(
     userId: string,
     updateData: Partial<IUser>

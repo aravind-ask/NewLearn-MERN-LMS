@@ -17,6 +17,9 @@ class UserService {
     const updatedUser = await userRepository.updateUser(userId, updates);
     return await userRepository.updateUser(userId, updates);
   }
+  async getUsers(page: number, limit: number) {
+    return await userRepository.getAllUsers(page, limit);
+  }
 }
 
 export default new UserService();
