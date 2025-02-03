@@ -10,6 +10,7 @@ import Sales from "@/components/Admin/Sales";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
+import AdminInstructorRequests from "@/components/Admin/InstructorRequests";
 
 const AdminDashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -20,11 +21,22 @@ const AdminDashboard = () => {
 
   const tabs = [
     { key: "users", label: "Users", icon: <User2 size={20} /> },
+    {
+      key: "instructorRequests",
+      label: "Instructor Requests",
+      icon: <User2 size={20} />,
+    },
+
     { key: "courses", label: "Courses", icon: <Book size={20} /> },
     {
       key: "sales",
       label: "Sales",
       icon: <Award size={20} />,
+    },
+    {
+      key: "instructorRequests",
+      label: "Instructor Requests",
+      icon: <User2 size={20} />,
     },
   ];
 
@@ -74,6 +86,7 @@ const AdminDashboard = () => {
           {selectedTab === "users" && <Users />}
           {selectedTab === "courses" && <Courses />}
           {selectedTab === "sales" && <Sales />}
+          {selectedTab === "instructorRequests" && <AdminInstructorRequests />}
         </Card>
       </main>
     </div>

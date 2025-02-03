@@ -9,6 +9,7 @@ import ToastProvider from "./components/ToastProvider";
 import ProfilePage from "./pages/ProfilePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
+import InstructorRegistration from "./pages/InstructorRegistration";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/instructor/apply" element={<InstructorRegistration />} />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />
         </Routes>

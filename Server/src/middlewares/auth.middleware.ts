@@ -3,7 +3,7 @@ import { tokenUtils } from "../utils/tokenUtils";
 import { errorResponse } from "../utils/responseHandler";
 
 interface AuthenticatedRequest extends Request {
-  user?: { id: string };
+  user?: { id: string, role: string };
 }
 
 export const authMiddleware = {
@@ -19,7 +19,7 @@ export const authMiddleware = {
       const token = authHeader.split(" ")[1];
       const decoded = tokenUtils.verifyAccessToken(token);
       console.log("decoded", decoded);
-      req.user = { id: decoded.userId };
+      req.user = { id: decoded.userId, role: decoded.role };
       next();
     } catch (error) {
       console.error("Error verifying access token:", error);

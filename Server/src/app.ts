@@ -5,9 +5,13 @@ import morgan from "morgan";
 import { connectDB } from "./config/db";
 import authRoutes from "./Routes/auth.routes";
 import userRoutes from "./Routes/user.routes";
+import instructorRoutes from "./Routes/instructor.routes";
+import multer from "multer";
 
 dotenv.config();
 const app = express();
+
+const upload = multer();
 
 cors({
   origin: process.env.CLIENT_URL,
@@ -17,6 +21,7 @@ cors({
 });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -29,6 +34,7 @@ connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/instructor", instructorRoutes);
 
 app.use(
   (

@@ -49,4 +49,7 @@ export const userRepository = {
       { new: true }
     );
   },
+  async updateUserRole(userId: string, role: string) {
+    return await User.findByIdAndUpdate(userId, { role }, { new: true });
+  },
 };
