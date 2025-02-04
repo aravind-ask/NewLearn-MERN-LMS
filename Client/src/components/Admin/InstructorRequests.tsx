@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useGetInstructorApplicationsQuery,
   useReviewInstructorApplicationMutation,
@@ -24,18 +24,22 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "../ui/skeleton";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 // Admin Component for Managing Instructor Requests
 const AdminInstructorRequests = () => {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = useGetInstructorApplicationsQuery({
-    page: 1,
-    limit: 5,
-  });
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [requests, setRequests] = useState([]);
+  const { data, isLoading, isError, refetch } =
+    useGetInstructorApplicationsQuery({
+      page: 1,
+      limit: 5,
+    });
   const [reviewApplication, { isLoading: isReviewing }] =
     useReviewInstructorApplicationMutation();
 
-  
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedApplicationId, setSelectedApplicationId] = useState<
@@ -63,6 +67,7 @@ const AdminInstructorRequests = () => {
       }).unwrap();
       toast.success("Instructor request rejected.");
       handleRejectClose();
+      refetch();
     } catch (error: any) {
       toast.error("Failed to reject request.");
     }
@@ -76,14 +81,15 @@ const AdminInstructorRequests = () => {
         rejectionReason: "",
       }).unwrap();
       toast.success("Instructor request approved successfully!");
+      refetch();
     } catch (error: any) {
       toast.error("Failed to approve request.");
     }
   };
 
- if (isLoading) return <Skeleton className="h-full w-full" />;
- if (isError)
-   return <p className="text-center text-red-500">Failed to load users</p>;
+  if (isLoading) return <Skeleton className="h-full w-full" />;
+  if (isError)
+    return <p className="text-center text-red-500">Failed to load users</p>;
 
   return (
     <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -97,6 +103,7 @@ const AdminInstructorRequests = () => {
             <TableHead>Qualification</TableHead>
             <TableHead>Experience</TableHead>
             <TableHead>Actions</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -115,22 +122,39 @@ const AdminInstructorRequests = () => {
                 >
                   View
                 </Button>
-                <Button
-                  onClick={() => handleApprove(application._id)}
-                  variant="outline"
-                  isLoading={isReviewing}
-                  className="mr-2"
+                {application.status === "pending" && (
+                  <>
+                    <Button
+                      onClick={() => handleApprove(application._id)}
+                      variant="outline"
+                      isLoading={isReviewing}
+                      className="mr-2"
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectOpen(application._id)}
+                      variant="outline"
+                      isLoading={isReviewing}
+                      className="bg-red-500 text-white"
+                    >
+                      Reject
+                    </Button>
+                  </>
+                )}
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`px-2 py-1 rounded-full text-white ${
+                    application.status === "pending"
+                      ? "bg-yellow-500"
+                      : application.status === "approved"
+                      ? "bg-green-500"
+                      : "bg-red-500"
+                  }`}
                 >
-                  Approve
-                </Button>
-                <Button
-                  onClick={() => handleRejectOpen(application._id)}
-                  variant="outline"
-                  isLoading={isReviewing}
-                  className="bg-red-500 text-white"
-                >
-                  Reject
-                </Button>
+                  {application.status}
+                </span>
               </TableCell>
             </TableRow>
           ))}

@@ -71,7 +71,6 @@ export const getUsers = async (req: Request, res: Response) => {
 
     const { users, totalPages } = await UserService.getUsers(page, limit);
 
-    // res.status(200).json({ users, totalPages });
     successResponse(
       res,
       { users, totalPages },
@@ -80,7 +79,6 @@ export const getUsers = async (req: Request, res: Response) => {
     );
   } catch (error) {
     console.error("Error fetching users:", error);
-    // res.status(500).json({ message: "Internal Server Error" });
     errorResponse(res, "Internal Server Error", 500);
   }
 };

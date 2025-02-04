@@ -20,9 +20,14 @@ router.get(
   authorizeRoles(["admin"]),
   InstructorApplicationController.getApplications
 );
+router.get(
+  "/:applicationId",
+  authMiddleware.verifyAccessToken,
+  InstructorApplicationController.getApplication
+);
 
 router.put(
-  "/:applicationId",
+  "/review/:applicationId",
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),
   InstructorApplicationController.reviewApplication

@@ -28,10 +28,7 @@ export class InstructorApplicationRepository {
   }
 
   async getApplicationById(applicationId: string | undefined) {
-    return await InstructorApplication.findById(applicationId).populate(
-      "user",
-      "name email"
-    );
+    return await InstructorApplication.findById(applicationId);
   }
 
   async updateApplicationStatus(

@@ -33,11 +33,6 @@ const AdminDashboard = () => {
       label: "Sales",
       icon: <Award size={20} />,
     },
-    {
-      key: "instructorRequests",
-      label: "Instructor Requests",
-      icon: <User2 size={20} />,
-    },
   ];
 
   const handleLogout = async () => {

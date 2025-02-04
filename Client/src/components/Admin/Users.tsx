@@ -82,7 +82,7 @@ export default function AdminUsers() {
               </TableCell>
               <TableCell className="text-right space-x-2">
                 <div className="flex justify-end gap-5">
-                  <Button variant="outline">Edit</Button>
+                  {/* <Button variant="outline">Edit</Button> */}
                   <Button
                     variant={user.blocked ? "outline" : "destructive"}
                     onClick={() => handleBlock(user._id, !user.isBlocked)}

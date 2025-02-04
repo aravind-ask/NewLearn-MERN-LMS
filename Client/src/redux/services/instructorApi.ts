@@ -17,16 +17,23 @@ export const instructorApi = api.injectEndpoints({
     }),
     reviewInstructorApplication: builder.mutation({
       query: ({ applicationId, status, rejectionReason }) => ({
-        url: `/instructor/${applicationId}`,
+        url: `/instructor/review/${applicationId}`,
         method: "PUT",
         body: { status, rejectionReason },
       }),
     }),
+    getInstructorApplication : builder.query({
+      query: ({ applicationId }) => ({
+        url: `/instructor/${applicationId}`,
+        method: "GET",
+      }),
+    })
   }),
 });
 
 export const {
   useApplyForInstructorMutation,
   useGetInstructorApplicationsQuery,
+  useGetInstructorApplicationQuery,
   useReviewInstructorApplicationMutation,
 } = instructorApi;

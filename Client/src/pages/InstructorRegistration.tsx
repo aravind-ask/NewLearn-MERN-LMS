@@ -1,4 +1,7 @@
-import { useApplyForInstructorMutation } from "@/redux/services/instructorApi";
+import {
+  useApplyForInstructorMutation,
+  useGetInstructorApplicationQuery,
+} from "@/redux/services/instructorApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +45,8 @@ const instructorSchema = z.object({
 type InstructorFormData = z.infer<typeof instructorSchema>;
 
 const InstructorRegistration = () => {
-  const [applyForInstructor, { isLoading }] = useApplyForInstructorMutation();
   const { user } = useSelector((state: RootState) => state.auth);
+  const [applyForInstructor, { isLoading }] = useApplyForInstructorMutation();
   const [certificateFiles, setCertificateFiles] = useState<string[]>([]);
   const [profilePicture, setProfilePicture] = useState<File | string | null>(
     null
@@ -52,8 +55,11 @@ const InstructorRegistration = () => {
     useGetPresignedUrlMutation();
   const [isUploading, setIsUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [isResModalOpen, setIsResModalOpen] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  // const { data, isError, refetch } = useGetInstructorApplicationQuery(user?.id);
   const {
     register,
     handleSubmit,
@@ -63,6 +69,12 @@ const InstructorRegistration = () => {
   } = useForm<InstructorFormData>({
     resolver: zodResolver(instructorSchema),
   });
+  const { data: application, refetch } = useGetInstructorApplicationQuery(
+    user?.id,
+    {
+      skip: !user?.id,
+    }
+  );
 
   useEffect(() => {
     if (user) {
@@ -70,7 +82,25 @@ const InstructorRegistration = () => {
       setValue("email", user.email);
       setProfilePicture(user.photoUrl);
     }
-  }, [user, setValue]);
+    const fetchApplicationStatus = async () => {
+      if (!user?.id) return;
+      try {
+        if (!application) return;
+
+        if (application.status === "approved") {
+          navigate("/instructor/dashboard");
+        } else if (application.status === "rejected") {
+          setRejectionReason(application.rejectionReason);
+          setIsModalOpen(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch application status", err);
+        refetch();
+        setError("Failed to fetch application status. Please try again.");
+      }
+    };
+    fetchApplicationStatus();
+  }, [user, setValue, navigate]);
 
   const handleCertificateUpload = async (
     e: React.ChangeEvent<HTMLInputElement>

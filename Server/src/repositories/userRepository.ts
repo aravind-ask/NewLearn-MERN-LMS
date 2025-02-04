@@ -25,7 +25,10 @@ export const userRepository = {
   async getAllUsers(page: number, limit: number) {
     const skip = (page - 1) * limit;
 
-    const users = await User.find({}, "id name email role photoUrl isBlocked")
+    const users = await User.find(
+      { role: { $ne: "admin" } },
+      "id name email role photoUrl isBlocked"
+    )
       .skip(skip)
       .limit(limit);
 

@@ -60,7 +60,7 @@ export function AvatarDropdown() {
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">{user.name}</h4>
             <p className="text-sm text-gray-500">
-              {user.role === "admin" ? "Admin" : "Student"}
+              {user.role === "admin" ? "Admin" : (user.role === "instructor" ? "Instructor" : "Student")}
             </p>
           </div>
         </div>

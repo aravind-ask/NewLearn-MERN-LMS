@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { InstructorApplicationService } from "../services/instructorApplication.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import mongoose from "mongoose";
+
 
 const instructorApplicationService = new InstructorApplicationService();
 
@@ -64,6 +66,11 @@ export class InstructorApplicationController {
     try {
       const { applicationId } = req.params;
       const { status, rejectionReason } = req.body;
+      console.log(applicationId, status, rejectionReason);
+
+      if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+         errorResponse(res, "Invalid application ID.", 400);
+      }
 
       const updatedApplication =
         await instructorApplicationService.reviewApplication(
@@ -75,6 +82,28 @@ export class InstructorApplicationController {
         res,
         updatedApplication,
         "Application reviewed successfully.",
+        200
+      );
+    } catch (error: any) {
+      console.log(error);
+      errorResponse(res, error.message, 400);
+    }
+  }
+
+  static async getApplication(req: Request, res: Response) {
+    try {
+      const { applicationId } = req.params;
+
+      if (!applicationId || !mongoose.Types.ObjectId.isValid(applicationId)) {
+        errorResponse(res, "Invalid application ID.", 400);
+        return;
+      }
+      const application =
+        await instructorApplicationService.getApplication(applicationId);
+      successResponse(
+        res,
+        application,
+        "Instructor application fetched successfully.",
         200
       );
     } catch (error: any) {
