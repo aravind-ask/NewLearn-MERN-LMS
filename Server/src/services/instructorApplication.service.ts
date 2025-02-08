@@ -26,9 +26,9 @@ export class InstructorApplicationService {
     );
   }
 
-  async getApplication(applicationId: string) {
+  async getApplication(userId: string | undefined) {
     const application =
-      await instructorApplicationRepository.getApplicationById(applicationId);
+      await instructorApplicationRepository.getApplication(userId);
     if (!application) throw new NotFoundError("Application not found");
     return application;
   }

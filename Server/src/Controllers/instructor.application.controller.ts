@@ -90,16 +90,14 @@ export class InstructorApplicationController {
     }
   }
 
-  static async getApplication(req: Request, res: Response) {
+  static async getApplication(req: CustomRequest, res: Response) {
     try {
-      const { applicationId } = req.params;
-
-      if (!applicationId || !mongoose.Types.ObjectId.isValid(applicationId)) {
-        errorResponse(res, "Invalid application ID.", 400);
-        return;
+      const userId = req.user?.id;
+      if (!userId) {
+        errorResponse(res, "Unauthorized", 400);
       }
       const application =
-        await instructorApplicationService.getApplication(applicationId);
+        await instructorApplicationService.getApplication(userId);
       successResponse(
         res,
         application,
@@ -108,7 +106,7 @@ export class InstructorApplicationController {
       );
     } catch (error: any) {
       console.log(error);
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 }

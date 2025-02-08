@@ -22,12 +22,12 @@ export const instructorApi = api.injectEndpoints({
         body: { status, rejectionReason },
       }),
     }),
-    getInstructorApplication : builder.query({
-      query: ({ applicationId }) => ({
-        url: `/instructor/${applicationId}`,
+    getInstructorApplication: builder.query({
+      query: () => ({
+        url: `/instructor/application`,
         method: "GET",
       }),
-    })
+    }),
   }),
 });
 

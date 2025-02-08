@@ -10,6 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import InstructorRegistration from "./pages/InstructorRegistration";
+import InstructorDashboard from "./pages/InstructorDashboard";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/instructor/apply" element={<InstructorRegistration />} />
+            <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />
         </Routes>

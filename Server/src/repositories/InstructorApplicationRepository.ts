@@ -31,6 +31,10 @@ export class InstructorApplicationRepository {
     return await InstructorApplication.findById(applicationId);
   }
 
+  async getApplication(userId: string | undefined) {
+    return await InstructorApplication.findOne({ user: userId });
+  }
+
   async updateApplicationStatus(
     applicationId: string,
     status: string,

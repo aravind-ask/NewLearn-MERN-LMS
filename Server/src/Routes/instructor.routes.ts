@@ -21,7 +21,7 @@ router.get(
   InstructorApplicationController.getApplications
 );
 router.get(
-  "/:applicationId",
+  "/application",
   authMiddleware.verifyAccessToken,
   InstructorApplicationController.getApplication
 );

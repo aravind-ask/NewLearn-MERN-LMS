@@ -23,6 +23,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const instructorSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters."),
@@ -64,17 +65,12 @@ const InstructorRegistration = () => {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<InstructorFormData>({
     resolver: zodResolver(instructorSchema),
   });
-  const { data: application, refetch } = useGetInstructorApplicationQuery(
-    user?.id,
-    {
-      skip: !user?.id,
-    }
-  );
+  const { data: application, isLoading: isApplicationLoading } =
+    useGetInstructorApplicationQuery();
 
   useEffect(() => {
     if (user) {
@@ -82,25 +78,15 @@ const InstructorRegistration = () => {
       setValue("email", user.email);
       setProfilePicture(user.photoUrl);
     }
-    const fetchApplicationStatus = async () => {
-      if (!user?.id) return;
-      try {
-        if (!application) return;
-
-        if (application.status === "approved") {
-          navigate("/instructor/dashboard");
-        } else if (application.status === "rejected") {
-          setRejectionReason(application.rejectionReason);
-          setIsModalOpen(true);
-        }
-      } catch (err) {
-        console.error("Failed to fetch application status", err);
-        refetch();
-        setError("Failed to fetch application status. Please try again.");
+    if (application?.data) {
+      if (application.data.status === "approved") {
+        navigate("/instructor/dashboard");
+      } else if (application.data.status === "rejected") {
+        setRejectionReason(application.data.rejectionReason);
+        setIsResModalOpen(true);
       }
-    };
-    fetchApplicationStatus();
-  }, [user, setValue, navigate]);
+    }
+  }, [user, setValue, navigate, application]);
 
   const handleCertificateUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -173,6 +159,10 @@ const InstructorRegistration = () => {
     setIsModalOpen(false);
     navigate("/");
   };
+
+  if (isApplicationLoading || isLoading || isPresigning || isUploading) {
+    return <Skeleton className="h-full w-full" />;
+  }
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -319,6 +309,7 @@ const InstructorRegistration = () => {
             </p>
           )}
         </div>
+        {error && <p className="text-red-500">{error}</p>}
 
         {/* Submit Button */}
         <Button type="submit" disabled={isLoading}>
@@ -337,6 +328,29 @@ const InstructorRegistration = () => {
           <DialogFooter>
             <Button onClick={handleCloseModal}>Go to Home</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isResModalOpen}
+        onOpenChange={() => setIsResModalOpen(false)}
+      >
+        <DialogContent className="text-center bg-white">
+          <DialogHeader>
+            <DialogTitle>Application {application?.data?.status}</DialogTitle>
+          </DialogHeader>
+          {application?.data?.status === "rejected" ? (
+            <>
+              <p>
+                Your application has been rejected due to the following reasons.
+              </p>
+              <p>{rejectionReason}</p>
+            </>
+          ) : (
+            <p>
+              Your application is under review. You will be notified once it is
+              approved.
+            </p>
+          )}
         </DialogContent>
       </Dialog>
     </div>
