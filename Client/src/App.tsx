@@ -10,7 +10,8 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import InstructorRegistration from "./pages/InstructorRegistration";
-import InstructorDashboard from "./pages/InstructorDashboard";
+import InstructorDashboard from "./pages/InstructorDashboardPage";
+import AddNewCourse from "./pages/AddNewCourse";
 
 function App() {
   return (
@@ -27,8 +28,18 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/instructor/apply" element={<InstructorRegistration />} />
-            <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+            <Route
+              path="/instructor/apply"
+              element={<InstructorRegistration />}
+            />
+            <Route
+              path="/instructor/dashboard"
+              element={<InstructorDashboard />}
+            />
+            <Route
+              path="/instructor/create-new-course"
+              element={<AddNewCourse />}
+            />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />
         </Routes>
