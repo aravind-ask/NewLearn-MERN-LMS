@@ -3,6 +3,8 @@ import UserService from "../services/user.service";
 import { getPresignedUrl } from "../config/s3.config";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import dotenv from "dotenv";
+import { v4 as uuidv4 } from "uuid";
+
 
 dotenv.config();
 
@@ -16,7 +18,7 @@ export const getUploadUrl = async (req: Request, res: Response) => {
     const url = await getPresignedUrl(fileName);
     res.json({
       url,
-      key: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/profile-pics/${fileName}`,
+      key: `uploads/${uuidv4()}-${Date.now()}-${fileName}`,
     });
   } catch (error) {
     console.error("S3 URL Error:", error);
