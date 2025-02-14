@@ -3,14 +3,15 @@ import { InstructorApplicationController } from "../Controllers/instructor.appli
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import multer from "multer";
-
+import { createCourse } from "../Controllers/course.controller";
 
 const router = express.Router();
 const upload = multer();
 
 router.post(
   "/apply",
-  authMiddleware.verifyAccessToken,upload.none(),
+  authMiddleware.verifyAccessToken,
+  upload.none(),
   InstructorApplicationController.applyForInstructor
 );
 
@@ -32,5 +33,7 @@ router.put(
   authorizeRoles(["admin"]),
   InstructorApplicationController.reviewApplication
 );
+
+router.get("/create-course", authMiddleware.verifyAccessToken, createCourse);
 
 export default router;

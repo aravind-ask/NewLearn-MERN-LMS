@@ -6,6 +6,8 @@ import { connectDB } from "./config/db";
 import authRoutes from "./Routes/auth.routes";
 import userRoutes from "./Routes/user.routes";
 import instructorRoutes from "./Routes/instructor.routes";
+import categoryRoutes from "./Routes/category.routes";
+
 import multer from "multer";
 
 dotenv.config();
@@ -35,6 +37,7 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/instructor", instructorRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.use(
   (

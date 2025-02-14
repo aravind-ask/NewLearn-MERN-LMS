@@ -6,6 +6,7 @@ import instructorReducer from "./slices/instructorSlice";
 export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
+    // [categoryApi.reducerPath]: categoryApi.reducer,
     auth: authReducer,
     instructor: instructorReducer,
   },

@@ -3,9 +3,9 @@ import { CustomRequest } from "../types/customRequest";
 import { errorResponse } from "../utils/responseHandler";
 
 export const authorizeRoles = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as CustomRequest).user;
-    console.log("usser:",user?.role);
+  return (req: CustomRequest, res: Response, next: NextFunction): void => {
+    const user = req.user;
+    console.log("user:",user?.role);
 
     if (!user || !roles.includes(user.role)) {
       errorResponse(res, "Forbidden", 403);

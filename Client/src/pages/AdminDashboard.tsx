@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
-import { Award, Book, LogOut, User2 } from "lucide-react";
+import { Award, Book, LogOut, ScanFace, User2 } from "lucide-react";
 import Users from "@/components/Admin/Users";
 import Courses from "@/components/Admin/Courses";
 import Sales from "@/components/Admin/Sales";
@@ -11,6 +11,7 @@ import { useLogoutMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import AdminInstructorRequests from "@/components/Admin/InstructorRequests";
+import Category from "@/components/Admin/Category";
 
 const AdminDashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -32,6 +33,11 @@ const AdminDashboard = () => {
       key: "sales",
       label: "Sales",
       icon: <Award size={20} />,
+    },
+    {
+      key: "category",
+      label: "Category",
+      icon: <ScanFace size={20} />,
     },
   ];
 
@@ -82,6 +88,7 @@ const AdminDashboard = () => {
           {selectedTab === "courses" && <Courses />}
           {selectedTab === "sales" && <Sales />}
           {selectedTab === "instructorRequests" && <AdminInstructorRequests />}
+          {selectedTab === "category" && <Category />}
         </Card>
       </main>
     </div>

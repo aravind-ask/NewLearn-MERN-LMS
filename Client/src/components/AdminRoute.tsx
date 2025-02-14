@@ -6,7 +6,7 @@ import { RootState } from "@/redux/store";
 const AdminRoute: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
 
-  if (user.role == "admin") {
+  if (user?.role == "admin") {
     return <Navigate to="/dashboard" replace />;
   }
   return <Outlet />;

@@ -1,7 +1,7 @@
 import {
   CourseCurriculum,
   courseCurriculumInitialFormData,
-  courseLandingPageFormControls,
+  courseLandingInitialFormData,
 } from "@/config/CourseConfigs";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
@@ -15,7 +15,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // }
 
 const initialState = {
-  courseLandingFormData: courseLandingPageFormControls,
+  courseLandingFormData: courseLandingInitialFormData,
   courseCurriculumFormData: courseCurriculumInitialFormData,
   mediaUploadProgress: false,
   uploadedVideoUrl: "",
