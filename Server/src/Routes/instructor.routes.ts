@@ -1,11 +1,10 @@
-import express from "express";
+import express, { Router } from "express";
 import { InstructorApplicationController } from "../Controllers/instructor.application.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import multer from "multer";
-import { createCourse } from "../Controllers/course.controller";
 
-const router = express.Router();
+const router: Router = express.Router();
 const upload = multer();
 
 router.post(
@@ -34,6 +33,5 @@ router.put(
   InstructorApplicationController.reviewApplication
 );
 
-router.get("/create-course", authMiddleware.verifyAccessToken, createCourse);
 
 export default router;

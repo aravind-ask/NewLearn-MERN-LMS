@@ -38,9 +38,11 @@ export class CategoryController {
   updateCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
+      const { name } = req.body;
+      console.log("name", name);
       const updatedCategory = await this.categoryService.updateCategory(
         id,
-        req.body
+        name
       );
       if (!updatedCategory) errorResponse(res, "Category not found", 404);
 

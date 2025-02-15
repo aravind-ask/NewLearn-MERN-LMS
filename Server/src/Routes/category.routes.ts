@@ -1,7 +1,7 @@
-import express from "express";
+import express, { Router } from "express";
 import { CategoryController } from "../Controllers/category.controller";
 
-const router = express.Router();
+const router: Router = express.Router();
 const categoryController = new CategoryController();
 
 router.get("/", categoryController.getAllCategories);

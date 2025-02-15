@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
+  useUpdateCategoryMutation,
   useDeleteCategoryMutation,
 } from "@/redux/services/categoryApi";
 import { useState } from "react";
@@ -29,8 +30,14 @@ const Category = () => {
   console.log(categories);
   const [createCategory, { isLoading: isCreating }] =
     useCreateCategoryMutation();
+  const [updateCategory, { isLoading: isUpdating }] =
+    useUpdateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
   const [categoryName, setCategoryName] = useState<string>("");
+  const [editCategoryName, setEditCategoryName] = useState<string>("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
 
   const handleCreateCategory = async () => {
     if (categoryName.trim()) {
@@ -43,6 +50,27 @@ const Category = () => {
     }
   };
 
+  const handleEditCategory = (id: string, name: string) => {
+    setEditingCategoryId(id);
+    setEditCategoryName(name);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (editCategoryName.trim() && editingCategoryId) {
+      console.log(editingCategoryId, editCategoryName);
+      try {
+        await updateCategory({
+          id: editingCategoryId,
+          name: editCategoryName,
+        }).unwrap();
+        setEditingCategoryId(null);
+        setEditCategoryName("");
+      } catch (error) {
+        console.error("Failed to update category:", error);
+      }
+    }
+  };
+
   const handleDeleteCategory = async (id: string) => {
     try {
       await deleteCategory(id).unwrap();
@@ -51,8 +79,8 @@ const Category = () => {
     }
   };
 
-  if(isLoading) return <p>Loading categories...</p>
-  if(isError) return <p>Error loading categories</p>
+  if (isLoading) return <p>Loading categories...</p>;
+  if (isError) return <p>Error loading categories</p>;
 
   return (
     <div>
@@ -108,9 +136,47 @@ const Category = () => {
               <TableRow key={category._id}>
                 <TableCell>{category.name}</TableCell>
                 <TableCell>
-                  <Button className="mr-2" variant="outline">
-                    Edit
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="mr-2"
+                        variant="outline"
+                        onClick={() =>
+                          handleEditCategory(category._id, category.name)
+                        }
+                      >
+                        Edit
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white">
+                      <DialogHeader>
+                        <DialogTitle>Edit Category</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="edit-category-name">
+                            Category Name
+                          </Label>
+                          <Input
+                            id="edit-category-name"
+                            value={editCategoryName}
+                            onChange={(e) =>
+                              setEditCategoryName(e.target.value)
+                            }
+                            placeholder="Enter new category name"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          onClick={handleUpdateCategory}
+                          disabled={isUpdating || !editCategoryName.trim()}
+                        >
+                          {isUpdating ? "Updating..." : "Update Category"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     variant="destructive"
                     onClick={() => handleDeleteCategory(category._id)}

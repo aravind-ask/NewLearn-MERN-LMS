@@ -6,16 +6,48 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
+import { useCreateCourseMutation } from "@/redux/services/courseApi";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const AddNewCourse = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
   const { courseCurriculumFormData, courseLandingFormData } = useSelector(
     (state: RootState) => state.instructor
   );
+  const navigate = useNavigate();
 
-  const handleCreateCourse = () => {
+  const [createCourse, { isLoading }] = useCreateCourseMutation();
+
+  const handleCreateCourse = async () => {
     console.log("CreateCourse");
     console.log("courseCurriculumFormData", courseCurriculumFormData);
     console.log("courseLandingFormData", courseLandingFormData);
+    try {
+      const courseData = {
+        ...courseLandingFormData,
+        instructorId: user?.id,
+        instructorName: user?.name,
+        curriculum: courseCurriculumFormData,
+        pricing: Number(courseLandingFormData.pricing),
+      };
+
+      const response = await createCourse(courseData).unwrap();
+      console.log("Course Created Successfully", response);
+      toast({
+        title: "Success",
+        description: "Course created successfully!",
+        status: "success",
+      });
+      navigate("/instructor/dashboard");
+    } catch (error) {
+      console.error("Failed to create course", error);
+      toast({
+        title: "Error",
+        description: "Failed to create course",
+        status: "error",
+      });
+    }
   };
   return (
     <div className="container mx-auto p-4">
@@ -25,7 +57,7 @@ const AddNewCourse = () => {
           className="text-sm tracking-wider font-bold px-8"
           onClick={handleCreateCourse}
         >
-          CREATE COURSE
+          {isLoading ? "Creating..." : "CREATE COURSE"}
         </Button>
       </div>
       <Card>
