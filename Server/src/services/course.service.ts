@@ -18,6 +18,32 @@ export class CourseService {
     return await this.courseRepo.updateCourse(courseId, updateData);
   }
 
+  async fetchInstructorCourses(
+    instructorId: string,
+    page: number,
+    limit: number,
+    sortOptions: { [key: string]: 1 | -1 }
+  ) {
+    if (!instructorId) {
+      throw new Error("Instructor ID is required");
+    }
+
+    const { courses, totalCourses } =
+      await this.courseRepo.getInstructorCourses(
+        instructorId,
+        page,
+        limit,
+        sortOptions
+      );
+
+    return {
+      courses,
+      totalCourses,
+      totalPages: Math.ceil(totalCourses / limit),
+      currentPage: page,
+    };
+  }
+
   async deleteCourse(courseId: string): Promise<ICourse | null> {
     return await this.courseRepo.deleteCourse(courseId);
   }

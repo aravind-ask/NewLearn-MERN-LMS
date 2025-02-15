@@ -28,6 +28,13 @@ export const instructorApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    getInstructorCourses: builder.query({
+      query: ({ page, limit, sortBy = "createdAt", order = "desc" }) => ({
+        url: `/instructor/courses?page=${page}&limit=${limit}&sortBy=${sortBy}&order=${order}`,
+        method: "GET",
+        providesTags: ["Courses"],
+      }),
+    }),
   }),
 });
 
@@ -36,4 +43,5 @@ export const {
   useGetInstructorApplicationsQuery,
   useGetInstructorApplicationQuery,
   useReviewInstructorApplicationMutation,
+  useGetInstructorCoursesQuery,
 } = instructorApi;
