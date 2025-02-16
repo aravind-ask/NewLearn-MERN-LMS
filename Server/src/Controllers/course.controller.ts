@@ -35,7 +35,6 @@ export class CourseController {
 
   static async editCourse(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("edit",req.body);
       const validatedData: EditCourseInput = EditCourseDto.parse(req.body);
       const updatedCourse = await courseService.editCourse(validatedData);
 

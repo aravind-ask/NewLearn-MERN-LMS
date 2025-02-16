@@ -98,7 +98,7 @@ const AddNewCourse = () => {
         toast({
           title: "Success",
           description: "Course updated successfully!",
-          status: "success",
+          variant: "default",
         });
       } else {
         // Create new course
@@ -107,18 +107,18 @@ const AddNewCourse = () => {
         toast({
           title: "Success",
           description: "Course created successfully!",
-          status: "success",
+          variant: "default",
         });
       }
 
       navigate("/instructor/dashboard");
     } catch (error) {
       console.error("Failed to save course", error);
-      toast({
-        title: "Error",
-        description: "Failed to save course",
-        status: "error",
-      });
+       toast({
+         title: "Error",
+         description: "Failed to save course",
+         variant: "destructive",
+       });
     }
   };
 

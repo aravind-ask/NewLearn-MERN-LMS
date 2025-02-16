@@ -121,7 +121,7 @@ export const courseLandingPageFormControls: FormControl[] = [
     label: "Category",
     componentType: "select",
     type: "text",
-    options: courseCategories,
+    options: [],
   },
   {
     name: "level",
