@@ -18,7 +18,6 @@ export class CourseController {
   static async createCourse(req: Request, res: Response, next: NextFunction) {
     try {
       const courseData = req.body;
-      console.log("CourseData", courseData);
 
       const validatedData = CreateCourseDto.parse(courseData);
 
@@ -36,6 +35,7 @@ export class CourseController {
 
   static async editCourse(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log("edit",req.body);
       const validatedData: EditCourseInput = EditCourseDto.parse(req.body);
       const updatedCourse = await courseService.editCourse(validatedData);
 
@@ -122,6 +122,22 @@ export class CourseController {
         sortOptions
       );
       successResponse(res, result, "Courses fetched successfully", 200);
+    } catch (error: any) {
+      errorResponse(res, error, error.status || 400);
+    }
+  }
+  static async getCourseDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { courseId } = req.params;
+      if (!courseId) {
+        errorResponse(res, { message: "Course not found" }, 404);
+      }
+      const course = await courseService.getCourseDetails(courseId);
+      successResponse(res, course, "Course details fetched successfully", 200);
     } catch (error: any) {
       errorResponse(res, error, error.status || 400);
     }

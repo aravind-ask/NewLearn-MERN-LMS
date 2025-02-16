@@ -38,7 +38,7 @@ export const instructorApi = api.injectEndpoints({
       }) => ({
         url: `/instructor/courses?page=${page}&limit=${limit}&sortBy=${sortBy}&order=${order}&search=${search}`,
         method: "GET",
-        providesTags: ["Courses"],
+        providesTags: ["Courses", "InstructorCourses"],
       }),
     }),
   }),

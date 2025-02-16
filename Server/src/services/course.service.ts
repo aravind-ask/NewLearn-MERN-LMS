@@ -11,13 +11,24 @@ export class CourseService {
   }
 
   async createCourse(data: CreateCourseInput): Promise<ICourse> {
-    return await this.courseRepo.createCourse(data);
+    try {
+      return await this.courseRepo.createCourse(data);
+    } catch (error) {
+      console.error("Service Error creating course:", error);
+      throw new Error("Service failed to create course");
+    }
   }
 
   async editCourse(data: EditCourseInput): Promise<ICourse | null> {
-    const { courseId, ...updateData } = data;
-    return await this.courseRepo.updateCourse(courseId, updateData);
+    try {
+      const { courseId, ...updateData } = data;
+      return await this.courseRepo.updateCourse(courseId, updateData);
+    } catch (error) {
+      console.error("Service Error editing course:", error);
+      throw new Error("Service failed to edit course");
+    }
   }
+
   async getAllCourses(
     page: number,
     limit: number,
@@ -27,15 +38,29 @@ export class CourseService {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) {
-    return await this.courseRepo.getAllCourses(
-      page,
-      limit,
-      search,
-      category,
-      difficulty,
-      sortBy,
-      sortOrder
-    );
+    try {
+      return await this.courseRepo.getAllCourses(
+        page,
+        limit,
+        search,
+        category,
+        difficulty,
+        sortBy,
+        sortOrder
+      );
+    } catch (error) {
+      console.error("Service Error getting all courses:", error);
+      throw new Error("Service failed to get all courses");
+    }
+  }
+
+  async getCourseDetails(courseId: string): Promise<ICourse | null> {
+    try {
+      return await this.courseRepo.getCourseDetails(courseId);
+    } catch (error) {
+      console.error("Service Error getting course details:", error);
+      throw new Error("Service failed to get course details");
+    }
   }
 
   async fetchInstructorCourses(
@@ -54,23 +79,33 @@ export class CourseService {
       throw new Error("Instructor ID is required");
     }
 
-    const { courses, totalCourses } =
-      await this.courseRepo.getInstructorCourses(
-        filter,
-        page,
-        limit,
-        sortOptions
-      );
+    try {
+      const { courses, totalCourses } =
+        await this.courseRepo.getInstructorCourses(
+          filter,
+          page,
+          limit,
+          sortOptions
+        );
 
-    return {
-      courses,
-      totalCourses,
-      totalPages: Math.ceil(totalCourses / limit),
-      currentPage: page,
-    };
+      return {
+        courses,
+        totalCourses,
+        totalPages: Math.ceil(totalCourses / limit),
+        currentPage: page,
+      };
+    } catch (error) {
+      console.error("Service Error fetching instructor courses:", error);
+      throw new Error("Service failed to fetch instructor courses");
+    }
   }
 
   async deleteCourse(courseId: string): Promise<ICourse | null> {
-    return await this.courseRepo.deleteCourse(courseId);
+    try {
+      return await this.courseRepo.deleteCourse(courseId);
+    } catch (error) {
+      console.error("Service Error deleting course:", error);
+      throw new Error("Service failed to delete course");
+    }
   }
 }

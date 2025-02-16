@@ -5,24 +5,77 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RootState } from "@/redux/store";
-import { useSelector } from "react-redux";
-import { useCreateCourseMutation } from "@/redux/services/courseApi";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  useCreateCourseMutation,
+  useGetCourseDetailsQuery,
+  useUpdateCourseMutation,
+} from "@/redux/services/courseApi";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  resetCourseFormData,
+  setCourseCurriculumFormData,
+  setCourseLandingFormData,
+  setCurrentEditedCourseId,
+} from "@/redux/slices/instructorSlice";
+import { useEffect, useRef } from "react";
+import { courseLandingInitialFormData } from "@/config/CourseConfigs";
 
 const AddNewCourse = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const { courseCurriculumFormData, courseLandingFormData } = useSelector(
-    (state: RootState) => state.instructor
-  );
-  const navigate = useNavigate();
+  const {
+    courseCurriculumFormData,
+    courseLandingFormData,
+    currentEditedCourseId,
+  } = useSelector((state: RootState) => state.instructor);
 
-  const [createCourse, { isLoading }] = useCreateCourseMutation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const params = useParams();
+  const initialLoad = useRef(true);
+
+  // Set the current edited course ID from params
+  useEffect(() => {
+    if (params.courseId) {
+      dispatch(setCurrentEditedCourseId(params.courseId));
+    }
+  }, [params.courseId, dispatch]);
+
+  // Fetch course details if editing an existing course
+  const { data: courseDetails } = useGetCourseDetailsQuery(
+    currentEditedCourseId,
+    {
+      skip: !currentEditedCourseId,
+    }
+  );
+
+  // Update form data when courseDetails changes
+  useEffect(() => {
+    if (courseDetails && initialLoad.current) {
+      const setCourseFormData = Object.keys(
+        courseLandingInitialFormData
+      ).reduce((acc, key) => {
+        acc[key] = courseDetails.data[key] || courseLandingInitialFormData[key];
+        return acc;
+      }, {});
+
+      dispatch(setCourseLandingFormData(setCourseFormData));
+      dispatch(setCourseCurriculumFormData(courseDetails.data.curriculum));
+      initialLoad.current = false; // Prevent further updates
+    }
+  }, [courseDetails, dispatch]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetCourseFormData()); // Reset the form data
+    };
+  }, [dispatch]);
+
+  const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
+  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation();
 
   const handleCreateCourse = async () => {
-    console.log("CreateCourse");
-    console.log("courseCurriculumFormData", courseCurriculumFormData);
-    console.log("courseLandingFormData", courseLandingFormData);
     try {
       const courseData = {
         ...courseLandingFormData,
@@ -32,23 +85,43 @@ const AddNewCourse = () => {
         pricing: Number(courseLandingFormData.pricing),
       };
 
-      const response = await createCourse(courseData).unwrap();
-      console.log("Course Created Successfully", response);
-      toast({
-        title: "Success",
-        description: "Course created successfully!",
-        status: "success",
-      });
+      let response;
+      if (currentEditedCourseId) {
+        // Update existing course
+        const courseEditData = {
+          courseId: currentEditedCourseId,
+          ...courseData,
+        };
+        console.log("Updating course", courseEditData);
+        response = await updateCourse(courseEditData).unwrap();
+        console.log("Course Updated Successfully", response);
+        toast({
+          title: "Success",
+          description: "Course updated successfully!",
+          status: "success",
+        });
+      } else {
+        // Create new course
+        response = await createCourse(courseData).unwrap();
+        console.log("Course Created Successfully", response);
+        toast({
+          title: "Success",
+          description: "Course created successfully!",
+          status: "success",
+        });
+      }
+
       navigate("/instructor/dashboard");
     } catch (error) {
-      console.error("Failed to create course", error);
+      console.error("Failed to save course", error);
       toast({
         title: "Error",
-        description: "Failed to create course",
+        description: "Failed to save course",
         status: "error",
       });
     }
   };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between">
@@ -56,8 +129,13 @@ const AddNewCourse = () => {
         <Button
           className="text-sm tracking-wider font-bold px-8"
           onClick={handleCreateCourse}
+          disabled={isCreating || isUpdating}
         >
-          {isLoading ? "Creating..." : "CREATE COURSE"}
+          {isCreating || isUpdating
+            ? "Saving..."
+            : currentEditedCourseId
+            ? "UPDATE COURSE"
+            : "CREATE COURSE"}
         </Button>
       </div>
       <Card>

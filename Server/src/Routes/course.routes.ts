@@ -6,9 +6,9 @@ import { authorizeRoles } from "../middlewares/authorizeRoles";
 const router: Router = express.Router();
 
 router.get("/", CourseController.getAllCourses);
+router.get("/:courseId", CourseController.getCourseDetails);
 router.post("/", CourseController.createCourse);
-router.put("/:courseId", CourseController.editCourse);
+router.put("/", CourseController.editCourse);
 router.delete("/:courseId", CourseController.deleteCourse);
-
 
 export default router;

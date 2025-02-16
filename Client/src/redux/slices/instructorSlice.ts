@@ -52,6 +52,14 @@ const instructorSlice = createSlice({
     setCurrentEditedCourseId: (state, action: PayloadAction<string | null>) => {
       state.currentEditedCourseId = action.payload;
     },
+    resetCourseFormData: (state) => {
+      state.courseLandingFormData = courseLandingInitialFormData;
+      state.courseCurriculumFormData = courseCurriculumInitialFormData;
+      state.mediaUploadProgress = false;
+      state.mediaUploadProgressPercentage = 0;
+      state.uploadedVideoUrl = "";
+      state.currentEditedCourseId = null;
+    },
   },
 });
 
@@ -63,6 +71,7 @@ export const {
   setInstructorCoursesList,
   setCurrentEditedCourseId,
   setUploadedVideoUrl,
+  resetCourseFormData,
 } = instructorSlice.actions;
 
 export default instructorSlice.reducer;

@@ -147,6 +147,9 @@ const InstructorCourses = () => {
                         className="cursor-pointer"
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          navigate(`/instructor/edit-course/${course?._id}`);
+                        }}
                       >
                         <Edit className="h-6 w-6" />
                       </Button>

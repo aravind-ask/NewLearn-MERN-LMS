@@ -44,6 +44,10 @@ function App() {
                 path="/instructor/create-new-course"
                 element={<AddNewCourse />}
               />
+              <Route
+                path="/instructor/edit-course/:courseId"
+                element={<AddNewCourse />}
+              />
             </Route>
             <Route path="/dashboard" element={<AdminDashboard />} />
           </Routes>
