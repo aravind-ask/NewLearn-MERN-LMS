@@ -7,7 +7,6 @@ import {
   EditCourseInput,
 } from "../utils/course.dto";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import { log } from "console";
 
 const courseService = new CourseService();
 
@@ -64,6 +63,33 @@ export class CourseController {
       errorResponse(res, error, error.status || 400);
     }
   }
+  static async getAllCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {
+        page = "1",
+        limit = "10",
+        search,
+        category,
+        difficulty,
+        sortBy,
+        sortOrder,
+      } = req.query;
+
+      const result = await courseService.getAllCourses(
+        Number(page),
+        Number(limit),
+        search as string,
+        category as string,
+        difficulty as string,
+        sortBy as string,
+        sortOrder as "asc" | "desc"
+      );
+
+      successResponse(res, result, "Courses fetched successfully", 200);
+    } catch (error: any) {
+      errorResponse(res, error, error.status || 400);
+    }
+  }
   static async getInstructorCourses(
     req: AuthenticatedRequest,
     res: Response,
@@ -77,7 +103,12 @@ export class CourseController {
       const instructorId = req.user.id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const { sortBy = "createdAt", order = "desc" } = req.query;
+      const { sortBy = "createdAt", order = "desc", search = "" } = req.query;
+
+      const filter = {
+        instructorId: instructorId,
+        title: { $regex: search, $options: "i" }, // Case-insensitive search
+      };
 
       const sortKey = typeof sortBy === "string" ? sortBy : "createdAt";
 
@@ -85,7 +116,7 @@ export class CourseController {
       sortOptions[sortKey] = order === "desc" ? -1 : 1;
 
       const result = await courseService.fetchInstructorCourses(
-        instructorId,
+        filter,
         page,
         limit,
         sortOptions

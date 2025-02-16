@@ -8,15 +8,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import SearchBar from "./SearchBar";
 import { AvatarDropdown } from "./AvatarDropDown";
 
-export default function Component() {
+export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
   const role = user?.role;
-  console.log(user);
 
   if (role === "admin") {
     return (
-      <header className="flex h-20 w-full shrink-0 items-center px-8 md:px-6 bg-gray-500 text-white">
-        <div className="flex items-center justify-between w-full">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-20 w-full items-center bg-gray-800 px-8 text-white shadow-lg">
+        <div className="flex w-full items-center justify-between">
           <h1 className="text-2xl font-bold">Welcome, Admin!</h1>
           <p className="text-lg">Thank you for managing our platform.</p>
         </div>
@@ -25,7 +24,8 @@ export default function Component() {
   }
 
   return (
-    <header className="flex h-20 w-full shrink-0 items-center px-8  md:px-6">
+    <header className="fixed top-0 left-0 right-0 z-50 flex h-20 w-full items-center bg-white px-8 shadow-lg">
+      {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="lg:hidden">
@@ -33,88 +33,89 @@ export default function Component() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left">
-          <Link to="#" className="mr-6 hidden lg:flex">
-            <MountainIcon className="h-6 w-6" />
-            <span className="sr-only">Acme Inc</span>
-          </Link>
-          <div className="grid gap-2 py-6">
+        <SheetContent side="left" className="w-64">
+          <div className="flex flex-col gap-4 py-6">
+            <Link to="#" className="flex items-center gap-2">
+              <MountainIcon className="h-6 w-6" />
+              <span className="text-lg font-semibold">NewLearn</span>
+            </Link>
             {user && (
-              <Avatar>
-                <AvatarImage
-                  src={user?.photoUrl || "https://github.com/shadcn.png"}
-                  alt="@shadcn"
-                />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
+              <div className="flex items-center gap-2">
+                <Avatar>
+                  <AvatarImage
+                    src={user?.photoUrl || "https://github.com/shadcn.png"}
+                    alt="@shadcn"
+                  />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <span className="text-lg font-semibold">{user.name}</span>
+              </div>
             )}
-
-            <Link
-              to="#"
-              className="flex w-full items-center py-2 text-lg font-semibold"
-            >
+            <Link to="/" className="text-lg font-semibold hover:text-gray-700">
               Home
             </Link>
             <Link
-              to="#"
-              className="flex w-full items-center py-2 text-lg font-semibold"
+              to="/courses"
+              className="text-lg font-semibold hover:text-gray-700"
             >
+              Courses
+            </Link>
+            <Link to="#" className="text-lg font-semibold hover:text-gray-700">
               About
             </Link>
-            <Link
-              to="#"
-              className="flex w-full items-center py-2 text-lg font-semibold"
-            >
-              Services
-            </Link>
-            <Link
-              to="#"
-              className="flex w-full items-center py-2 text-lg font-semibold"
-            >
+            <Link to="#" className="text-lg font-semibold hover:text-gray-700">
               Contact
             </Link>
             <Link
               to="/instructor/apply"
-              className="flex w-full items-center py-2 text-lg font-semibold"
+              className="text-lg font-semibold hover:text-gray-700"
             >
               Teach on NewLearn
             </Link>
           </div>
         </SheetContent>
       </Sheet>
-      <Link to="#" className="mr-6 hidden lg:flex">
+
+      {/* Logo */}
+      <Link to="#" className="mr-6 hidden lg:flex items-center gap-2">
         <MountainIcon className="h-6 w-6" />
-        <span className="sr-only">Acme Inc</span>
+        <span className="text-xl font-bold">NewLearn</span>
       </Link>
-      <SearchBar />
-      <nav className="ml-auto hidden lg:flex gap-6">
+
+      {/* Search Bar */}
+      <div className="flex-1 mx-4">
+        <SearchBar />
+      </div>
+
+      {/* Desktop Navigation */}
+      <nav className="hidden lg:flex items-center gap-6">
         <Link
           to="/"
-          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-100/50 data-[state=open]:bg-gray-100/50 "
+          className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           Home
         </Link>
         <Link
+          to="/courses"
+          className="text-sm font-medium hover:text-gray-700 transition-colors"
+        >
+          Courses
+        </Link>
+        <Link
           to="#"
-          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-100/50 data-[state=open]:bg-gray-100/50 "
+          className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           About
         </Link>
         <Link
           to="#"
-          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-100/50 data-[state=open]:bg-gray-100/50 "
-        >
-          Services
-        </Link>
-        <Link
-          to="#"
-          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-100/50 data-[state=open]:bg-gray-100/50 "
+          className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           Contact
         </Link>
         <Link
           to="/instructor/apply"
-          className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-100/50 data-[state=open]:bg-gray-100/50 "
+          className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           Teach on NewLearn
         </Link>
@@ -122,10 +123,16 @@ export default function Component() {
           <AvatarDropdown />
         ) : (
           <div className="flex gap-4">
-            <Link to={"/login"} className="p-2 rounded-2xl">
+            <Link
+              to="/login"
+              className="px-4 py-2 text-sm font-medium bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
               Login
             </Link>
-            <Link to={"/signup"} className="p-2 rounded-2xl">
+            <Link
+              to="/signup"
+              className="px-4 py-2 text-sm font-medium bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
               Signup
             </Link>
           </div>

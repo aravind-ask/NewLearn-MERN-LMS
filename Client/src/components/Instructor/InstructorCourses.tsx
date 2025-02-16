@@ -24,11 +24,12 @@ import {
   PaginationNext,
   PaginationLink,
 } from "@/components/ui/pagination";
-import { Delete, Edit } from "lucide-react";
+import { Delete, Edit, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 import { useDeleteCourseMutation } from "@/redux/services/courseApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Input } from "../ui/input";
 
 const InstructorCourses = () => {
   const navigate = useNavigate();
@@ -37,12 +38,24 @@ const InstructorCourses = () => {
   const limit = 5;
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [search]);
 
   const { data, isLoading, isError } = useGetInstructorCoursesQuery({
     page,
     limit,
     sortBy,
     order,
+    search: debouncedSearch,
   });
   const [deleteCourse] = useDeleteCourseMutation();
 
@@ -59,7 +72,7 @@ const InstructorCourses = () => {
     const [newSortBy, newOrder] = value.split("_");
     setSortBy(newSortBy);
     setOrder(newOrder);
-    setPage(1); 
+    setPage(1);
   };
 
   if (isLoading) return <p>Loading courses...</p>;
@@ -69,28 +82,45 @@ const InstructorCourses = () => {
     <Card>
       <CardHeader className="flex justify-between flex-row items-center">
         <CardTitle className="text-3xl font-extrabold">All Courses</CardTitle>
-        <Select onValueChange={handleSortChange} defaultValue="createdAt_desc">
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent className="bg-white shadow-md">
-            <SelectItem value="createdAt_desc">Most Recent</SelectItem>
-            <SelectItem value="revenue_desc">Revenue (High to Low)</SelectItem>
-            <SelectItem value="revenue_asc">Revenue (Low to High)</SelectItem>
-            <SelectItem value="enrolledStudents_desc">
-              Students (High to Low)
-            </SelectItem>
-            <SelectItem value="enrolledStudents_asc">
-              Students (Low to High)
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          className="p-5 cursor-pointer"
-          onClick={() => navigate("/instructor/create-new-course")}
-        >
-          Create New Course
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search courses..."
+              className="pl-10 w-[250px]"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Select
+            onValueChange={handleSortChange}
+            defaultValue="createdAt_desc"
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-white shadow-md">
+              <SelectItem value="createdAt_desc">Most Recent</SelectItem>
+              <SelectItem value="revenue_desc">
+                Revenue (High to Low)
+              </SelectItem>
+              <SelectItem value="revenue_asc">Revenue (Low to High)</SelectItem>
+              <SelectItem value="enrolledStudents_desc">
+                Students (High to Low)
+              </SelectItem>
+              <SelectItem value="enrolledStudents_asc">
+                Students (Low to High)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            className="p-5 cursor-pointer"
+            onClick={() => navigate("/instructor/create-new-course")}
+          >
+            Create New Course
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

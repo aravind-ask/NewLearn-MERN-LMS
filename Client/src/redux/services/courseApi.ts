@@ -3,7 +3,26 @@ import { api } from "./apiSetup";
 export const courseApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getCourses: builder.query({
-      query: () => "/courses",
+      query: ({
+        page,
+        limit,
+        search,
+        category,
+        difficulty,
+        sortBy,
+        sortOrder,
+      }) => ({
+        url: "/courses",
+        params: {
+          page,
+          limit,
+          search,
+          category,
+          difficulty,
+          sortBy,
+          sortOrder,
+        },
+      }),
       providesTags: ["Courses"],
     }),
     createCourse: builder.mutation({

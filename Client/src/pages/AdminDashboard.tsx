@@ -5,13 +5,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
 import { Award, Book, LogOut, ScanFace, User2 } from "lucide-react";
 import Users from "@/components/Admin/Users";
-import Courses from "@/components/Admin/Courses";
 import Sales from "@/components/Admin/Sales";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import AdminInstructorRequests from "@/components/Admin/InstructorRequests";
 import Category from "@/components/Admin/Category";
+import AllCourses from "@/components/Admin/Courses";
 
 const AdminDashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
       <main className="flex-1 p-6">
         <Card className="p-4">
           {selectedTab === "users" && <Users />}
-          {selectedTab === "courses" && <Courses />}
+          {selectedTab === "courses" && <AllCourses />}
           {selectedTab === "sales" && <Sales />}
           {selectedTab === "instructorRequests" && <AdminInstructorRequests />}
           {selectedTab === "category" && <Category />}
