@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+
 export const CreateCourseDto = z.object({
   instructorId: z.string(),
   instructorName: z.string(),

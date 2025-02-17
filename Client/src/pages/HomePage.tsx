@@ -1,65 +1,35 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { motion } from "framer-motion";
 import banner from "@/assets/images/banner-img.png";
-import { useGetCategoriesQuery } from "@/redux/services/categoryApi"; // Import the query
+import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
+import { useGetCoursesQuery } from "@/redux/services/courseApi";
 
 export default function Homepage() {
   const { data: categoriesData, isLoading: isCategoriesLoading } =
     useGetCategoriesQuery();
+  const { data: coursesData, isLoading: isCoursesLoading } = useGetCoursesQuery(
+    {
+      limit: 8,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    }
+  );
+  console.log("courses", coursesData);
 
   return (
-    // <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    //   {/* Hero Section */}
-    //   <motion.div
-    //     initial={{ opacity: 0, y: -20 }}
-    //     animate={{ opacity: 1, y: 0 }}
-    //     transition={{ duration: 0.8 }}
-    //     className="text-center mb-10"
-    //   >
-    //     <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl">
-    //       Welcome to{" "}
-    //       <span className="text-blue-600 dark:text-blue-400">Your LMS</span>
-    //     </h1>
-    //     <p className="text-lg text-black mt-3">
-    //       Learn, Explore, and Grow with our powerful learning management system.
-    //     </p>
-    //   </motion.div>
-
-    //   {/* Banner Section */}
-    //   <motion.div
-    //     initial={{ opacity: 0, scale: 0.9 }}
-    //     animate={{ opacity: 1, scale: 1 }}
-    //     transition={{ duration: 1 }}
-    //     className="w-full max-w-4xl"
-    //   >
-    //     <Card className="overflow-hidden shadow-lg rounded-2xl">
-    //       <img
-    //         src="https://images.unsplash.com/photo-1556761175-4b46a572b786?w=1600"
-    //         alt="Banner"
-    //         className="w-full h-64 object-cover"
-    //       />
-    //       <CardContent className="p-6">
-    //         <h2 className="text-2xl font-semibold">
-    //           Start Your Learning Journey
-    //         </h2>
-    //         <p className="text-gray-600 mt-2">
-    //           Discover top courses, interact with experienced instructors, and
-    //           achieve your learning goals with ease.
-    //         </p>
-    //         <div className="flex justify-center mt-4">
-    //           <Button className="text-lg px-6 py-3">Get Started</Button>
-    //         </div>
-    //       </CardContent>
-    //     </Card>
-    //   </motion.div>
-    // </div>
     <div className="min-h-screen bg-white">
       <section className="flex flex-col lg:flex-row items-center justify-between py-8 px-4 lg:px-8">
         <div className="lg:w-1/2 lg:pr-12">
-          <h1 className="text-4xl font-bold mb-4 lg:text-5xl">
+          <h1 className="text-4xl font-bold mb-4 lg:text-4xl">
             Welcome to{" "}
-            <span className="text-blue-600 dark:text-blue-400">Your LMS</span>
+            <span className="text-blue-600 dark:text-blue-400">NewLearn</span>
           </h1>
           <p className="text-xl text-gray-700 mt-3">
             Welcome students! We are excited to have you on board. Dive into our
@@ -88,6 +58,53 @@ export default function Homepage() {
               {categoryItem.name}
             </Button>
           ))}
+        </div>
+      </section>
+      <section className="py-12 px-4 lg:px-8">
+        <h2 className="text-2xl font-bold mb-6">Featured Courses</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* {coursesData?.data?.courses.map((course) => (
+            <Card key={course._id}>
+              <CardHeader>
+                <CardTitle>{course.title}</CardTitle>
+                <CardDescription>{course.shortDescription}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Difficulty: {course.difficulty}</p>
+                <p>Category: {course.category}</p>
+                <Button className="mt-4">Enroll Now</Button>
+              </CardContent>
+            </Card>
+          ))} */}
+          {coursesData?.data?.courses &&
+          coursesData?.data?.courses.length > 0 ? (
+            coursesData.data.courses.map((course) => (
+              <div
+                className="border rounded-lg overflow-hidden shadow-lg cursor-pointer"
+                key={course._id}
+              >
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  width={300}
+                  height={150}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4">
+                  <h3 className="text-xl font-bold">{course.title}</h3>
+                  <p className="text-gray-700 mb-2">{course.instructorName}</p>
+                  <p className="font-bold text-[16px]">₹{" "}{course.pricing}</p>
+                    {/* <p>Difficulty: {course.level}</p>
+                    <p>Category: {course.category}</p>
+                  <div className="flex justify-between items-center mt-4">
+                  </div>
+                  <Button className="mt-4">Enroll Now</Button> */}
+                </div>
+              </div>
+            ))
+          ) : (
+            <h1>No Courses Found</h1>
+          )}
         </div>
       </section>
     </div>
