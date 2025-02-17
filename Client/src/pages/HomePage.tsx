@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import banner from "@/assets/images/banner-img.png";
 import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
 import { useGetCoursesQuery } from "@/redux/services/courseApi";
+import { useNavigate } from "react-router-dom";
 
 export default function Homepage() {
   const { data: categoriesData, isLoading: isCategoriesLoading } =
@@ -21,7 +22,12 @@ export default function Homepage() {
       sortOrder: "desc",
     }
   );
+  const navigate = useNavigate();
   console.log("courses", coursesData);
+
+  const handleCategoryClick = (categoryName) => {
+    navigate(`/all-courses?category=${categoryName}`);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -54,6 +60,7 @@ export default function Homepage() {
               className="justify-start"
               variant="outline"
               key={categoryItem._id}
+              onClick={() => handleCategoryClick(categoryItem.name)} 
             >
               {categoryItem.name}
             </Button>
@@ -93,8 +100,8 @@ export default function Homepage() {
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{course.title}</h3>
                   <p className="text-gray-700 mb-2">{course.instructorName}</p>
-                  <p className="font-bold text-[16px]">₹{" "}{course.pricing}</p>
-                    {/* <p>Difficulty: {course.level}</p>
+                  <p className="font-bold text-[16px]">₹ {course.pricing}</p>
+                  {/* <p>Difficulty: {course.level}</p>
                     <p>Category: {course.category}</p>
                   <div className="flex justify-between items-center mt-4">
                   </div>

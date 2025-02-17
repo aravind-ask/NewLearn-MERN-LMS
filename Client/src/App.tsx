@@ -23,7 +23,7 @@ function App() {
         <Routes>
           <Route element={<AdminRoute />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/courses" element={<AllCourses />} />
+            <Route path="/all-courses" element={<AllCourses />} />
           </Route>
           <Route element={<AuthGuard />}>
             <Route path="/login" element={<Login />} />

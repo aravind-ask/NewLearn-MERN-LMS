@@ -55,7 +55,7 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              to="/courses"
+              to="/all-courses"
               className="text-lg font-semibold hover:text-gray-700"
             >
               Courses
@@ -96,7 +96,7 @@ export default function Navbar() {
           Home
         </Link>
         <Link
-          to="/courses"
+          to="/all-courses"
           className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           Courses

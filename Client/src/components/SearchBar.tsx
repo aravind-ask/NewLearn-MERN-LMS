@@ -8,21 +8,18 @@ export default function SearchBar() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
-  // Debounced search handler
   const handleSearch = debounce((searchQuery: string) => {
     if (searchQuery.trim()) {
-      navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/all-courses?search=${encodeURIComponent(searchQuery)}`);
     }
-  }, 500); // 500ms debounce delay
+  }, 500);
 
-  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    handleSearch(value); // Trigger debounced search
+    handleSearch(value);
   };
 
-  // Handle search button click
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
