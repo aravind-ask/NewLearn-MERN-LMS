@@ -10,8 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 import { useGetCoursesQuery } from "@/redux/services/courseApi";
+import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
+
 import debounce from "lodash.debounce";
+import { ChevronDownIcon } from "lucide-react";
 
 const AllCourses = () => {
   const [search, setSearch] = useState("");
@@ -29,7 +40,14 @@ const AllCourses = () => {
     setSearch(searchQuery);
   }
 
-  const { data, isLoading, isError } = useGetCoursesQuery({
+  const { data: categoriesData, isLoading: isCategoriesLoading } =
+    useGetCategoriesQuery();
+
+  const {
+    data: coursesData,
+    isLoading,
+    isError,
+  } = useGetCoursesQuery({
     page,
     limit,
     search,
@@ -59,17 +77,27 @@ const AllCourses = () => {
           className="w-full sm:w-1/3"
         />
 
-        <Select onValueChange={(value) => setCategory(value)} value={category}>
-          <SelectTrigger className="w-full sm:w-1/4">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent className="bg-white shadow-md">
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="web development">Web Development</SelectItem>
-            <SelectItem value="data science">Data Science</SelectItem>
-            <SelectItem value="machine learning">Machine Learning</SelectItem>
-          </SelectContent>
-        </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full sm:w-1/4">
+              {category || "Select Category"}
+              <ChevronDownIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="max-h-64 overflow-y-auto bg-white shadow-md">
+            <DropdownMenuRadioGroup
+              value={category}
+              onValueChange={(value) => setCategory(value)}
+            >
+              <DropdownMenuRadioItem value="">All</DropdownMenuRadioItem>
+              {categoriesData?.data.map((cat) => (
+                <DropdownMenuRadioItem key={cat._id} value={cat.name}>
+                  {cat.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Select
           onValueChange={(value) => setDifficulty(value)}
@@ -110,29 +138,36 @@ const AllCourses = () => {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.data.courses?.length > 0 ? (
-          data?.data.courses?.map((course) => (
-            <Card key={course.id} className="shadow-lg">
-              <CardHeader>
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-40 object-cover rounded-md"
-                />
-                <CardTitle className="mt-3">{course.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Instructor: {course.instructorName}
-                </p>
-                <p className="text-lg font-semibold">₹{course.pricing}</p>
-                <Button className="mt-3 w-full">View Course</Button>
+      <div className="space-y-4">
+        {coursesData?.data?.courses?.length > 0 ? (
+          coursesData.data.courses.map((course) => (
+            <Card key={course._id} className="cursor-pointer">
+              <CardContent className="flex gap-4 p-4">
+                <div className="w-48 h-32 flex-shrink-0">
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl mb-2">{course.title}</CardTitle>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Created By{" "}
+                    <span className="font-bold">{course.instructorName}</span>
+                  </p>
+                  <p className="text-[16px] text-gray-600 mt-3 mb-2">
+                    {`${course.curriculum?.length || 0} ${
+                      course.curriculum?.length <= 1 ? "Lecture" : "Lectures"
+                    } - ${course.level.toUpperCase()} Level`}
+                  </p>
+                  <p className="font-bold text-lg">₹{course.pricing}</p>
+                </div>
               </CardContent>
             </Card>
           ))
         ) : (
-          <div className="text-center">No courses found</div>
+          <h1 className="font-extrabold text-4xl">No Courses Found</h1>
         )}
       </div>
 
@@ -146,7 +181,7 @@ const AllCourses = () => {
         <span className="text-lg font-semibold">{page}</span>
         <Button
           onClick={() => setPage((prev) => prev + 1)}
-          disabled={page >= data?.data?.totalCourses / limit}
+          disabled={page >= coursesData?.data?.totalCourses / limit}
         >
           Next
         </Button>
