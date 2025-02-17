@@ -167,6 +167,25 @@ const Curriculum = () => {
     fileInput.click();
   };
 
+  const handleDeleteLecture = async (index: number) => {
+    let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+    const getCurrentEditedVideoPublicId =
+      cpyCourseCurriculumFormData[index]?.public_id;
+    if (getCurrentEditedVideoPublicId) {
+      await fetch(`/api/videos/${getCurrentEditedVideoPublicId}`, {
+        method: "DELETE",
+      }).then((res) => {
+        if (res.ok) {
+          console.log("Video deleted successfully");
+          cpyCourseCurriculumFormData = cpyCourseCurriculumFormData.filter(
+            (_, idx) => idx !== index
+          );
+          dispatch(setCourseCurriculumFormData(cpyCourseCurriculumFormData));
+        }
+      });
+    }
+  };
+
   const isCourseCurriculumFormDatavalid = () => {
     return courseCurriculumFormData.every((item) => {
       return (
@@ -230,7 +249,12 @@ const Curriculum = () => {
                     <Button onClick={() => handleReplaceVideo(index)}>
                       Change Video
                     </Button>
-                    <Button className="bg-red-900">Delete Lecture</Button>
+                    <Button
+                      onClick={() => handleDeleteLecture(index)}
+                      className="bg-red-900"
+                    >
+                      Delete Lecture
+                    </Button>
                   </div>
                 ) : (
                   <Input

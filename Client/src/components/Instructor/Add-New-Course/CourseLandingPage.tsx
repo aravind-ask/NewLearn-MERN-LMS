@@ -4,7 +4,7 @@ import { courseLandingPageFormControls } from "@/config/CourseConfigs";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setCourseLandingFormData } from "@/redux/slices/instructorSlice";
-import { useGetCategoriesQuery } from "@/redux/services/categoryApi"; // Import the query
+import { useGetCategoriesQuery } from "@/redux/services/categoryApi"; 
 import { useEffect, useState } from "react";
 
 const CourseLandingPage = () => {
