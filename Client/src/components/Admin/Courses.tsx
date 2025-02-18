@@ -24,9 +24,9 @@ import {
   PaginationNext,
   PaginationLink,
 } from "@/components/ui/pagination";
-import { Delete, Edit, Search } from "lucide-react";
+import { Delete, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
+import { useGetCoursesQuery } from "@/redux/services/courseApi";
 import { useDeleteCourseMutation } from "@/redux/services/courseApi";
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
@@ -50,12 +50,14 @@ const AllCourses = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { data, isLoading, isError } = useGetInstructorCoursesQuery({
+  const { data, isLoading, isError } = useGetCoursesQuery({
     page,
     limit,
-    sortBy,
-    order,
     search: debouncedSearch,
+    // category,
+    // difficulty,
+    sortBy,
+    // sortOrder,
   });
   const [deleteCourse] = useDeleteCourseMutation();
 
@@ -114,12 +116,12 @@ const AllCourses = () => {
               </SelectItem>
             </SelectContent>
           </Select>
-          <Button
+          {/* <Button
             className="p-5 cursor-pointer"
             onClick={() => navigate("/instructor/create-new-course")}
           >
             Create New Course
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       <CardContent>
@@ -143,13 +145,13 @@ const AllCourses = () => {
                     <TableCell>{course.enrolledStudents || 0}</TableCell>
                     <TableCell>${course.revenue || 0}</TableCell>
                     <TableCell className="text-right">
-                      <Button
+                      {/* <Button
                         className="cursor-pointer"
                         variant="ghost"
                         size="sm"
                       >
                         <Edit className="h-6 w-6" />
-                      </Button>
+                      </Button> */}
                       <Button
                         className="cursor-pointer"
                         variant="ghost"

@@ -229,8 +229,14 @@ const Curriculum = () => {
                       handleFreePreviewChange(value, index)
                     }
                     id={`freePreview-${index + 1}`}
-                  />
-                  <Label htmlFor={`freePreview-${index + 1}`}>
+                    className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 data-[state=checked]:bg-indigo-600"
+                  >
+                    <span className="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform data-[state=checked]:translate-x-5" />
+                  </Switch>
+                  <Label
+                    htmlFor={`freePreview-${index + 1}`}
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Free Preview
                   </Label>
                 </div>

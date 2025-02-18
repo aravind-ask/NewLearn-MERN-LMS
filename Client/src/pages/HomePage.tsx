@@ -1,16 +1,9 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { motion } from "framer-motion";
 import banner from "@/assets/images/banner-img.png";
 import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
 import { useGetCoursesQuery } from "@/redux/services/courseApi";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Homepage() {
   const { data: categoriesData, isLoading: isCategoriesLoading } =
@@ -28,6 +21,8 @@ export default function Homepage() {
   const handleCategoryClick = (categoryName) => {
     navigate(`/all-courses?category=${categoryName}`);
   };
+
+  if (isCategoriesLoading || isCoursesLoading) return <Skeleton />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -60,7 +55,7 @@ export default function Homepage() {
               className="justify-start"
               variant="outline"
               key={categoryItem._id}
-              onClick={() => handleCategoryClick(categoryItem.name)} 
+              onClick={() => handleCategoryClick(categoryItem.name)}
             >
               {categoryItem.name}
             </Button>
@@ -70,25 +65,13 @@ export default function Homepage() {
       <section className="py-12 px-4 lg:px-8">
         <h2 className="text-2xl font-bold mb-6">Featured Courses</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* {coursesData?.data?.courses.map((course) => (
-            <Card key={course._id}>
-              <CardHeader>
-                <CardTitle>{course.title}</CardTitle>
-                <CardDescription>{course.shortDescription}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Difficulty: {course.difficulty}</p>
-                <p>Category: {course.category}</p>
-                <Button className="mt-4">Enroll Now</Button>
-              </CardContent>
-            </Card>
-          ))} */}
           {coursesData?.data?.courses &&
           coursesData?.data?.courses.length > 0 ? (
             coursesData.data.courses.map((course) => (
               <div
                 className="border rounded-lg overflow-hidden shadow-lg cursor-pointer"
                 key={course._id}
+                onClick={() => navigate(`/course/${course._id}`)}
               >
                 <img
                   src={course.image}
@@ -101,11 +84,6 @@ export default function Homepage() {
                   <h3 className="text-xl font-bold">{course.title}</h3>
                   <p className="text-gray-700 mb-2">{course.instructorName}</p>
                   <p className="font-bold text-[16px]">₹ {course.pricing}</p>
-                  {/* <p>Difficulty: {course.level}</p>
-                    <p>Category: {course.category}</p>
-                  <div className="flex justify-between items-center mt-4">
-                  </div>
-                  <Button className="mt-4">Enroll Now</Button> */}
                 </div>
               </div>
             ))

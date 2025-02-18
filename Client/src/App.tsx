@@ -13,17 +13,19 @@ import InstructorDashboard from "./pages/InstructorDashboardPage";
 import AddNewCourse from "./pages/AddNewCourse";
 import AllCourses from "./pages/AllCourses";
 import { Toaster } from "@/components/ui/toaster";
+import CourseDetails from "./pages/CourseDetails";
+import InstructorApplicationDetails from "./components/Admin/InstructorRequestDetails";
 
 function App() {
   return (
     <Router>
       <Navbar />
-      {/* Add padding-top to the main content container */}
       <div className="pt-20">
         <Routes>
           <Route element={<AdminRoute />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/all-courses" element={<AllCourses />} />
+            <Route path="/course/:courseId" element={<CourseDetails />} />
           </Route>
           <Route element={<AuthGuard />}>
             <Route path="/login" element={<Login />} />
@@ -49,6 +51,11 @@ function App() {
             />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="*" element={<h1>Not Found</h1>} />
+          <Route
+            path="/dashboard/instructor/:applicationId"
+            element={<InstructorApplicationDetails />}
+          />
         </Routes>
         <Toaster />
       </div>

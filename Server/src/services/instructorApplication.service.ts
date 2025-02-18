@@ -33,6 +33,13 @@ export class InstructorApplicationService {
     return application;
   }
 
+  async getApplicationDetails(applicationId: string) {
+    const application =
+      await instructorApplicationRepository.getApplicationById(applicationId);
+    if (!application) throw new NotFoundError("Application not found");
+    return application;
+  }
+
   async reviewApplication(
     applicationId: string,
     status: "approved" | "rejected",

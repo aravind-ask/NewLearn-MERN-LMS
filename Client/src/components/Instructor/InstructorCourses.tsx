@@ -30,6 +30,7 @@ import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 import { useDeleteCourseMutation } from "@/redux/services/courseApi";
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
+import { Skeleton } from "../ui/skeleton";
 
 const InstructorCourses = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ const InstructorCourses = () => {
     setPage(1);
   };
 
-  if (isLoading) return <p>Loading courses...</p>;
+  if (isLoading) return <Skeleton />;
   if (isError) return <p>Failed to load courses</p>;
 
   return (
@@ -157,7 +158,7 @@ const InstructorCourses = () => {
                         className="cursor-pointer"
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(course.id)}
+                        onClick={() => handleDelete(course._id)}
                       >
                         <Delete className="h-6 w-6" />
                       </Button>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useGetInstructorApplicationsQuery,
   useReviewInstructorApplicationMutation,
@@ -20,21 +21,25 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
-// Admin Component for Managing Instructor Requests
 const AdminInstructorRequests = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { user } = useSelector((state: RootState) => state.auth);
-  const [requests, setRequests] = useState([]);
   const { data, isLoading, isError, refetch } =
     useGetInstructorApplicationsQuery({
-      page: 1,
+      page,
       limit: 5,
     });
   const [reviewApplication, { isLoading: isReviewing }] =
@@ -46,19 +51,25 @@ const AdminInstructorRequests = () => {
     string | null
   >(null);
 
+  // Handle opening the rejection dialog
   const handleRejectOpen = (applicationId: string) => {
     setSelectedApplicationId(applicationId);
     setIsRejectDialogOpen(true);
   };
 
+  // Handle closing the rejection dialog
   const handleRejectClose = () => {
     setSelectedApplicationId(null);
     setRejectionReason("");
     setIsRejectDialogOpen(false);
   };
 
+  // Handle rejecting an application
   const handleReject = async () => {
-    if (!rejectionReason || !selectedApplicationId) return;
+    if (!rejectionReason || !selectedApplicationId) {
+      toast.error("Please provide a rejection reason.");
+      return;
+    }
     try {
       await reviewApplication({
         applicationId: selectedApplicationId,
@@ -73,6 +84,7 @@ const AdminInstructorRequests = () => {
     }
   };
 
+  // Handle approving an application
   const handleApprove = async (applicationId: string) => {
     try {
       await reviewApplication({
@@ -87,14 +99,24 @@ const AdminInstructorRequests = () => {
     }
   };
 
+  // Handle navigation to the application details page
+  const handleViewDetails = (applicationId: string) => {
+    navigate(`/dashboard/instructor/${applicationId}`);
+  };
+
   if (isLoading) return <Skeleton className="h-full w-full" />;
   if (isError)
-    return <p className="text-center text-red-500">Failed to load users</p>;
+    return (
+      <p className="text-center text-red-500">
+        Failed to load instructor requests.
+      </p>
+    );
 
   return (
     <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Instructor Requests</h2>
+      <h2 className="text-2xl font-bold mb-6">Instructor Requests</h2>
 
+      {/* Table for Instructor Requests */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -102,59 +124,60 @@ const AdminInstructorRequests = () => {
             <TableHead>Email</TableHead>
             <TableHead>Qualification</TableHead>
             <TableHead>Experience</TableHead>
-            <TableHead>Actions</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
-
         <TableBody>
           {data?.data?.applications?.map((application) => (
-            <TableRow key={application._id}>
+            <TableRow
+              key={application._id}
+              onClick={() => handleViewDetails(application._id)}
+              className="cursor-pointer hover:bg-gray-50"
+            >
               <TableCell>{application.fullName}</TableCell>
               <TableCell>{application.email}</TableCell>
               <TableCell>{application.qualification}</TableCell>
-              <TableCell>{application.experience}</TableCell>
-              <TableCell>
-                <Button
-                  onClick={() => window.open(application.profileUrl)}
-                  variant="outline"
-                  className="mr-2"
-                >
-                  View
-                </Button>
-                {application.status === "pending" && (
-                  <>
-                    <Button
-                      onClick={() => handleApprove(application._id)}
-                      variant="outline"
-                      isLoading={isReviewing}
-                      className="mr-2"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      onClick={() => handleRejectOpen(application._id)}
-                      variant="outline"
-                      isLoading={isReviewing}
-                      className="bg-red-500 text-white"
-                    >
-                      Reject
-                    </Button>
-                  </>
-                )}
-              </TableCell>
+              <TableCell>{application.experience} years</TableCell>
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-white ${
+                  className={`px-2 py-1 rounded-full text-sm font-medium ${
                     application.status === "pending"
-                      ? "bg-yellow-500"
+                      ? "bg-yellow-100 text-yellow-800"
                       : application.status === "approved"
-                      ? "bg-green-500"
-                      : "bg-red-500"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                   }`}
                 >
                   {application.status}
                 </span>
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click event
+                      handleApprove(application._id);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={application.status !== "pending" || isReviewing}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click event
+                      handleRejectOpen(application._id);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={application.status !== "pending" || isReviewing}
+                    className="bg-red-500 text-white hover:bg-red-600"
+                  >
+                    Reject
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -162,53 +185,61 @@ const AdminInstructorRequests = () => {
       </Table>
 
       {/* Pagination */}
-      <Pagination className="mt-4 cursor-pointer">
+      <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              className={page === 1 ? "disabled-class" : ""}
+              disabled={page === 1}
+              className={page === 1 ? "opacity-50 cursor-not-allowed" : ""}
             />
           </PaginationItem>
           <PaginationItem>
-            Page {page} of {data?.data?.totalPages}
+            <span className="text-sm">
+              Page {page} of {data?.data?.totalPages}
+            </span>
           </PaginationItem>
           <PaginationItem>
             <PaginationNext
               onClick={() =>
                 setPage((prev) => Math.min(prev + 1, data?.data?.totalPages))
               }
+              disabled={page === data?.data?.totalPages}
               className={
-                page === data?.data?.totalPages ? "disabled-class" : ""
+                page === data?.data?.totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
 
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onClose={handleRejectClose}>
+      {/* Rejection Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={handleRejectClose}>
         <DialogContent>
-          <DialogTitle>Provide Rejection Reason</DialogTitle>
-          <p>Please enter the reason for rejecting the instructor request.</p>
+          <DialogTitle>Reject Instructor Application</DialogTitle>
+          <p className="text-sm text-gray-600 mb-4">
+            Please provide a reason for rejecting this application.
+          </p>
           <Textarea
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Rejection reason"
+            placeholder="Enter rejection reason..."
             className="mb-4"
           />
-          <div className="flex justify-end space-x-4">
+          <DialogFooter>
             <Button variant="outline" onClick={handleRejectClose}>
               Cancel
             </Button>
             <Button
               onClick={handleReject}
-              className="bg-red-500 text-white"
-              isLoading={isReviewing}
+              className="bg-red-500 text-white hover:bg-red-600"
+              disabled={!rejectionReason || isReviewing}
             >
-              Reject
+              {isReviewing ? "Rejecting..." : "Reject"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

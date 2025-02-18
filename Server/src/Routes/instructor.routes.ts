@@ -26,6 +26,11 @@ router.get(
   authMiddleware.verifyAccessToken,
   InstructorApplicationController.getApplication
 );
+router.get(
+  "/application/:applicationId",
+  authMiddleware.verifyAccessToken,
+  InstructorApplicationController.getApplicationDetails
+);
 
 router.put(
   "/review/:applicationId",

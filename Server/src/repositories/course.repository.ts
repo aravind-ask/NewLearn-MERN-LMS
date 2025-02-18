@@ -6,6 +6,7 @@ import { CreateCourseInput } from "../utils/course.dto";
 interface InstructorCoursesResult {
   courses: ICourse[];
   totalCourses: number;
+  totalPages?: number;
 }
 
 export class CourseRepository {
@@ -67,8 +68,9 @@ export class CourseRepository {
         .limit(limit);
 
       const totalCourses = await Course.countDocuments(query);
+      const totalPages = Math.ceil(totalCourses / limit);
 
-      return { courses, totalCourses };
+      return { courses, totalCourses, totalPages };
     } catch (error) {
       console.error("Error getting all courses:", error);
       throw new Error("Failed to get all courses");

@@ -30,14 +30,14 @@ const AdminDashboard = () => {
 
     { key: "courses", label: "Courses", icon: <Book size={20} /> },
     {
-      key: "sales",
-      label: "Sales",
-      icon: <Award size={20} />,
-    },
-    {
       key: "category",
       label: "Category",
       icon: <ScanFace size={20} />,
+    },
+    {
+      key: "sales",
+      label: "Sales",
+      icon: <Award size={20} />,
     },
   ];
 

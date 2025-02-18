@@ -10,12 +10,21 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from "@/components/ui/pagination";
 import { useGetCoursesQuery } from "@/redux/services/courseApi";
 import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
 import debounce from "lodash.debounce";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AllCourses = () => {
   const [search, setSearch] = useState("");
@@ -60,7 +69,7 @@ const AllCourses = () => {
   }, 500);
 
   const handleCategoryChange = (value) => {
-    if (value === "Select Category") value = "";
+    if (value === "All") value = "";
     setCategory(value);
     navigate(`/all-courses?search=${search}&category=${value}`);
   };
@@ -71,11 +80,13 @@ const AllCourses = () => {
 
   const filterOptions = {
     Category: [
-      { id: "", label: "All" },
-      ...categoriesData?.data.map((cat) => ({
-        id: cat.name,
-        label: cat.name,
-      })),
+      { id: "All", label: "All" },
+      ...(categoriesData?.data
+        ? categoriesData.data.map((cat) => ({
+            id: cat.name,
+            label: cat.name,
+          }))
+        : []),
     ],
     Difficulty: [
       { id: "beginner", label: "Beginner" },
@@ -102,15 +113,15 @@ const AllCourses = () => {
     navigate("/all-courses");
   };
 
-  if (isLoading) return <p>Loading courses...</p>;
+  if (isLoading || isCategoriesLoading) return <Skeleton />;
   if (isError) return <p>Failed to load courses</p>;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4 mt-4">All Courses</h1>
       <div className="flex flex-col md:flex-row gap-4">
-        <aside className="w-full md:w-64 space-y-4">
-          <div>
+        <aside className=" w-full md:w-64 space-y-4">
+          <div className="sticky top-28">
+            <h1 className="text-3xl font-bold mb-4 mt-4">All Courses</h1>
             {Object.keys(filterOptions).map((keyItem) => (
               <div className="p-4 border-b" key={keyItem}>
                 <h3 className="font-bold mb-3">{keyItem.toUpperCase()}</h3>
@@ -144,6 +155,47 @@ const AllCourses = () => {
             >
               Clear All Filters
             </Button>
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                    className={`cursor-pointer ${
+                      page === 1 ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  />
+                </PaginationItem>
+
+                {Array.from(
+                  { length: coursesData?.data.totalPages },
+                  (_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        onClick={() => setPage(i + 1)}
+                        isActive={page === i + 1}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setPage((prev) =>
+                        Math.min(coursesData?.data?.totalPages, prev + 1)
+                      )
+                    }
+                    disabled={page === coursesData?.data?.totalPages}
+                    className={`cursor-pointer ${
+                      page >= coursesData?.data?.totalPages
+                    }? "opacity-50 cursor-not-allowed" : ""`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </aside>
         <main className="flex-1">
@@ -200,7 +252,11 @@ const AllCourses = () => {
           <div className="space-y-4">
             {coursesData?.data?.courses?.length > 0 ? (
               coursesData.data.courses.map((course) => (
-                <Card key={course._id} className="cursor-pointer">
+                <Card
+                  key={course._id}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/course/${course._id}`)}
+                >
                   <CardContent className="flex gap-4 p-4">
                     <div className="w-48 h-32 flex-shrink-0">
                       <img
@@ -234,21 +290,6 @@ const AllCourses = () => {
             ) : (
               <h1 className="font-extrabold text-4xl">No Courses Found</h1>
             )}
-          </div>
-          <div className="flex justify-center mt-6 gap-3">
-            <Button
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              disabled={page === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-lg font-semibold">{page}</span>
-            <Button
-              onClick={() => setPage((prev) => prev + 1)}
-              disabled={page >= coursesData?.data?.totalCourses / limit}
-            >
-              Next
-            </Button>
           </div>
         </main>
       </div>

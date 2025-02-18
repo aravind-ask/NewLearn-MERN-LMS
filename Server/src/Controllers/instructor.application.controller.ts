@@ -3,7 +3,6 @@ import { InstructorApplicationService } from "../services/instructorApplication.
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import mongoose from "mongoose";
 
-
 const instructorApplicationService = new InstructorApplicationService();
 
 interface CustomRequest extends Request {
@@ -23,6 +22,7 @@ export class InstructorApplicationController {
       if (!userId) {
         errorResponse(res, "User ID is required.", 400);
       }
+      console.log(req.body);
       const application = await instructorApplicationService.applyForInstructor(
         userId,
         req.body
@@ -52,7 +52,7 @@ export class InstructorApplicationController {
         { applications, totalPages },
         "Instructor applications fetched successfully.",
         200
-      );  
+      );
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -69,7 +69,7 @@ export class InstructorApplicationController {
       console.log(applicationId, status, rejectionReason);
 
       if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-         errorResponse(res, "Invalid application ID.", 400);
+        errorResponse(res, "Invalid application ID.", 400);
       }
 
       const updatedApplication =
@@ -96,8 +96,9 @@ export class InstructorApplicationController {
       if (!userId) {
         errorResponse(res, "Unauthorized", 400);
       }
-      const application =
-        await instructorApplicationService.getApplication(userId);
+      const application = await instructorApplicationService.getApplication(
+        userId
+      );
       successResponse(
         res,
         application,
@@ -107,6 +108,22 @@ export class InstructorApplicationController {
     } catch (error: any) {
       console.log(error);
       errorResponse(res, error.message, error.statusCode || 400);
+    }
+  }
+  static async getApplicationDetails(req: Request, res: Response) {
+    try {
+      const { applicationId } = req.params;
+      const applicationDetails =
+        await instructorApplicationService.getApplicationDetails(applicationId);
+      successResponse(
+        res,
+        applicationDetails,
+        "Instructor application details fetched successfully.",
+        200
+      );
+    } catch (error: any) {
+      console.log(error);
+      errorResponse(res, error.message, 400);
     }
   }
 }

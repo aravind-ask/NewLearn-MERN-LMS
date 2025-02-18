@@ -4,8 +4,24 @@ import { courseLandingPageFormControls } from "@/config/CourseConfigs";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setCourseLandingFormData } from "@/redux/slices/instructorSlice";
-import { useGetCategoriesQuery } from "@/redux/services/categoryApi"; 
+import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+// import { useForm, Controller } from "react-hook-form";
+// import { yupResolver } from "@hookform/resolvers/yup";
+// import * as yup from "yup";
+
+// const schema = yup.object().shape({
+//   title: yup.string().required("Title is required"),
+//   description: yup.string().required("Description is required"),
+//   category: yup.string().required("Category is required"),
+//   pricing: yup.number().required("Pricing is required"),
+//   subtitle: yup.string().required("Subtitle is required"),
+//   level: yup.string().required("Difficulty is required"),
+//   primaryLanguage: yup.string().required("Primary Language is required"),
+//   objectives: yup.string().required("Objectives is required"),
+//   welcomeMessage: yup.string().required("Welcome Message is required"),
+// });
 
 const CourseLandingPage = () => {
   const dispatch = useDispatch();
@@ -13,24 +29,20 @@ const CourseLandingPage = () => {
     (state: RootState) => state.instructor
   );
 
-  // Fetch categories
   const { data: categoriesData, isLoading: isCategoriesLoading } =
     useGetCategoriesQuery();
 
-  // State to hold dynamic form controls
   const [dynamicFormControls, setDynamicFormControls] = useState<
     typeof courseLandingPageFormControls
   >(courseLandingPageFormControls);
 
-  // Transform categories into the required format
   useEffect(() => {
     if (categoriesData) {
       const transformedCategories = categoriesData.data.map((category) => ({
-        id: category.name, // Assuming the backend returns `_id`
-        label: category.name, // Assuming the backend returns `name`
+        id: category.name,
+        label: category.name,
       }));
 
-      // Update the "category" control with dynamic options
       const updatedFormControls = courseLandingPageFormControls.map(
         (control) => {
           if (control.name === "category") {
@@ -52,7 +64,7 @@ const CourseLandingPage = () => {
   };
 
   if (isCategoriesLoading) {
-    return <p>Loading categories...</p>;
+    return <Skeleton />;
   }
 
   return (
