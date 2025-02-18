@@ -15,6 +15,7 @@ import AllCourses from "./pages/AllCourses";
 import { Toaster } from "@/components/ui/toaster";
 import CourseDetails from "./pages/CourseDetails";
 import InstructorApplicationDetails from "./components/Admin/InstructorRequestDetails";
+import NotFoundPage from "./pages/404ErrorPage";
 
 function App() {
   return (
@@ -51,7 +52,7 @@ function App() {
             />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="*" element={<h1>Not Found</h1>} />
+          <Route path="*" element={<NotFoundPage />} />
           <Route
             path="/dashboard/instructor/:applicationId"
             element={<InstructorApplicationDetails />}
