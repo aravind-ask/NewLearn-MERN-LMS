@@ -30,6 +30,7 @@ import { useGetCoursesQuery } from "@/redux/services/courseApi";
 import { useDeleteCourseMutation } from "@/redux/services/courseApi";
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
+import { Skeleton } from "../ui/skeleton";
 
 const AllCourses = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const AllCourses = () => {
     setPage(1);
   };
 
-  if (isLoading) return <p>Loading courses...</p>;
+  if (isLoading) return <Skeleton />;
   if (isError) return <p>Failed to load courses</p>;
 
   return (

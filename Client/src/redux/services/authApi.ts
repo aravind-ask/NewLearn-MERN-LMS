@@ -1,24 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { RootState } from "../store";
+import { api } from "./apiSetup";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3003";
-
-const baseQuery = fetchBaseQuery({
-  baseUrl: `${BASE_URL}/api`,
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-    return headers;
-  },
-  credentials: "include",
-});
-
-// 🔹 Create a new API instance
-export const authApi = createApi({
-  reducerPath: "authApi",
-  baseQuery,
+export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation<
       { message: string },

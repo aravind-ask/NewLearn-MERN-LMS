@@ -74,6 +74,18 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+    .addMatcher(
+        (action) => action.type === "/auth/refresh-token",
+        (
+          state,
+          action: PayloadAction<{ accessToken: string; refreshToken: string }>
+        ) => {
+          state.token = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          setLocalStorage("token", action.payload.accessToken);
+          setLocalStorage("refreshToken", action.payload.refreshToken);
+        }
+      )
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
         (state, { payload }) => {
@@ -101,11 +113,9 @@ const authSlice = createSlice({
       .addMatcher(
         authApi.endpoints.verifyOtp.matchFulfilled,
         (state, { payload }) => {
-          const { accessToken, refreshToken, user } = payload.data;
-          state.user = user;
+          const { accessToken, refreshToken } = payload.data;
           state.token = accessToken;
           state.refreshToken = refreshToken;
-          setLocalStorage("user", JSON.stringify(user));
           setLocalStorage("token", accessToken);
           setLocalStorage("refreshToken", refreshToken);
         }
@@ -138,7 +148,8 @@ const authSlice = createSlice({
           setLocalStorage("token", payload.data.accessToken);
           setLocalStorage("refreshToken", payload.data.refreshToken);
         }
-      );
+      )
+      
   },
 });
 

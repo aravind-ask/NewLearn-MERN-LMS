@@ -28,6 +28,12 @@ export const instructorApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    getInstructorApplicationDetails: builder.query({
+      query: ({ applicationId }) => ({
+        url: `/instructor/application/${applicationId}`,
+        method: "GET",
+      }),
+    }),
     getInstructorCourses: builder.query({
       query: ({
         page,
@@ -50,4 +56,5 @@ export const {
   useGetInstructorApplicationQuery,
   useReviewInstructorApplicationMutation,
   useGetInstructorCoursesQuery,
+  useGetInstructorApplicationDetailsQuery,
 } = instructorApi;

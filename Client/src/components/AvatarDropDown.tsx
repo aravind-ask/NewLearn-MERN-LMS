@@ -49,7 +49,7 @@ export function AvatarDropdown() {
           </Avatar>
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent className="w-64">
+      <HoverCardContent className="w-64 bg-white shadow-lg rounded-lg">
         <div className="flex items-center space-x-4 p-4">
           <Avatar>
             <AvatarImage

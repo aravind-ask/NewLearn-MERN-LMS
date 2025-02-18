@@ -7,7 +7,6 @@ const NotFoundPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      {/* 404 Text with Animation */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -32,7 +31,6 @@ const NotFoundPage = () => {
         </motion.p>
       </motion.div>
 
-      {/* Back to Home Button */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -46,7 +44,6 @@ const NotFoundPage = () => {
         </Button>
       </motion.div>
 
-      {/* Optional: Subtle Background Animation */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
