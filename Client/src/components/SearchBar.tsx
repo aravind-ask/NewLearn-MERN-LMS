@@ -8,11 +8,15 @@ export default function SearchBar() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = debounce((searchQuery: string) => {
-    if (searchQuery.trim()) {
-      navigate(`/all-courses?search=${encodeURIComponent(searchQuery)}`);
-    }
-  }, 500);
+  const handleSearch = debounce(
+    (searchQuery: string) => {
+      if (searchQuery.trim()) {
+        navigate(`/all-courses?search=${encodeURIComponent(searchQuery)}`);
+      }
+    },
+    500,
+    { leading: true }
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

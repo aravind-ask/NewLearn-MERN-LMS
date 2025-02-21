@@ -1,17 +1,20 @@
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { MenuIcon, MountainIcon } from "lucide-react";
+import { MenuIcon, MountainIcon, ShoppingCart, Heart } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import SearchBar from "./SearchBar";
 import { AvatarDropdown } from "./AvatarDropDown";
+import { Badge } from "./ui/badge";
 
 export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
+  // const { cart, wishlist } = useSelector((state: RootState) => state.user);
   const role = user?.role;
 
+  // Admin-specific Navbar
   if (role === "admin") {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 flex h-20 w-full items-center bg-gray-800 px-8 text-white shadow-lg">
@@ -72,6 +75,26 @@ export default function Navbar() {
             >
               Teach on NewLearn
             </Link>
+            <Link
+              to="/cart"
+              className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Cart
+              {/* {cart.length > 0 && (
+                <Badge variant="secondary">{cart.length}</Badge>
+              )} */}
+            </Link>
+            <Link
+              to="/wishlist"
+              className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
+            >
+              <Heart className="h-5 w-5" />
+              Wishlist
+              {/* {wishlist.length > 0 && (
+                <Badge variant="secondary">{wishlist.length}</Badge>
+              )} */}
+            </Link>
           </div>
         </SheetContent>
       </Sheet>
@@ -118,6 +141,24 @@ export default function Navbar() {
           className="text-sm font-medium hover:text-gray-700 transition-colors"
         >
           Teach on NewLearn
+        </Link>
+        <Link
+          to="/cart"
+          className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          Cart
+          {/* {cart.length > 0 && <Badge variant="secondary">{cart.length}</Badge>} */}
+        </Link>
+        <Link
+          to="/wishlist"
+          className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
+        >
+          <Heart className="h-5 w-5" />
+          Wishlist
+          {/* {wishlist.length > 0 && (
+            <Badge variant="secondary">{wishlist.length}</Badge>
+          )} */}
         </Link>
         {user ? (
           <AvatarDropdown />

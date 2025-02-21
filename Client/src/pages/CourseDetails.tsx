@@ -1,4 +1,3 @@
-// CourseDetails.js
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetCourseDetailsQuery } from "@/redux/services/courseApi";
@@ -7,11 +6,9 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Breadcrumb,
@@ -23,21 +20,54 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, Globe, Lock, PlayCircle } from "lucide-react";
+import {
+  CheckCircle,
+  Globe,
+  Lock,
+  PlayCircle,
+  Heart,
+  ShoppingCart,
+} from "lucide-react";
 import VideoPlayer from "@/components/VideoPlayer";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  useAddToCartMutation,
+  useRemoveFromCartMutation,
+  useAddToWishlistMutation,
+  useRemoveFromWishlistMutation,
+  useGetCartQuery,
+  useGetWishlistQuery,
+} from "@/redux/services/courseApi";
+import {
+  addToCart,
+  removeFromCart,
+  addToWishlist,
+  removeFromWishlist,
+} from "@/redux/slices/userSlice";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     data: course,
     isLoading,
     isError,
+    error,
   } = useGetCourseDetailsQuery(courseId);
 
   const [displayCurrentFreePreview, setDisplayCurrentFreePreview] =
     useState(null);
   const [showFreePreview, setShowFreePreview] = useState(false);
+
+  const [addToCartApi] = useAddToCartMutation();
+  const [removeFromCartApi] = useRemoveFromCartMutation();
+  const [addToWishlistApi] = useAddToWishlistMutation();
+  const [removeFromWishlistApi] = useRemoveFromWishlistMutation();
+
+  const { data: cart } = useGetCartQuery();
+  const { data: wishlist } = useGetWishlistQuery();
+  console.log("cart", cart, "\nWishlist", wishlist);
 
   const getIndexOfFreePreviewUrl =
     course !== null
@@ -48,6 +78,42 @@ const CourseDetails = () => {
     setDisplayCurrentFreePreview(getCurrentVideoInfo.videoUrl);
   }
 
+  const handleAddToCart = async () => {
+    try {
+      await addToCartApi(courseId).unwrap();
+      dispatch(addToCart(course?.data));
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    }
+  };
+
+  const handleRemoveFromCart = async () => {
+    try {
+      await removeFromCartApi(courseId).unwrap();
+      dispatch(removeFromCart(courseId));
+    } catch (error) {
+      console.error("Failed to remove from cart:", error);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    try {
+      await addToWishlistApi(courseId).unwrap();
+      dispatch(addToWishlist(course?.data));
+    } catch (error) {
+      console.error("Failed to add to wishlist:", error);
+    }
+  };
+
+  const handleRemoveFromWishlist = async () => {
+    try {
+      await removeFromWishlistApi(courseId).unwrap();
+      dispatch(removeFromWishlist(courseId));
+    } catch (error) {
+      console.error("Failed to remove from wishlist:", error);
+    }
+  };
+
   useEffect(() => {
     if (displayCurrentFreePreview !== null) {
       setShowFreePreview(true);
@@ -55,7 +121,15 @@ const CourseDetails = () => {
   }, [displayCurrentFreePreview]);
 
   if (isLoading) return <Skeleton />;
-  if (isError) return <p>Failed to load course details</p>;
+  if (isError)
+    return (
+      <p className="text-red-600 flex justify-center items-center">
+        Failed to load course details {error?.data?.message}
+      </p>
+    );
+
+  const isInCart = cart?.data?.some((item) => item._id === courseId);
+  const isInWishlist = wishlist?.data?.some((item) => item._id === courseId);
 
   return (
     <div className="container mx-auto p-4">
@@ -70,12 +144,6 @@ const CourseDetails = () => {
               <BreadcrumbLink href="/all-courses">All Courses</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {/* <BreadcrumbItem>
-              <BreadcrumbLink href="/docs/components">
-                Components
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator /> */}
             <BreadcrumbItem>
               <BreadcrumbPage>{course?.data?.title}</BreadcrumbPage>
             </BreadcrumbItem>
@@ -172,7 +240,23 @@ const CourseDetails = () => {
                   ₹ {course?.data?.pricing}
                 </span>
               </div>
-              <Button className="w-full">Enroll Now</Button>
+              <Button
+                className="w-full mb-2"
+                onClick={isInCart ? handleRemoveFromCart : handleAddToCart}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {isInCart ? "Remove from Cart" : "Add to Cart"}
+              </Button>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={
+                  isInWishlist ? handleRemoveFromWishlist : handleAddToWishlist
+                }
+              >
+                <Heart className="mr-2 h-4 w-4" />
+                {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+              </Button>
             </CardContent>
           </Card>
         </aside>
@@ -187,9 +271,6 @@ const CourseDetails = () => {
         <DialogContent className="w-[600px] bg-white">
           <DialogHeader>
             <DialogTitle>Course Preview</DialogTitle>
-            {/* <DialogDescription>
-              Anyone who has this link will be able to view this.
-            </DialogDescription> */}
           </DialogHeader>
           <div className="aspect-video mb-4 rounded-lg flex items-center justify-center">
             <VideoPlayer

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Book, Award, LogOut } from "lucide-react";
+import { Home, Book, Award, LogOut, ShoppingCart, Heart } from "lucide-react";
 import Profile from "@/components/profile/Profile";
 import MyLearnings from "@/components/profile/MyLearnings";
 import Certificates from "@/components/profile/MyCertificates";
@@ -10,6 +10,8 @@ import { logout } from "@/redux/slices/authSlice";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
+import WishlistPage from "./Wishlist";
+import CartPage from "./Cart";
 
 const ProfilePage = () => {
   const [selectedTab, setSelectedTab] = useState("profile");
@@ -20,6 +22,8 @@ const ProfilePage = () => {
 
   const tabs = [
     { key: "profile", label: "Profile", icon: <Home size={20} /> },
+    { key: "cart", label: "Cart", icon: <ShoppingCart size={20} /> },
+    { key: "wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { key: "my-learnings", label: "My Learnings", icon: <Book size={20} /> },
     {
       key: "certificates",
@@ -73,6 +77,8 @@ const ProfilePage = () => {
       <main className="flex-1 p-6">
         <Card className="p-4">
           {selectedTab === "profile" && <Profile />}
+          {selectedTab === "cart" && <CartPage />}
+          {selectedTab === "wishlist" && <WishlistPage />}
           {selectedTab === "my-learnings" && <MyLearnings />}
           {selectedTab === "certificates" && <Certificates />}
         </Card>

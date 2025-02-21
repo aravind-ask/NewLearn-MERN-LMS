@@ -82,7 +82,9 @@ export default function Homepage() {
                 />
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{course.title}</h3>
-                  <p className="text-gray-700 mb-2">{course.instructorName}</p>
+                  <p className="text-gray-700">Created By {course.instructorName}</p>
+                  <p className="text-gray-700 mb-2">Category: {course.category}</p>
+
                   <p className="font-bold text-[16px]">₹ {course.pricing}</p>
                 </div>
               </div>

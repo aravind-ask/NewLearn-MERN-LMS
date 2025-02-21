@@ -8,6 +8,8 @@ import userRoutes from "./Routes/user.routes";
 import instructorRoutes from "./Routes/instructor.routes";
 import categoryRoutes from "./Routes/category.routes";
 import courseRoutes from "./Routes/course.routes";
+import cartRoutes from "./Routes/cart.routes";
+import wishlistRoutes from "./Routes/wishlist.routes";
 
 import multer from "multer";
 
@@ -40,6 +42,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/instructor", instructorRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 app.use(
   (

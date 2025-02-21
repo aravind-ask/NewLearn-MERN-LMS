@@ -16,6 +16,8 @@ import { Toaster } from "@/components/ui/toaster";
 import CourseDetails from "./pages/CourseDetails";
 import InstructorApplicationDetails from "./components/Admin/InstructorRequestDetails";
 import NotFoundPage from "./pages/404ErrorPage";
+import Cart from "./pages/Cart";
+import Wishlist from "./pages/Wishlist";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route
               path="/instructor/apply"
               element={<InstructorRegistration />}

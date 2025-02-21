@@ -53,6 +53,50 @@ export const courseApi = api.injectEndpoints({
         url: `/courses/${courseId}`,
       }),
     }),
+    addToCart: builder.mutation({
+      query: (courseId) => ({
+        url: `/cart/add`,
+        method: "POST",
+        body: { courseId },
+      }),
+      invalidatesTags: ["Cart"],
+    }),
+    removeFromCart: builder.mutation({
+      query: (courseId) => ({
+        url: `/cart/remove`,
+        method: "DELETE",
+        body: { courseId },
+      }),
+      invalidatesTags: ["Cart"],
+    }),
+    addToWishlist: builder.mutation({
+      query: (courseId) => ({
+        url: `/wishlist/add`,
+        method: "POST",
+        body: { courseId },
+      }),
+      invalidatesTags: ["Wishlist"],
+    }),
+    removeFromWishlist: builder.mutation({
+      query: (courseId) => ({
+        url: `/wishlist/remove`,
+        method: "DELETE",
+        body: { courseId },
+      }),
+      invalidatesTags: ["Wishlist"],
+    }),
+    getCart: builder.query({
+      query: () => ({
+        url: `/cart`,
+      }),
+      providesTags: ["Cart"],
+    }),
+    getWishlist: builder.query({
+      query: () => ({
+        url: `/wishlist`,
+      }),
+      providesTags: ["Wishlist"],
+    }),
   }),
 });
 
@@ -62,4 +106,10 @@ export const {
   useUpdateCourseMutation,
   useDeleteCourseMutation,
   useGetCourseDetailsQuery,
+  useAddToCartMutation,
+  useRemoveFromCartMutation,
+  useAddToWishlistMutation,
+  useRemoveFromWishlistMutation,
+  useGetCartQuery,
+  useGetWishlistQuery,
 } = courseApi;
