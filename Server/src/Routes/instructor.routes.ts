@@ -31,6 +31,10 @@ router.get(
   authMiddleware.verifyAccessToken,
   InstructorApplicationController.getApplicationDetails
 );
+router.get(
+  "/details/:instructorId",
+  InstructorApplicationController.getInstructorDetails
+);
 
 router.put(
   "/review/:applicationId",
@@ -45,6 +49,5 @@ router.get(
   authorizeRoles(["instructor"]),
   CourseController.getInstructorCourses
 );
-
 
 export default router;

@@ -52,7 +52,7 @@ export default function Homepage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {categoriesData?.data.map((categoryItem) => (
             <Button
-              className="justify-start"
+              className="justify-start hover:bg-black hover:text-white hover:font-bold"
               variant="outline"
               key={categoryItem._id}
               onClick={() => handleCategoryClick(categoryItem.name)}
@@ -69,7 +69,7 @@ export default function Homepage() {
           coursesData?.data?.courses.length > 0 ? (
             coursesData.data.courses.map((course) => (
               <div
-                className="border rounded-lg overflow-hidden shadow-lg cursor-pointer"
+                className="border rounded-lg overflow-hidden shadow-lg cursor-pointer hover:bg-gray-100 hover:shadow-xl hover:border-gray-200"
                 key={course._id}
                 onClick={() => navigate(`/course/${course._id}`)}
               >

@@ -18,6 +18,7 @@ import InstructorApplicationDetails from "./components/Admin/InstructorRequestDe
 import NotFoundPage from "./pages/404ErrorPage";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
+import InstructorProfile from "./pages/InstructorProfile";
 
 function App() {
   return (
@@ -53,6 +54,10 @@ function App() {
             <Route
               path="/instructor/edit-course/:courseId"
               element={<AddNewCourse />}
+            />
+            <Route
+              path="/instructor/profile/:instructorId"
+              element={<InstructorProfile />}
             />
           </Route>
           <Route path="/dashboard" element={<AdminDashboard />} />

@@ -151,51 +151,10 @@ const AllCourses = () => {
             <Button
               onClick={handleClearAllFilters}
               variant="outline"
-              className="w-full mt-4"
+              className="w-full mt-4 hover:bg-black hover:text-white hover:font-bold"
             >
               Clear All Filters
             </Button>
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                    disabled={page === 1}
-                    className={`cursor-pointer ${
-                      page === 1 ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  />
-                </PaginationItem>
-
-                {Array.from(
-                  { length: coursesData?.data.totalPages },
-                  (_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        onClick={() => setPage(i + 1)}
-                        isActive={page === i + 1}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setPage((prev) =>
-                        Math.min(coursesData?.data?.totalPages, prev + 1)
-                      )
-                    }
-                    disabled={page === coursesData?.data?.totalPages}
-                    className={`cursor-pointer ${
-                      page >= coursesData?.data?.totalPages
-                    }? "opacity-50 cursor-not-allowed" : ""`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
           </div>
         </aside>
         <main className="flex-1">
@@ -254,7 +213,7 @@ const AllCourses = () => {
               coursesData.data.courses.map((course) => (
                 <Card
                   key={course._id}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-gray-100 hover:shadow-lg"
                   onClick={() => navigate(`/course/${course._id}`)}
                 >
                   <CardContent className="flex gap-4 p-4">
@@ -291,6 +250,44 @@ const AllCourses = () => {
               <h1 className="font-extrabold text-4xl">No Courses Found</h1>
             )}
           </div>
+          <Pagination className="mt-6">
+            <PaginationContent>
+              <PaginationItem className="cursor-pointer">
+                <PaginationPrevious
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                  className={`cursor-pointer ${
+                    page === 1 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: coursesData?.data.totalPages }, (_, i) => (
+                <PaginationItem key={i} className="cursor-pointer">
+                  <PaginationLink
+                    onClick={() => setPage(i + 1)}
+                    isActive={page === i + 1}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem className="cursor-pointer">
+                <PaginationNext
+                  onClick={() =>
+                    setPage((prev) =>
+                      Math.min(coursesData?.data?.totalPages, prev + 1)
+                    )
+                  }
+                  disabled={page === coursesData?.data?.totalPages}
+                  className={`cursor-pointer ${
+                    page >= coursesData?.data?.totalPages
+                  }? "opacity-50 cursor-not-allowed" : ""`}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </main>
       </div>
     </div>

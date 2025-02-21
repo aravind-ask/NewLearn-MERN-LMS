@@ -29,6 +29,7 @@ import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { useToast } from "../hooks/use-toast";
+import { motion } from "framer-motion";
 
 export default function Component() {
   const [sendOtp] = useSendOTPMutation();
@@ -141,92 +142,148 @@ export default function Component() {
   };
 
   return (
-    <>
-      <Card className="mx-auto max-w-sm">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>
-            Enter your email and password to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <p className="text-red-500">
-                {(error as any).data?.message || "Login failed"}
-              </p>
-            )}
-            {formErrors && <p className="text-red-500">{formErrors}</p>}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  placeholder="Enter your Email"
-                  onChange={handleChange}
-                  className={formErrors ? "border-red-500" : ""}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex items-center justify-center h-[calc(100vh-5rem)] p-20 bg-gradient-to-r from-gray-50 to-gray-100"
+    >
+      {/* Welcome Message on the Left */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-1/2 flex items-center justify-center p-8"
+      >
+        <div className="text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            Welcome Back!
+          </h1>
+          <p className="text-xl text-gray-600">
+            Unlock your potential with our world-class learning platform.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Login Form on the Right */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-1/2 flex items-center justify-center p-8"
+      >
+        <Card className="w-full max-w-md shadow-lg rounded-lg bg-white">
+          <CardHeader className="space-y-1 p-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Login
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Enter your email and password to login to your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit}>
+              {error && (
+                <p className="text-red-500 text-sm mb-4">
+                  {(error as any).data?.message || "Login failed"}
+                </p>
+              )}
+              {formErrors && (
+                <p className="text-red-500 text-sm mb-4">{formErrors}</p>
+              )}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700">
+                    Email
+                  </Label>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Enter your Password"
-                    value={form.password}
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    placeholder="Enter your Email"
                     onChange={handleChange}
-                    className={formErrors ? "border-red-500" : ""}
+                    className={`w-full ${
+                      formErrors ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
-                  <button
-                    type="button"
-                    onClick={toggleShowPassword}
-                    className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-700">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Enter your Password"
+                      value={form.password}
+                      onChange={handleChange}
+                      className={`w-full ${
+                        formErrors ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+                <div className="w-full">
+                  <GoogleAuth />
+                </div>
+                <span className="text-sm text-gray-600">
+                  Don't have an account?{" "}
+                  <Link
+                    to={"/signup"}
+                    className="text-gray-900 hover:text-gray-700 transition-colors"
+                  >
+                    Register
+                  </Link>
+                </span>
+                <br></br>
+                <span
+                  className="cursor-pointer text-sm text-gray-900 hover:text-gray-700 transition-colors"
+                  onClick={handleForgotPasswordClick}
+                >
+                  Forgot password?
+                </span>
               </div>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                Login
-              </Button>
-              <div className="w-full">
-                <GoogleAuth />
-              </div>
-              <span>
-                Don't have an account? <Link to={"/signup"}>Register</Link>
-              </span>
-              <br></br>
-              <span
-                className="cursor-pointer"
-                onClick={handleForgotPasswordClick}
-              >
-                Forgot password?
-              </span>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Forgot Password Dialog */}
       <Dialog
         open={isForgotPasswordModalOpen}
         onOpenChange={setIsForgotPasswordModalOpen}
       >
-        <DialogContent className="sm:max-w-[425px] bg-white">
+        <DialogContent className="sm:max-w-[425px] bg-white rounded-lg shadow-xl">
           <DialogHeader>
-            <DialogTitle>Forgot Password</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Forgot Password
+            </DialogTitle>
             {!isOtpSent ? (
-              <DialogDescription>
+              <DialogDescription className="text-gray-600">
                 Enter your email to receive a one-time password (OTP).
               </DialogDescription>
             ) : (
-              <DialogDescription>
+              <DialogDescription className="text-gray-600">
                 Enter the OTP sent to your email.
               </DialogDescription>
             )}
@@ -236,7 +293,7 @@ export default function Component() {
             {!isOtpSent ? (
               <>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
+                  <Label htmlFor="email" className="text-right text-gray-700">
                     Email
                   </Label>
                   <Input
@@ -245,15 +302,25 @@ export default function Component() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="col-span-3"
+                    className="col-span-3 border-gray-300"
                   />
                   {errors.email && (
-                    <p className="text-red-500 col-span-4">{errors.email}</p>
+                    <p className="text-red-500 col-span-4 text-sm">
+                      {errors.email}
+                    </p>
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleSendOtp}>Send OTP</Button>
-                  <Button onClick={() => setIsForgotPasswordModalOpen(false)}>
+                  <Button
+                    onClick={handleSendOtp}
+                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white"
+                  >
+                    Send OTP
+                  </Button>
+                  <Button
+                    onClick={() => setIsForgotPasswordModalOpen(false)}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800"
+                  >
                     Close
                   </Button>
                 </DialogFooter>
@@ -261,7 +328,7 @@ export default function Component() {
             ) : (
               <>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="otp" className="text-right">
+                  <Label htmlFor="otp" className="text-right text-gray-700">
                     OTP
                   </Label>
                   <Input
@@ -270,14 +337,19 @@ export default function Component() {
                     name="otp"
                     value={formData.otp}
                     onChange={handleOtpChange}
-                    className="col-span-3"
+                    className="col-span-3 border-gray-300"
                   />
                   {errors.otp && (
-                    <p className="text-red-500 col-span-4">{errors.otp}</p>
+                    <p className="text-red-500 col-span-4 text-sm">
+                      {errors.otp}
+                    </p>
                   )}
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="newPassword" className="text-right">
+                  <Label
+                    htmlFor="newPassword"
+                    className="text-right text-gray-700"
+                  >
                     New Password
                   </Label>
                   <Input
@@ -286,16 +358,19 @@ export default function Component() {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleOtpChange}
-                    className="col-span-3"
+                    className="col-span-3 border-gray-300"
                   />
                   {errors.newPassword && (
-                    <p className="text-red-500 col-span-4">
+                    <p className="text-red-500 col-span-4 text-sm">
                       {errors.newPassword}
                     </p>
                   )}
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="confPassword" className="text-right">
+                  <Label
+                    htmlFor="confPassword"
+                    className="text-right text-gray-700"
+                  >
                     Confirm Password
                   </Label>
                   <Input
@@ -304,17 +379,25 @@ export default function Component() {
                     name="confPassword"
                     value={formData.confPassword}
                     onChange={handleOtpChange}
-                    className="col-span-3"
+                    className="col-span-3 border-gray-300"
                   />
                   {errors.confPassword && (
-                    <p className="text-red-500 col-span-4">
+                    <p className="text-red-500 col-span-4 text-sm">
                       {errors.confPassword}
                     </p>
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleSubmitOtp}>Submit OTP</Button>
-                  <Button onClick={() => setIsForgotPasswordModalOpen(false)}>
+                  <Button
+                    onClick={handleSubmitOtp}
+                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white"
+                  >
+                    Submit OTP
+                  </Button>
+                  <Button
+                    onClick={() => setIsForgotPasswordModalOpen(false)}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800"
+                  >
                     Close
                   </Button>
                 </DialogFooter>
@@ -323,6 +406,6 @@ export default function Component() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useGetCourseDetailsQuery } from "@/redux/services/courseApi";
+import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +28,9 @@ import {
   PlayCircle,
   Heart,
   ShoppingCart,
+  Book,
+  Link2,
+  LinkIcon,
 } from "lucide-react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useDispatch, useSelector } from "react-redux";
@@ -67,7 +71,18 @@ const CourseDetails = () => {
 
   const { data: cart } = useGetCartQuery();
   const { data: wishlist } = useGetWishlistQuery();
-  console.log("cart", cart, "\nWishlist", wishlist);
+
+  const {
+    data: instructorCourses,
+    isLoading: isInstructorCoursesLoading,
+    isError: isInstructorCoursesError,
+  } = useGetInstructorCoursesQuery({
+    instructorId: course?.data?.instructorId,
+    page: 1,
+    limit: 5,
+  });
+
+  console.log("instrucorCourses", instructorCourses);
 
   const getIndexOfFreePreviewUrl =
     course !== null
@@ -149,7 +164,11 @@ const CourseDetails = () => {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <Button onClick={() => navigate(-1)} variant="outline" className="mb-4">
+        <Button
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className="mb-4 cursor-pointer  hover:bg-black hover:text-white hover:font-bold"
+        >
           Go Back
         </Button>
       </div>
@@ -157,7 +176,15 @@ const CourseDetails = () => {
         <h1 className="text-3xl font-bold mb-4">{course?.data?.title}</h1>
         <p className="text-xl mb-4">{course?.data?.subtitle}</p>
         <div className="flex items-center space-x-4 mt-2 text-sm">
-          <span className="">Created By {course?.data?.instructorName}</span>
+          <span className="flex">
+            Created By {course?.data?.instructorName}
+            <Link
+              to={`/instructor/profile/${course?.data?.instructorId}`}
+              className="ml-2 text-blue-500 hover:underline"
+            >
+              <LinkIcon className="mr-1 h-4 w-4" />
+            </Link>
+          </span>
           <span>Created On {course?.data?.date.split("T")[0]}</span>
           <span className="flex items-center">
             <Globe className="mr-1 h-4 w-4" />
@@ -219,6 +246,34 @@ const CourseDetails = () => {
               ))}
             </CardContent>
           </Card>
+          {/* Display other courses by the same instructor */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Courses by the same instructor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isInstructorCoursesLoading ? (
+                <Skeleton />
+              ) : isInstructorCoursesError ? (
+                <p className="text-red-600">
+                  Failed to load instructor courses
+                </p>
+              ) : (
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {instructorCourses?.data?.courses?.map((course) => (
+                    <li key={course._id} className="flex items-start">
+                      <Link
+                        to={`/course/${course._id}`}
+                        className="text-blue-500 hover:underline"
+                      >
+                        {course.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </main>
         <aside className="w-full md:w-[500px]">
           <Card className="sticky top-22">
@@ -240,21 +295,28 @@ const CourseDetails = () => {
                   ₹ {course?.data?.pricing}
                 </span>
               </div>
+              <Button className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold">
+                <Book className="mr-2 h-4 w-4" />
+                Enroll Now
+              </Button>
               <Button
-                className="w-full mb-2"
+                className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold"
                 onClick={isInCart ? handleRemoveFromCart : handleAddToCart}
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 {isInCart ? "Remove from Cart" : "Add to Cart"}
               </Button>
               <Button
-                className="w-full"
-                variant="outline"
+                className="w-full cursor-pointer hover:bg-black hover:text-white hover:font-bold"
                 onClick={
                   isInWishlist ? handleRemoveFromWishlist : handleAddToWishlist
                 }
               >
-                <Heart className="mr-2 h-4 w-4" />
+                <Heart
+                  className={`mr-2 h-4 w-4 ${
+                    isInWishlist ? "text-red-600 font-bold" : ""
+                  }`}
+                />
                 {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
               </Button>
             </CardContent>

@@ -14,6 +14,7 @@ import { OTPModal } from "@/components/otpModal";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
+import { motion } from "framer-motion";
 
 export default function Component() {
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -59,92 +60,159 @@ export default function Component() {
       console.error("Registration failed", err);
     }
   };
+
   return (
-    <div>
-      <Card className="mx-auto max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-3xl">Register</CardTitle>
-          <CardDescription>
-            Enter your information to create an account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit}>
-            {formErrors && <p className="text-red-500">{formErrors}</p>}
-            {error && (
-              <p className="text-red-500">
-                {(error as any).data?.message || "Registration failed"}
-              </p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="full-name">Full name</Label>
-              <Input
-                name="name"
-                value={form.name}
-                placeholder="Enter your Full Name"
-                onChange={handleChange}
-                className={formErrors ? "border-red-500" : ""}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Enter your Email"
-                className={formErrors ? "border-red-500" : ""}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Enter your Password"
-                value={form.password}
-                onChange={handleChange}
-                className={formErrors ? "border-red-500" : ""}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm your Password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  className={formErrors ? "border-red-500" : ""}
-                />
-                <button
-                  type="button"
-                  onClick={toggleShowPassword}
-                  className="absolute inset-y-0 right-0 flex items-center rounded-full p-2 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <Button className="w-full mt-5" disabled={isLoading}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex items-center justify-center h-[calc(100vh-5rem)] p-20 bg-gradient-to-r from-gray-50 to-gray-100"
+    >
+      {/* Welcome Message on the Left */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-1/2 flex items-center justify-center p-8"
+      >
+        <div className="text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            Join Us Today!
+          </h1>
+          <p className="text-xl text-gray-600">
+            Start your journey with our world-class learning platform.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Registration Form on the Right */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-1/2 flex items-center justify-center p-8"
+      >
+        <Card className="w-full max-w-md shadow-lg rounded-lg bg-white">
+          <CardHeader className="space-y-1 p-6">
+            <CardTitle className="text-2xl font-bold text-gray-900">
               Register
-            </Button>
-            <GoogleAuth />
-            <span>
-              Already have an account? <Link to={"/login"}>Login</Link>
-            </span>
-          </form>
-        </CardContent>
-      </Card>
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Enter your information to create an account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit}>
+              {formErrors && (
+                <p className="text-red-500 text-sm mb-4">{formErrors}</p>
+              )}
+              {error && (
+                <p className="text-red-500 text-sm mb-4">
+                  {(error as any).data?.message || "Registration failed"}
+                </p>
+              )}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-gray-700">
+                    Full Name
+                  </Label>
+                  <Input
+                    name="name"
+                    value={form.name}
+                    placeholder="Enter your Full Name"
+                    onChange={handleChange}
+                    className={`w-full ${
+                      formErrors ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="Enter your Email"
+                    className={`w-full ${
+                      formErrors ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-700">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Enter your Password"
+                    value={form.password}
+                    onChange={handleChange}
+                    className={`w-full ${
+                      formErrors ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-gray-700">
+                    Confirm Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder="Confirm your Password"
+                      value={form.confirmPassword}
+                      onChange={handleChange}
+                      className={`w-full ${
+                        formErrors ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                >
+                  {isLoading ? "Registering..." : "Register"}
+                </Button>
+                <div className="w-full">
+                  <GoogleAuth />
+                </div>
+                <span className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link
+                    to={"/login"}
+                    className="text-gray-900 hover:text-gray-700 transition-colors"
+                  >
+                    Login
+                  </Link>
+                </span>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* OTP Modal */}
       {otpModalOpen && (
         <OTPModal
           email={form.email}
@@ -152,6 +220,6 @@ export default function Component() {
           onClose={() => setOtpModalOpen(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

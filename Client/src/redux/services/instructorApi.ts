@@ -47,6 +47,9 @@ export const instructorApi = api.injectEndpoints({
         providesTags: ["Courses", "InstructorCourses"],
       }),
     }),
+    getInstructorDetails: builder.query({
+      query: (instructorId) => `/instructor/details/${instructorId}`,
+    }),
   }),
 });
 
@@ -57,4 +60,5 @@ export const {
   useReviewInstructorApplicationMutation,
   useGetInstructorCoursesQuery,
   useGetInstructorApplicationDetailsQuery,
+  useGetInstructorDetailsQuery,
 } = instructorApi;

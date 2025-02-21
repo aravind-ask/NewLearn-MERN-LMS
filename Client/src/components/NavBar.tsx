@@ -36,23 +36,45 @@ export default function Navbar() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64">
+        <SheetContent side="left" className="w-64 bg-gray-100">
           <div className="flex flex-col gap-4 py-6">
             <Link to="#" className="flex items-center gap-2">
               <MountainIcon className="h-6 w-6" />
               <span className="text-lg font-semibold">NewLearn</span>
             </Link>
             {user && (
-              <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage
-                    src={user?.photoUrl || "https://github.com/shadcn.png"}
-                    alt="@shadcn"
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <span className="text-lg font-semibold">{user.name}</span>
-              </div>
+              <>
+                <div className="flex items-center gap-2">
+                  <Avatar>
+                    <AvatarImage
+                      src={user?.photoUrl || "https://github.com/shadcn.png"}
+                      alt="@shadcn"
+                    />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                  <span className="text-lg font-semibold">{user.name}</span>
+                </div>
+                <Link
+                  to="/cart"
+                  className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Cart
+                  {/* {cart.length > 0 && (
+                <Badge variant="secondary">{cart.length}</Badge>
+              )} */}
+                </Link>
+                <Link
+                  to="/wishlist"
+                  className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
+                >
+                  <Heart className="h-5 w-5" />
+                  Wishlist
+                  {/* {wishlist.length > 0 && (
+                <Badge variant="secondary">{wishlist.length}</Badge>
+              )} */}
+                </Link>
+              </>
             )}
             <Link to="/" className="text-lg font-semibold hover:text-gray-700">
               Home
@@ -74,26 +96,6 @@ export default function Navbar() {
               className="text-lg font-semibold hover:text-gray-700"
             >
               Teach on NewLearn
-            </Link>
-            <Link
-              to="/cart"
-              className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Cart
-              {/* {cart.length > 0 && (
-                <Badge variant="secondary">{cart.length}</Badge>
-              )} */}
-            </Link>
-            <Link
-              to="/wishlist"
-              className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
-            >
-              <Heart className="h-5 w-5" />
-              Wishlist
-              {/* {wishlist.length > 0 && (
-                <Badge variant="secondary">{wishlist.length}</Badge>
-              )} */}
             </Link>
           </div>
         </SheetContent>
@@ -142,26 +144,29 @@ export default function Navbar() {
         >
           Teach on NewLearn
         </Link>
-        <Link
-          to="/cart"
-          className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          Cart
-          {/* {cart.length > 0 && <Badge variant="secondary">{cart.length}</Badge>} */}
-        </Link>
-        <Link
-          to="/wishlist"
-          className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
-        >
-          <Heart className="h-5 w-5" />
-          Wishlist
-          {/* {wishlist.length > 0 && (
+
+        {user ? (
+          <>
+            <Link
+              to="/cart"
+              className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Cart
+              {/* {cart.length > 0 && <Badge variant="secondary">{cart.length}</Badge>} */}
+            </Link>
+            <Link
+              to="/wishlist"
+              className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Heart className="h-5 w-5" />
+              Wishlist
+              {/* {wishlist.length > 0 && (
             <Badge variant="secondary">{wishlist.length}</Badge>
           )} */}
-        </Link>
-        {user ? (
-          <AvatarDropdown />
+            </Link>
+            <AvatarDropdown />
+          </>
         ) : (
           <div className="flex gap-4">
             <Link

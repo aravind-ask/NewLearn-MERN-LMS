@@ -110,6 +110,25 @@ export class InstructorApplicationController {
       errorResponse(res, error.message, error.statusCode || 400);
     }
   }
+  static async getInstructorDetails(req: Request, res: Response) {
+    try {
+      const userId = req.params.instructorId;
+
+      const application = await instructorApplicationService.getApplication(
+        userId
+      );
+      successResponse(
+        res,
+        application,
+        "Instructor Details fetched successfully.",
+        200
+      );
+    } catch (error: any) {
+      console.log(error);
+      errorResponse(res, error.message, error.statusCode || 400);
+    }
+  }
+
   static async getApplicationDetails(req: Request, res: Response) {
     try {
       const { applicationId } = req.params;
