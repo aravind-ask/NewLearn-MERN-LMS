@@ -7,6 +7,7 @@ type User = {
   email: string;
   role: "student" | "instructor" | "admin";
   photoUrl: string;
+  isBlocked: boolean;
 };
 
 type AuthState = {

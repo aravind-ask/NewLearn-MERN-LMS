@@ -26,6 +26,7 @@ export default function GoogleAuth() {
             email: result.data.user.email,
             role: result.data.user.role as "student" | "instructor" | "admin",
             photoUrl: result.data.user.photoUrl,
+            isBlocked: result.data.user.isBlocked,
           },
           accessToken: result.data.accessToken,
           refreshToken: result.data.refreshToken,

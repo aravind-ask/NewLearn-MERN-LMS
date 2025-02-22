@@ -13,6 +13,7 @@ export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
   // const { cart, wishlist } = useSelector((state: RootState) => state.user);
   const role = user?.role;
+  console.log("Current User:", user);
 
   // Admin-specific Navbar
   if (role === "admin") {

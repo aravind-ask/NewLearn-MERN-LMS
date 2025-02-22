@@ -102,6 +102,7 @@ const AddNewCourse = () => {
         });
       } else {
         // Create new course
+        console.log("Creating course", courseData);
         response = await createCourse(courseData).unwrap();
         console.log("Course Created Successfully", response);
         toast({

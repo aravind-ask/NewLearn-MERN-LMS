@@ -48,6 +48,12 @@ import {
   addToWishlist,
   removeFromWishlist,
 } from "@/redux/slices/userSlice";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -82,11 +88,11 @@ const CourseDetails = () => {
     limit: 5,
   });
 
-  console.log("instrucorCourses", instructorCourses);
-
   const getIndexOfFreePreviewUrl =
     course !== null
-      ? course?.data?.curriculum?.findIndex((item) => item.freePreview)
+      ? course?.data?.curriculum?.findIndex((section) =>
+          section.lectures.some((lecture) => lecture.freePreview)
+        )
       : -1;
 
   function handleSetFreePreview(getCurrentVideoInfo) {
@@ -167,7 +173,7 @@ const CourseDetails = () => {
         <Button
           onClick={() => navigate(-1)}
           variant="outline"
-          className="mb-4 cursor-pointer  hover:bg-black hover:text-white hover:font-bold"
+          className="mb-4 cursor-pointer hover:bg-black hover:text-white hover:font-bold"
         >
           Go Back
         </Button>
@@ -226,24 +232,44 @@ const CourseDetails = () => {
               <CardTitle>Course Curriculum</CardTitle>
             </CardHeader>
             <CardContent>
-              {course?.data?.curriculum.map((item, index) => (
-                <li
-                  className={`${
-                    item?.freePreview ? " cursor-pointer" : "cursor-not-allowed"
-                  } flex items-center mb-4 rounded-lg`}
-                  key={index}
-                  onClick={
-                    item?.freePreview ? () => handleSetFreePreview(item) : null
-                  }
-                >
-                  {item?.freePreview ? (
-                    <PlayCircle className="mr-2 h-5 w-5 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <Lock className="mr-2 h-5 w-5 text-red-500 flex-shrink-0" />
-                  )}
-                  <span>{item.title}</span>
-                </li>
-              ))}
+              <Accordion type="multiple">
+                {course?.data?.curriculum.map((section, sectionIndex) => (
+                  <AccordionItem
+                    key={sectionIndex}
+                    value={`section-${sectionIndex}`}
+                  >
+                    <AccordionTrigger className="text-lg font-semibold">
+                      {section.title}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="space-y-2">
+                        {section.lectures.map((lecture, lectureIndex) => (
+                          <li
+                            key={lectureIndex}
+                            className={`${
+                              lecture?.freePreview
+                                ? "cursor-pointer"
+                                : "cursor-not-allowed"
+                            } flex items-center mb-4 rounded-lg`}
+                            onClick={
+                              lecture?.freePreview
+                                ? () => handleSetFreePreview(lecture)
+                                : null
+                            }
+                          >
+                            {lecture?.freePreview ? (
+                              <PlayCircle className="mr-2 h-5 w-5 text-green-500 flex-shrink-0" />
+                            ) : (
+                              <Lock className="mr-2 h-5 w-5 text-red-500 flex-shrink-0" />
+                            )}
+                            <span>{lecture.title}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
           {/* Display other courses by the same instructor */}
@@ -282,7 +308,9 @@ const CourseDetails = () => {
                 <VideoPlayer
                   url={
                     getIndexOfFreePreviewUrl !== -1
-                      ? course?.data?.curriculum[getIndexOfFreePreviewUrl]
+                      ? course?.data?.curriculum[
+                          getIndexOfFreePreviewUrl
+                        ].lectures.find((lecture) => lecture.freePreview)
                           .videoUrl
                       : ""
                   }
@@ -343,9 +371,11 @@ const CourseDetails = () => {
           </div>
           <div className="flex flex-col gap-2">
             {course?.data?.curriculum
-              ?.filter((item) => item.freePreview)
+              ?.flatMap((section) => section.lectures)
+              ?.filter((lecture) => lecture.freePreview)
               .map((filteredItem) => (
                 <p
+                  key={filteredItem.videoUrl}
                   onClick={() => handleSetFreePreview(filteredItem)}
                   className="cursor-pointer text-[16px] font-medium"
                 >

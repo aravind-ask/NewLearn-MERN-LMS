@@ -63,7 +63,7 @@ const WishlistPage = () => {
           Go Back
         </Button>
       </div>
-      {wishlist?.length === 0 ? (
+      {wishlist?.data?.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <Heart className="h-16 w-16 mb-4 text-gray-400" />
           <p className="text-xl text-gray-600">Your wishlist is empty</p>

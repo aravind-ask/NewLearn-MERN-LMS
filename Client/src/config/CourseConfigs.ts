@@ -19,6 +19,18 @@ export interface CourseCurriculum {
   public_id: string;
 }
 
+export interface Lecture {
+  title: string;
+  videoUrl: string;
+  freePreview: boolean;
+  public_id: string;
+}
+
+export interface Section {
+  title: string;
+  lectures: Lecture[];
+}
+
 export const signUpFormControls: FormControl[] = [
   {
     name: "userName",
@@ -187,12 +199,17 @@ export const courseLandingInitialFormData: InitialFormData = {
   image: "",
 };
 
-export const courseCurriculumInitialFormData: CourseCurriculum[] = [
+export const courseCurriculumInitialFormData: Section[] = [
   {
-    title: "",
-    videoUrl: "",
-    freePreview: false,
-    public_id: "",
+    title: "New Section",
+    lectures: [
+      {
+        title: "",
+        videoUrl: "",
+        freePreview: false,
+        public_id: "",
+      },
+    ],
   },
 ];
 

@@ -47,7 +47,8 @@ export class CourseRepository {
     category?: string,
     difficulty?: string,
     sortBy?: string,
-    sortOrder: "asc" | "desc" = "desc"
+    sortOrder: "asc" | "desc" = "desc",
+    excludeInstructorId?: string
   ): Promise<InstructorCoursesResult | null> {
     try {
       const query: any = {};
@@ -58,6 +59,8 @@ export class CourseRepository {
 
       if (category) query.category = category;
       if (difficulty) query.level = difficulty;
+      if (excludeInstructorId)
+        query.instructorId = { $ne: excludeInstructorId };
 
       const sortField = sortBy === "price" ? "pricing" : "createdAt";
       const sortDirection = sortOrder === "asc" ? 1 : -1;

@@ -1,9 +1,27 @@
 import { z } from "zod";
 
+const LectureDto = z.object({
+  title: z.string(),
+  videoUrl: z.string(),
+  public_id: z.string(),
+  freePreview: z.boolean(),
+});
+
+const SectionDto = z.object({
+  title: z.string(),
+  lectures: z.array(LectureDto),
+});
+
+// const StudentDto = z.object({
+//   studentId: z.string(),
+//   studentName: z.string(),
+//   studentEmail: z.string(),
+// });
 
 export const CreateCourseDto = z.object({
   instructorId: z.string(),
   instructorName: z.string(),
+  // date: z.date().default(new Date()),
   title: z.string(),
   category: z.string(),
   level: z.string(),
@@ -14,14 +32,8 @@ export const CreateCourseDto = z.object({
   pricing: z.number(),
   objectives: z.string(),
   welcomeMessage: z.string(),
-  curriculum: z.array(
-    z.object({
-      title: z.string(),
-      videoUrl: z.string(),
-      freePreview: z.boolean(),
-      public_id: z.string(),
-    })
-  ),
+  // students: z.array(StudentDto).default([]),
+  curriculum: z.array(SectionDto),
 });
 
 export const EditCourseDto = CreateCourseDto.extend({

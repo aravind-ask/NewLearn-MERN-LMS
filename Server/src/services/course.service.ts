@@ -36,7 +36,8 @@ export class CourseService {
     category?: string,
     difficulty?: string,
     sortBy?: string,
-    sortOrder?: "asc" | "desc"
+    sortOrder?: "asc" | "desc",
+    excludeInstructorId?: string
   ) {
     try {
       return await this.courseRepo.getAllCourses(
@@ -46,7 +47,8 @@ export class CourseService {
         category,
         difficulty,
         sortBy,
-        sortOrder
+        sortOrder,
+        excludeInstructorId
       );
     } catch (error) {
       console.error("Service Error getting all courses:", error);

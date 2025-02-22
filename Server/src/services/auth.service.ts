@@ -95,6 +95,7 @@ export const authService = {
         email: string;
         role: string;
         photoUrl?: string;
+        isBlocked: boolean;
       };
     } = {
       accessToken,
@@ -105,6 +106,7 @@ export const authService = {
         email: user.email,
         role: user.role,
         photoUrl: user.photoUrl,
+        isBlocked: user.isBlocked!,
       },
     };
 
@@ -159,6 +161,7 @@ export const authService = {
         email: string;
         role: string;
         photoUrl?: string;
+        isBlocked: boolean;
       };
     } = {
       accessToken,
@@ -169,6 +172,7 @@ export const authService = {
         email: user.email,
         role: user.role,
         photoUrl: user.photoUrl,
+        isBlocked: user.isBlocked!,
       },
     };
 

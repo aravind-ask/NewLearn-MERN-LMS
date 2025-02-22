@@ -7,11 +7,12 @@ import {
   EditCourseInput,
 } from "../utils/course.dto";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import { tokenUtils } from "../utils/tokenUtils"; // Import tokenUtils to verify token
 
 const courseService = new CourseService();
 
 interface AuthenticatedRequest extends Request {
-  user?: { id: string };
+  user?: { id: string; role: string };
 }
 
 export class CourseController {
@@ -62,7 +63,11 @@ export class CourseController {
       errorResponse(res, error, error.status || 400);
     }
   }
-  static async getAllCourses(req: Request, res: Response, next: NextFunction) {
+  static async getAllCourses(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const {
         page = "1",
@@ -74,6 +79,26 @@ export class CourseController {
         sortOrder,
       } = req.query;
 
+      let excludeInstructorId: string | undefined;
+
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        try {
+          const decoded = tokenUtils.verifyAccessToken(token);
+          req.user = { id: decoded.userId, role: decoded.role };
+          console.log("user", req.user);
+          if (req.user?.role === "instructor") {
+            excludeInstructorId = req.user?.id;
+          }
+        } catch (error) {
+          errorResponse(res, "Invalid or expired access token", 401);
+          return;
+        }
+      }
+
+      console.log("excludeInstructorId", excludeInstructorId);
+
       const result = await courseService.getAllCourses(
         Number(page),
         Number(limit),
@@ -81,7 +106,8 @@ export class CourseController {
         category as string,
         difficulty as string,
         sortBy as string,
-        sortOrder as "asc" | "desc"
+        sortOrder as "asc" | "desc",
+        excludeInstructorId
       );
 
       successResponse(res, result, "Courses fetched successfully", 200);

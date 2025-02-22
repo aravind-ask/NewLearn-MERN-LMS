@@ -14,6 +14,16 @@ const LectureSchema = new Schema<Lecture>({
   freePreview: { type: Boolean, required: true },
 });
 
+export interface Section {
+  title: string;
+  lectures: Lecture[];
+}
+
+const SectionSchema = new Schema<Section>({
+  title: { type: String, required: true },
+  lectures: [LectureSchema],
+});
+
 export interface ICourse extends Document {
   instructorId: string;
   instructorName: string;
@@ -35,7 +45,7 @@ export interface ICourse extends Document {
       studentEmail: string;
     }
   ];
-  curriculum: Lecture[];
+  curriculum: Section[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -62,7 +72,7 @@ const CourseSchema = new Schema<ICourse>(
         studentEmail: { type: String, required: true },
       },
     ],
-    curriculum: [LectureSchema],
+    curriculum: [SectionSchema],
   },
   { timestamps: true }
 );
