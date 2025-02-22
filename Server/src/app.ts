@@ -10,7 +10,7 @@ import categoryRoutes from "./Routes/category.routes";
 import courseRoutes from "./Routes/course.routes";
 import cartRoutes from "./Routes/cart.routes";
 import wishlistRoutes from "./Routes/wishlist.routes";
-
+import paymentRoutes from "./Routes/payment.routes";
 import multer from "multer";
 
 dotenv.config();
@@ -44,6 +44,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.use(
   (

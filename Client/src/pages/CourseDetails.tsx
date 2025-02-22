@@ -141,6 +141,10 @@ const CourseDetails = () => {
     }
   }, [displayCurrentFreePreview]);
 
+  const handleEnrollNow = () => {
+    navigate("/checkout", { state: { courseDetails: course.data } });
+  };
+
   if (isLoading) return <Skeleton />;
   if (isError)
     return (
@@ -323,7 +327,10 @@ const CourseDetails = () => {
                   ₹ {course?.data?.pricing}
                 </span>
               </div>
-              <Button className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold">
+              <Button
+                className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold"
+                onClick={handleEnrollNow}
+              >
                 <Book className="mr-2 h-4 w-4" />
                 Enroll Now
               </Button>

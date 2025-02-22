@@ -19,6 +19,8 @@ import NotFoundPage from "./pages/404ErrorPage";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import InstructorProfile from "./pages/InstructorProfile";
+import CheckoutPage from "./pages/CheckOut";
+import { OrderConfirmationPage } from "./pages/OrderConfirmation";
 
 function App() {
   return (
@@ -39,6 +41,11 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route
+              path="/order-confirmation"
+              element={<OrderConfirmationPage />}
+            />
             <Route
               path="/instructor/apply"
               element={<InstructorRegistration />}

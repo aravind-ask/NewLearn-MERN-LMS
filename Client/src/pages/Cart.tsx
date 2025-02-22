@@ -27,7 +27,7 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    navigate("/checkout");
+    navigate("/checkout", { state: { cartItems: cart?.data } });
   };
 
   if (isLoading) return <Skeleton />;
