@@ -4,10 +4,10 @@ export const paymentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Create a Razorpay order
     createRazorpayOrder: builder.mutation({
-      query: (amount) => ({
+      query: ({ amount, courses, userId, userName, userEmail }) => ({
         url: "/payments/create-order",
         method: "POST",
-        body: { amount },
+        body: { amount, courses, userId, userName, userEmail },
       }),
     }),
 

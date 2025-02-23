@@ -42,7 +42,7 @@ const CheckoutPage = () => {
   const subtotal =
     itemsToCheckout?.reduce((total, course) => total + course.pricing, 0) || 0;
   const tax = subtotal * 0.18;
-  const total = subtotal + tax - discount;
+  const total = Math.round(subtotal + tax - discount);
 
   // Handle coupon application
   const handleApplyCoupon = () => {
@@ -61,48 +61,66 @@ const CheckoutPage = () => {
   const handleRazorpayPayment = async () => {
     setIsPlacingOrder(true);
 
-    try {
-      // Create a Razorpay order
-      const order = await createRazorpayOrder(total * 100).unwrap();
+     try {
+       // Prepare course details for the order
+       const courses = itemsToCheckout.map((course) => ({
+         courseId: course._id,
+         courseTitle: course.title,
+         courseImage: course.image,
+         coursePrice: course.pricing,
+         instructorId: course.instructorId,
+         instructorName: course.instructorName,
+       }));
 
-      // Initialize Razorpay
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay Key ID
-        amount: total * 100, // Amount in paise
-        currency: "INR",
-        name: "NewLearn-LMS",
-        description: "Course Purchase",
-        order_id: order.orderId,
-        handler: async (response) => {
-          // Verify payment on the backend
-          const verificationResult = await verifyRazorpayPayment(
-            response
-          ).unwrap();
+       // Create a Razorpay order
+       const order = await createRazorpayOrder({
+        amount: total,
+         courses,
+         userId: user?.id,
+         userName: user?.name,
+         userEmail: user?.email,
+       }).unwrap();
 
-          if (verificationResult.success) {
-            navigate("/order-confirmation");
-          } else {
-            alert("Payment failed. Please try again.");
-          }
-        },
-        prefill: {
-          name: user?.name,
-          email: user?.email,
-          contact: "9999999999",
-        },
-        theme: {
-          color: "#2563eb",
-        },
-      };
+       console.log("Razorpay order:", order);
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error("Payment failed:", error);
-      alert("Payment failed. Please try again.");
-    } finally {
-      setIsPlacingOrder(false);
-    }
+       // Initialize Razorpay
+       const options = {
+         key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay Key ID
+         amount: total,
+         currency: "INR",
+         name: "NewLearn-LMS",
+         description: "Course Purchase",
+         order_id: order.data.id,
+         handler: async (response) => {
+           // Verify payment on the backend
+           const verificationResult = await verifyRazorpayPayment(
+             response
+           ).unwrap();
+
+           if (verificationResult.success) {
+             navigate("/order-confirmation");
+           } else {
+             alert("Payment failed. Please try again.");
+           }
+         },
+         prefill: {
+           name: user?.name,
+           email: user?.email,
+           contact: "9999999999",
+         },
+         theme: {
+           color: "#2563eb",
+         },
+       };
+
+       const rzp = new (window as any).Razorpay(options);
+       rzp.open();
+     } catch (error) {
+       console.error("Payment failed:", error);
+       alert("Payment failed. Please try again.");
+     } finally {
+       setIsPlacingOrder(false);
+     }
   };
 
   return (

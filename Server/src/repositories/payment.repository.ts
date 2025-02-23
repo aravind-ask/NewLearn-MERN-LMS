@@ -1,19 +1,29 @@
+// src/repositories/paymentRepository.ts
 import PaymentModel, { IPayment } from "../models/Payment";
 
 export const createPayment = async (paymentData: Partial<IPayment>) => {
   return await PaymentModel.create({
     ...paymentData,
-    paymentId: "pending",
+    paymentId: "pending", // Temporary value
+    payerId: "pending", // Temporary value
+    paymentStatus: "pending", // Default value
+    orderStatus: "pending", // Default value
   });
 };
 
 export const updatePaymentStatus = async (
-  paymentId: string,
-  status: string
+  orderId: string,
+  updateData: { paymentId?: string; orderStatus: string; paymentStatus: string }
 ) => {
-  return await PaymentModel.findByIdAndUpdate(
-    paymentId,
-    { status },
+  console.log("Updating payment status for orderId:", orderId);
+  console.log("Update data:", updateData);
+
+  const updatedPayment = await PaymentModel.findOneAndUpdate(
+    { orderId },
+    { $set: updateData },
     { new: true }
   );
+
+  console.log("Updated payment record:", updatedPayment);
+  return updatedPayment;
 };

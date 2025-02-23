@@ -8,20 +8,21 @@ import { errorResponse, successResponse } from "../utils/responseHandler";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { amount } = req.body;
-    if (typeof amount !== "number") {
-      throw new Error("Invalid amount");
-    }
-    const order = await createRazorpayOrder(amount);
-    successResponse(
-      res,
-      { orderId: order.id },
-      "Order created successfully",
-      200
-    );
+    const { amount, courses, userId, userName, userEmail } = req.body;
+    console.log(req.body);
+    const order = await createRazorpayOrder({
+      amount,
+      courses,
+      userId,
+      userName,
+      userEmail,
+    });
+    // res.status(200).json({ orderId: order.id });
+    successResponse(res, order, "Order created successfully", 200);
   } catch (error: any) {
     console.log(error);
-    errorResponse(res, "Failed to create order", error?.status || 500);
+    // res.status(500).json({ message: "Failed to create order" });
+    errorResponse(res, "Failed to create order", error.status || 500);
   }
 };
 
@@ -31,7 +32,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
     // res.status(200).json({ success });
     successResponse(res, { success }, "Payment verified successfully", 200);
   } catch (error: any) {
+    console.log(error);
     // res.status(500).json({ message: "Payment verification failed" });
-    errorResponse(res, "Payment verificationfailed", error.status || 500);
+    errorResponse(res, "Payment verification failed", error.status || 500);
   }
 };
