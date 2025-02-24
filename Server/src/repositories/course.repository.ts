@@ -40,6 +40,39 @@ export class CourseRepository {
     }
   }
 
+  async updateCourseEnrollment(
+    courseId: string,
+    data: {
+      studentId: string;
+      studentName: string;
+      studentEmail: string;
+      paidAmount: number;
+    }
+  ): Promise<ICourse | null> {
+    try {
+      const { studentId, studentName, studentEmail, paidAmount } = data;
+      console.log("Updating course enrollment:", data);
+      return await Course.findByIdAndUpdate(
+        courseId,
+        {
+          $addToSet: {
+            students: {
+              studentId,
+              studentName,
+              studentEmail,
+              paidAmount,
+              dateJoined: new Date(),
+            },
+          },
+        },
+        { new: true }
+      );
+    } catch (error) {
+      console.error("Error updating course enrollment:", error);
+      throw new Error("Failed to update course enrollment");
+    }
+  }
+
   async getAllCourses(
     page: number,
     limit: number,

@@ -17,10 +17,20 @@ export const enrollUserInCourses = async (
 
   const enrollment = await EnrollmentModel.findOneAndUpdate(
     { userId },
-    { $push: { courses: { $each: courses } } },
+    { $addToSet: { courses: { $each: courses } } },
     { upsert: true, new: true }
   );
 
   console.log("Enrollment result:", enrollment);
   return enrollment;
+};
+
+export const getEnrollmentDetails = async (userId: string) => {
+  const enrollment = await EnrollmentModel.findOne({ userId });
+  return enrollment;
+};
+
+export const getEnrolledCourses = async (userId: string) => {
+  return await EnrollmentModel.findOne({ userId });
+  // return enrollment?.courses || [];
 };

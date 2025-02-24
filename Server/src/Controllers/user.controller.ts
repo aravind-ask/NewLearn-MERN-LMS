@@ -4,7 +4,7 @@ import { getPresignedUrl } from "../config/s3.config";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
-
+import { fetchEnrolledCourses } from "../services/enrollment.service";
 
 dotenv.config();
 
@@ -96,5 +96,40 @@ export const blockUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating block status:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getStudentCourses = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      errorResponse(res, "Unauthorized", 401);
+      return;
+    }
+    const userId = req.user.id;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const { courses, totalPages } = await fetchEnrolledCourses(
+      userId,
+      page,
+      limit
+    );
+    if (!courses) {
+      errorResponse(res, "No courses found for this student", 404);
+      return;
+    }
+    successResponse(
+      res,
+      { courses, totalPages },
+      "Student courses fetched successfully!",
+      200
+    );
+  } catch (error: any) {
+    console.error("Error fetching student courses:", error);
+    errorResponse(res, "Internal Server Error", error.status || 500);
   }
 };

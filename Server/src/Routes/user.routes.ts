@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import {
   blockUser,
+  getStudentCourses,
   getUploadUrl,
   getUsers,
   updateProfile,
@@ -23,6 +24,11 @@ router.post(
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),
   blockUser
+);
+router.get(
+  "/get-student-courses",
+  authMiddleware.verifyAccessToken,
+  getStudentCourses
 );
 
 export default router;

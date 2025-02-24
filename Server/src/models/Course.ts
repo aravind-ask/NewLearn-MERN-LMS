@@ -43,6 +43,8 @@ export interface ICourse extends Document {
       studentId: string;
       studentName: string;
       studentEmail: string;
+      paidAmount: number;
+      dateJoined: Date;
     }
   ];
   curriculum: Section[];

@@ -29,6 +29,23 @@ export class CourseService {
     }
   }
 
+  async updateCourseEnrollment(
+    courseId: string,
+    data: {
+      studentId: string;
+      studentName: string;
+      studentEmail: string;
+      paidAmount: number;
+    }
+  ) {
+    try {
+      return await this.courseRepo.updateCourseEnrollment(courseId, data);
+    } catch (error) {
+      console.error("Service Error updating course enrollment:", error);
+      throw new Error("Service failed to update course enrollment");
+    }
+  }
+
   async getAllCourses(
     page: number,
     limit: number,

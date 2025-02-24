@@ -4,8 +4,10 @@ import {
   createPayment,
   updatePaymentStatus,
 } from "../repositories/payment.repository";
+import { CourseService } from "./course.service";
 import { enrollUserInCourses } from "../repositories/enrollment.repository";
-import Payment from "../models/Payment";
+
+const courseService = new CourseService();
 
 export const createRazorpayOrder = async (orderData: {
   amount: number;
@@ -44,14 +46,12 @@ export const verifyRazorpayPayment = async (paymentData: any) => {
   console.log("Order ID:", razorpay_order_id);
 
   try {
-    // Verify payment with Razorpay
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
     console.log("Razorpay payment details:", payment);
 
     if (payment.status === "captured") {
       console.log("Payment captured. Updating payment status...");
 
-      // Update payment status in the database
       const updatedPayment = await updatePaymentStatus(razorpay_order_id, {
         paymentId: razorpay_payment_id,
         orderStatus: "completed",
@@ -63,11 +63,21 @@ export const verifyRazorpayPayment = async (paymentData: any) => {
       if (updatedPayment) {
         console.log("Enrolling user in courses...");
 
-        // Enroll the user in the purchased courses
-        const { userId, courses } = updatedPayment;
+        const { userId, userName, userEmail, courses } = updatedPayment;
         const enrollment = await enrollUserInCourses(userId, courses);
 
         console.log("Enrollment result:", enrollment);
+
+        for (let course of courses) {
+          const data = {
+            studentId: userId,
+            studentName: userName,
+            studentEmail: userEmail,
+            paidAmount: course.coursePrice,
+          };
+          await courseService.updateCourseEnrollment(course.courseId, data);
+        }
+
         return { success: true };
       } else {
         console.error(

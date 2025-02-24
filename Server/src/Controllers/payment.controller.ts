@@ -17,11 +17,9 @@ export const createOrder = async (req: Request, res: Response) => {
       userName,
       userEmail,
     });
-    // res.status(200).json({ orderId: order.id });
     successResponse(res, order, "Order created successfully", 200);
   } catch (error: any) {
     console.log(error);
-    // res.status(500).json({ message: "Failed to create order" });
     errorResponse(res, "Failed to create order", error.status || 500);
   }
 };
@@ -29,11 +27,9 @@ export const createOrder = async (req: Request, res: Response) => {
 export const verifyPayment = async (req: Request, res: Response) => {
   try {
     const { success } = await verifyRazorpayPayment(req.body);
-    // res.status(200).json({ success });
     successResponse(res, { success }, "Payment verified successfully", 200);
   } catch (error: any) {
     console.log(error);
-    // res.status(500).json({ message: "Payment verification failed" });
     errorResponse(res, "Payment verification failed", error.status || 500);
   }
 };

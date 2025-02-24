@@ -21,8 +21,21 @@ export const authApi = api.injectEndpoints({
         body: { userId, isBlocked },
       }),
     }),
-
+    getStudentCourses: builder.query<
+      { courses: Course[]; totalPages: number },
+      { page: number; limit: number }
+    >({
+      query: ({ page, limit }) => ({
+        url: `/user/get-student-courses?page=${page}&limit=${limit}`,
+        method: "GET",
+      }),
+      providesTags: ["EnrolledCourses"],
+    }),
   }),
 });
 
-export const { useGetUsersQuery, useBlockUserMutation } = authApi;
+export const {
+  useGetUsersQuery,
+  useBlockUserMutation,
+  useGetStudentCoursesQuery,
+} = authApi;

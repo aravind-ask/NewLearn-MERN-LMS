@@ -112,6 +112,7 @@ const apiInstance = createApi({
     "InstructorCourses",
     "Cart",
     "Wishlist",
+    "EnrolledCourses",
   ],
   endpoints: () => ({}),
 });
