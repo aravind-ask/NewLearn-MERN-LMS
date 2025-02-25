@@ -21,6 +21,10 @@ import Wishlist from "./pages/Wishlist";
 import InstructorProfile from "./pages/InstructorProfile";
 import CheckoutPage from "./pages/CheckOut";
 import { OrderConfirmationPage } from "./pages/OrderConfirmation";
+import EnrolledCourseDetailsPage from "./pages/EnrolledCourseDetailsPage";
+import Profile from "./components/profile/Profile";
+import MyLearnings from "./components/profile/MyLearnings";
+import Certificates from "./components/profile/MyCertificates";
 
 function App() {
   return (
@@ -28,20 +32,33 @@ function App() {
       <Navbar />
       <div className="pt-20">
         <Routes>
-          <Route element={<AdminRoute />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/all-courses" element={<AllCourses />} />
-            <Route path="/course/:courseId" element={<CourseDetails />} />
-          </Route>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/all-courses" element={<AllCourses />} />
+          <Route path="/course/:courseId" element={<CourseDetails />} />
+
+          {/* Auth Routes (Login/Signup) */}
           <Route element={<AuthGuard />}>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Register />} />
           </Route>
+
+          {/* Protected Routes (Authenticated Users) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/wishlist" element={<Wishlist />} />
+            {/* Profile Page with Nested Routes */}
+            <Route path="/profile/*" element={<ProfilePage />}>
+              <Route path="profile" element={<Profile />} />
+              <Route path="cart" element={<Cart />} />
+              <Route path="wishlist" element={<Wishlist />} />
+              <Route path="my-courses" element={<MyLearnings />} />
+              <Route path="certificates" element={<Certificates />} />
+            </Route>
+
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route
+              path="/course/:courseId/learn"
+              element={<EnrolledCourseDetailsPage />}
+            />
             <Route
               path="/order-confirmation"
               element={<OrderConfirmationPage />}
@@ -67,12 +84,16 @@ function App() {
               element={<InstructorProfile />}
             />
           </Route>
+
+          {/* Admin Routes */}
           <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="*" element={<NotFoundPage />} />
           <Route
             path="/dashboard/instructor/:applicationId"
             element={<InstructorApplicationDetails />}
           />
+
+          {/* 404 Page */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Toaster />
       </div>

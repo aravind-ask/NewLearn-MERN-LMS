@@ -8,6 +8,7 @@ import {
 } from "../utils/course.dto";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { tokenUtils } from "../utils/tokenUtils"; // Import tokenUtils to verify token
+import { checkEnrolled } from "../services/enrollment.service";
 
 const courseService = new CourseService();
 
@@ -132,7 +133,7 @@ export class CourseController {
 
       const filter = {
         instructorId: instructorId,
-        title: { $regex: search, $options: "i" }, // Case-insensitive search
+        title: { $regex: search, $options: "i" },
       };
 
       const sortKey = typeof sortBy === "string" ? sortBy : "createdAt";
@@ -152,7 +153,7 @@ export class CourseController {
     }
   }
   static async getCourseDetails(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ) {
@@ -161,9 +162,66 @@ export class CourseController {
       if (!courseId) {
         errorResponse(res, { message: "Course not found" }, 404);
       }
-      const course = await courseService.getCourseDetails(courseId);
+
+      const authHeader = req.headers.authorization;
+      let isCourseEnrolled = null;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        try {
+          const decoded = tokenUtils.verifyAccessToken(token);
+          req.user = { id: decoded.userId, role: decoded.role };
+          const isEnrolled = await checkEnrolled(req.user?.id, courseId);
+          console.log("isEnrolled", isEnrolled);
+          if (isEnrolled) {
+            isCourseEnrolled = {
+              enolledId: isEnrolled._id,
+              courseId: courseId,
+            };
+          }
+        } catch (error) {
+          errorResponse(res, "Invalid or expired access token", 401);
+          return;
+        }
+      }
+
+      const courseDetails = await courseService.getCourseDetails(courseId);
+      const course = {
+        courseDetails,
+        isEnrolled: isCourseEnrolled,
+      };
+      console.log("course", course);
       successResponse(res, course, "Course details fetched successfully", 200);
     } catch (error: any) {
+      errorResponse(res, error, error.status || 400);
+    }
+  }
+
+  static async checkCourseEnrollmentInfo(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const courseId = req.params.courseId;
+      if (!req.user) {
+        errorResponse(res, "Unauthorized", 401);
+        return;
+      }
+      const userId = req.user.id;
+      if (!courseId) {
+        errorResponse(res, { message: "Course not found" }, 404);
+      }
+
+      const isEnrolled = await checkEnrolled(userId, courseId);
+      console.log("isEnrolled", isEnrolled);
+      successResponse(
+        res,
+        { isEnrolled },
+        "Enrollment info fetched successfully",
+        200
+      );
+    } catch (error: any) {
+      console.log(error);
       errorResponse(res, error, error.status || 400);
     }
   }

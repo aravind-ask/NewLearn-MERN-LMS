@@ -52,6 +52,12 @@ export const courseApi = api.injectEndpoints({
       query: (courseId) => ({
         url: `/courses/${courseId}`,
       }),
+      providesTags: ["Details"],
+    }),
+    getCourseEnrollent: builder.query({
+      query: (courseId) => ({
+        url: `/courses/enrolled/:${courseId}`,
+      }),
     }),
     addToCart: builder.mutation({
       query: (courseId) => ({
@@ -106,6 +112,7 @@ export const {
   useUpdateCourseMutation,
   useDeleteCourseMutation,
   useGetCourseDetailsQuery,
+  useGetCourseEnrollentQuery,
   useAddToCartMutation,
   useRemoveFromCartMutation,
   useAddToWishlistMutation,

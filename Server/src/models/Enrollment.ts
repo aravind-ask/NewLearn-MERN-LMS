@@ -5,7 +5,7 @@ export interface IEnrollment extends Document {
   userId: string;
   courses: {
     courseId: string;
-    title: string;
+    courseTitle: string;
     instructorId: string;
     instructorName: string;
     dateOfPurchase: Date;
@@ -19,7 +19,7 @@ const enrollmentSchema = new mongoose.Schema<IEnrollment>(
     courses: [
       {
         courseId: { type: String, required: true },
-        title: { type: String, required: true },
+        courseTitle: { type: String, required: true },
         instructorId: { type: String, required: true },
         instructorName: { type: String, required: true },
         dateOfPurchase: { type: Date, default: Date.now },

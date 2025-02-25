@@ -1,4 +1,7 @@
-import { getEnrolledCourses } from "../repositories/enrollment.repository";
+import {
+  getEnrolledCourses,
+  isCourseEnrolled,
+} from "../repositories/enrollment.repository";
 
 export const fetchEnrolledCourses = async (
   userId: string,
@@ -15,4 +18,9 @@ export const fetchEnrolledCourses = async (
   const totalPages = Math.ceil(enrolled.courses.length / limit);
 
   return { courses: paginatedCourses, totalPages };
+};
+
+export const checkEnrolled = async (userId: string, courseId: string) => {
+  const isEnrolled = await isCourseEnrolled(userId, courseId);
+  return isEnrolled;
 };

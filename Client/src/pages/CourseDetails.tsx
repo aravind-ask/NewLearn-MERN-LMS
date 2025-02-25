@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { useGetCourseDetailsQuery } from "@/redux/services/courseApi";
 import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 import { Button } from "@/components/ui/button";
@@ -59,12 +59,12 @@ const CourseDetails = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    data: course,
-    isLoading,
-    isError,
-    error,
-  } = useGetCourseDetailsQuery(courseId);
+  const { data, isLoading, isError, error } =
+    useGetCourseDetailsQuery(courseId);
+
+  const course = data?.data?.courseDetails;
+
+  console.log("course", course);
 
   const [displayCurrentFreePreview, setDisplayCurrentFreePreview] =
     useState(null);
@@ -153,6 +153,12 @@ const CourseDetails = () => {
       </p>
     );
 
+  if (data?.data?.isEnrolled) {
+    const isEnrolled = data?.data?.isEnrolled.courseId.toString();
+    return <Navigate to={`/course/${isEnrolled}/learn`} />;
+    // navigate(`/course/${isEnrolled}/learn`);
+  }
+
   const isInCart = cart?.data?.some((item) => item._id === courseId);
   const isInWishlist = wishlist?.data?.some((item) => item._id === courseId);
 
@@ -183,26 +189,26 @@ const CourseDetails = () => {
         </Button>
       </div>
       <div className="bg-gray-900 text-white p-8 rounded-t-lg">
-        <h1 className="text-3xl font-bold mb-4">{course?.data?.title}</h1>
-        <p className="text-xl mb-4">{course?.data?.subtitle}</p>
+        <h1 className="text-3xl font-bold mb-4">{course?.title}</h1>
+        <p className="text-xl mb-4">{course?.subtitle}</p>
         <div className="flex items-center space-x-4 mt-2 text-sm">
           <span className="flex">
-            Created By {course?.data?.instructorName}
+            Created By {course?.instructorName}
             <Link
-              to={`/instructor/profile/${course?.data?.instructorId}`}
+              to={`/instructor/profile/${course?.instructorId}`}
               className="ml-2 text-blue-500 hover:underline"
             >
               <LinkIcon className="mr-1 h-4 w-4" />
             </Link>
           </span>
-          <span>Created On {course?.data?.date.split("T")[0]}</span>
+          <span>Created On {course?.date.split("T")[0]}</span>
           <span className="flex items-center">
             <Globe className="mr-1 h-4 w-4" />
-            {course?.data?.primaryLanguage}
+            {course?.primaryLanguage}
           </span>
           <span>
-            {course?.data?.students.length}{" "}
-            {course?.data?.students.length <= 1 ? "Student" : "Students"}
+            {course?.students.length}{" "}
+            {course?.students.length <= 1 ? "Student" : "Students"}
           </span>
         </div>
       </div>
@@ -212,7 +218,7 @@ const CourseDetails = () => {
             <CardHeader>
               <CardTitle>Course Description</CardTitle>
             </CardHeader>
-            <CardContent>{course?.data?.description}</CardContent>
+            <CardContent>{course?.description}</CardContent>
           </Card>
           <Card className="mb-8">
             <CardHeader>
@@ -220,14 +226,12 @@ const CourseDetails = () => {
             </CardHeader>
             <CardContent>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {course?.data?.objectives
-                  ?.split(",")
-                  .map((objective, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="mr-2 h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span>{objective}</span>
-                    </li>
-                  ))}
+                {course?.objectives?.split(",").map((objective, index) => (
+                  <li key={index} className="flex items-start">
+                    <CheckCircle className="mr-2 h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span>{objective}</span>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -237,7 +241,7 @@ const CourseDetails = () => {
             </CardHeader>
             <CardContent>
               <Accordion type="multiple">
-                {course?.data?.curriculum.map((section, sectionIndex) => (
+                {course?.curriculum.map((section, sectionIndex) => (
                   <AccordionItem
                     key={sectionIndex}
                     value={`section-${sectionIndex}`}
@@ -312,10 +316,12 @@ const CourseDetails = () => {
                 <VideoPlayer
                   url={
                     getIndexOfFreePreviewUrl !== -1
-                      ? course?.data?.curriculum[
+                      ? course?.curriculum[
                           getIndexOfFreePreviewUrl
-                        ].lectures.find((lecture) => lecture.freePreview)
-                          .videoUrl
+                        ]?.lectures.find(
+                          (lecture: { freePreview: boolean }) =>
+                            lecture.freePreview
+                        ).videoUrl
                       : ""
                   }
                   width="450px"
@@ -323,9 +329,7 @@ const CourseDetails = () => {
                 />
               </div>
               <div className="mb-4">
-                <span className="text-3xl font-bold">
-                  ₹ {course?.data?.pricing}
-                </span>
+                <span className="text-3xl font-bold">₹ {course?.pricing}</span>
               </div>
               <Button
                 className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold"
@@ -377,7 +381,7 @@ const CourseDetails = () => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            {course?.data?.curriculum
+            {course?.curriculum
               ?.flatMap((section) => section.lectures)
               ?.filter((lecture) => lecture.freePreview)
               .map((filteredItem) => (

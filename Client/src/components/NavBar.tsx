@@ -56,7 +56,7 @@ export default function Navbar() {
                   <span className="text-lg font-semibold">{user.name}</span>
                 </div>
                 <Link
-                  to="/cart"
+                  to="/profile/cart"
                   className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
                 >
                   <ShoppingCart className="h-5 w-5" />
@@ -66,7 +66,7 @@ export default function Navbar() {
               )} */}
                 </Link>
                 <Link
-                  to="/wishlist"
+                  to="/profile/wishlist"
                   className="text-lg font-semibold hover:text-gray-700 flex items-center gap-2"
                 >
                   <Heart className="h-5 w-5" />
@@ -149,7 +149,7 @@ export default function Navbar() {
         {user ? (
           <>
             <Link
-              to="/cart"
+              to="/profile/cart"
               className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -157,7 +157,7 @@ export default function Navbar() {
               {/* {cart.length > 0 && <Badge variant="secondary">{cart.length}</Badge>} */}
             </Link>
             <Link
-              to="/wishlist"
+              to="/profile/wishlist"
               className="text-sm font-medium hover:text-gray-700 transition-colors flex items-center gap-2"
             >
               <Heart className="h-5 w-5" />

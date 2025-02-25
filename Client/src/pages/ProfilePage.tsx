@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Home, Book, Award, LogOut, ShoppingCart, Heart } from "lucide-react";
 import Profile from "@/components/profile/Profile";
 import MyLearnings from "@/components/profile/MyLearnings";
@@ -8,29 +8,43 @@ import { Card } from "@/components/ui/card";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
 import { useLogoutMutation } from "@/redux/services/authApi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import WishlistPage from "./Wishlist";
 import CartPage from "./Cart";
 
 const ProfilePage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("profile");
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const [logoutMutation] = useLogoutMutation();
-  const navigate = useNavigate();
 
   const tabs = [
     { key: "profile", label: "Profile", icon: <Home size={20} /> },
     { key: "cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { key: "wishlist", label: "Wishlist", icon: <Heart size={20} /> },
-    { key: "my-learnings", label: "My Learnings", icon: <Book size={20} /> },
+    { key: "my-courses", label: "My Courses", icon: <Book size={20} /> },
     {
       key: "certificates",
       label: "Certificates",
       icon: <Award size={20} />,
     },
   ];
+
+  // Sync the selected tab with the current route
+  useEffect(() => {
+    const currentTab = location.pathname.split("/").pop();
+    if (currentTab && tabs.some((tab) => tab.key === currentTab)) {
+      setSelectedTab(currentTab);
+    }
+  }, [location]);
+
+  const handleTabChange = (tabKey: string) => {
+    setSelectedTab(tabKey);
+    navigate(`/profile/${tabKey}`);
+  };
 
   const handleLogout = async () => {
     try {
@@ -55,7 +69,7 @@ const ProfilePage = () => {
           <Button
             key={tab.key}
             variant={selectedTab === tab.key ? "default" : "outline"}
-            onClick={() => setSelectedTab(tab.key)}
+            onClick={() => handleTabChange(tab.key)}
             className="flex items-center gap-2 w-full justify-start"
           >
             {tab.icon}
@@ -79,7 +93,7 @@ const ProfilePage = () => {
           {selectedTab === "profile" && <Profile />}
           {selectedTab === "cart" && <CartPage />}
           {selectedTab === "wishlist" && <WishlistPage />}
-          {selectedTab === "my-learnings" && <MyLearnings />}
+          {selectedTab === "my-courses" && <MyLearnings />}
           {selectedTab === "certificates" && <Certificates />}
         </Card>
       </main>
