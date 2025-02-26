@@ -2,27 +2,36 @@ import InstructorCourses from "@/components/Instructor/InstructorCourses";
 import InstructorDashboard from "@/components/Instructor/InstructorDashboard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { BarChart, BookOpen, LogOut } from "lucide-react";
+import { BarChart, BookOpen, LogOut, User } from "lucide-react";
 import React from "react";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
+import InstructorProfile from "@/components/Instructor/InstructorProfile";
+import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 
 const InstructorDashboardPage = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [activeTab, setActiveTab] = React.useState("profile");
   const [logoutMutation] = useLogoutMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { data, isLoading, isError } = useGetInstructorCoursesQuery({});
 
   const menuItems = [
+    {
+      icon: User,
+      label: "Profile",
+      value: "profile",
+      component: <InstructorProfile />,
+    },
     {
       icon: BarChart,
       label: "Dashboard",
       value: "dashboard",
-      component: <InstructorDashboard />,
+      component: <InstructorDashboard data={data} />,
     },
     {
       icon: BookOpen,

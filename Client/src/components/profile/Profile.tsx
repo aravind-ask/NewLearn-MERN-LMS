@@ -13,6 +13,7 @@ import { PasswordChange } from "../PasswordChange";
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  console.log(user);
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const [getPresignedUrl] = useGetPresignedUrlMutation();
   const [isUploading, setIsUploading] = useState(false);
@@ -48,7 +49,7 @@ const Profile = () => {
         headers: { "Content-Type": file.type },
       });
 
-      setFormData({ ...formData, photoUrl: key });
+      setFormData({ ...formData, photoUrl: url });
       setChange(true);
       setIsUploading(false);
     } catch (error) {
@@ -101,7 +102,7 @@ const Profile = () => {
         />
         <div className="relative">
           <img
-            src={formData.photoUrl || "/default-avatar.png"}
+            src={formData.photoUrl}
             alt="Profile"
             className="w-32 h-32 rounded-full border cursor-pointer"
             onClick={() => document.getElementById("fileInput")?.click()}

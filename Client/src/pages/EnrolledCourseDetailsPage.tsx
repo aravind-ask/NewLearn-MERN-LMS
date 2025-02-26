@@ -106,16 +106,16 @@ function EnrolledCourseDetailsPage() {
     }
   }, [courseProgressData, allLecturesViewed]);
 
-  async function updateCourseProgress() {
-    if (currentLecture) {
+  const handleProgressUpdate = async (lecture) => {
+    if (lecture) {
       await markLectureAsViewed({
         courseId,
-        lectureId: currentLecture._id,
+        lectureId: lecture._id,
       }).unwrap();
 
       refetchCourseProgress();
     }
-  }
+  };
 
   async function handleRewatchCourse() {
     await resetCourseProgress({
@@ -131,10 +131,6 @@ function EnrolledCourseDetailsPage() {
   useEffect(() => {
     refetchCourseProgress();
   }, [courseId]);
-
-  useEffect(() => {
-    if (currentLecture) updateCourseProgress();
-  }, [currentLecture]);
 
   useEffect(() => {
     if (showConfetti) setTimeout(() => setShowConfetti(false), 15000);
@@ -179,7 +175,7 @@ function EnrolledCourseDetailsPage() {
             width="100%"
             height="500px"
             url={currentLecture?.videoUrl}
-            onProgressUpdate={setCurrentLecture}
+            onProgressUpdate={handleProgressUpdate}
             progressData={currentLecture}
           />
           <div className="p-6 bg-[#1c1d1f]">

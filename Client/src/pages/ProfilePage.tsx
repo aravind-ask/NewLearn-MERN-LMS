@@ -80,7 +80,7 @@ const ProfilePage = () => {
         <Button
           variant="destructive"
           onClick={handleLogout}
-          className="flex items-center gap-2 mt-auto"
+          className="flex items-center gap-2"
         >
           <LogOut size={20} />
           Logout

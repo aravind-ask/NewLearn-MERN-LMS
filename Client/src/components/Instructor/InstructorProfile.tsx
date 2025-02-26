@@ -12,10 +12,14 @@ import {
   Briefcase,
   Linkedin,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const InstructorProfile = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
-  const { instructorId } = useParams();
+  const instructorId = user?.id;
+  console.log("Instructor ID:", instructorId);
   const {
     data: instructor,
     isLoading,
@@ -79,13 +83,6 @@ const InstructorProfile = () => {
               </a>
             </div>
           </div>
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-            className="mb-4 cursor-pointer fixed right-40  hover:bg-black hover:text-white hover:font-bold"
-          >
-            Go Back
-          </Button>
         </div>
       </div>
 

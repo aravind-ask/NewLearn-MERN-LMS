@@ -13,7 +13,13 @@ import {
   VolumeX,
 } from "lucide-react";
 
-const VideoPlayer = ({ width = "100%", height = "100%", url }) => {
+const VideoPlayer = ({
+  width = "100%",
+  height = "100%",
+  url,
+  onProgressUpdate,
+  progressData,
+}) => {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
@@ -36,6 +42,11 @@ const VideoPlayer = ({ width = "100%", height = "100%", url }) => {
   const handleProgress = (state) => {
     if (!seeking) {
       setPlayed(state.played);
+
+      // Mark the lecture as completed when progress reaches 95% or more
+      if (state.played >= 0.95) {
+        onProgressUpdate(progressData); // Pass the lecture data to the parent component
+      }
     }
   };
 
