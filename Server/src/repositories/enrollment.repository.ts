@@ -25,8 +25,9 @@ export const enrollUserInCourses = async (
   return enrollment;
 };
 
-export const isCourseEnrolled = async (userID: string, courseId: string) => {
+export const isCourseEnrolled = async (userId: string, courseId: string) => {
   const isEnrolled = await EnrollmentModel.exists({
+    userId: userId,
     "courses.courseId": courseId,
   });
   return isEnrolled;

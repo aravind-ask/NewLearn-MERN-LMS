@@ -80,6 +80,9 @@ const CourseDetails = () => {
   const { data: cart } = useGetCartQuery();
   const { data: wishlist } = useGetWishlistQuery();
 
+  const [ratings, setRatings] = useState([]);
+  const [averageRating, setAverageRating] = useState<string | null>(null);
+
   const {
     data: instructorCourses,
     isLoading: isInstructorCoursesLoading,
@@ -106,15 +109,22 @@ const CourseDetails = () => {
     isLoading: isRatingsLoading,
     isError: isRatingsError,
   } = useGetReviewsByCourseIdQuery(courseId);
+  console.log("ratingsData", ratingsData);
 
-  const ratings = ratingsData?.data || [];
-  const averageRating =
-    ratings.length > 0
-      ? (
-          ratings.reduce((sum, review) => sum + review.rating, 0) /
-          ratings.length
-        ).toFixed(1)
-      : null;
+  useEffect(() => {
+    // const ratings = ratingsData?.data || [];
+    setRatings(ratingsData || []);
+    const averageRating =
+      ratings.length > 0
+        ? (
+            ratings.reduce((sum, review) => sum + review.rating, 0) /
+            ratings.length
+          ).toFixed(1)
+        : null;
+    setAverageRating(averageRating);
+    console.log("ratings", ratings);
+    console.log("averageRating", averageRating);
+  }, [ratingsData, courseId, data]);
 
   const handleAddToCart = async () => {
     try {
