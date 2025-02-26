@@ -39,6 +39,9 @@ import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import Reviews from "@/components/Reviews";
+import Discussions from "@/components/Discussions";
+import ChatWithTrainer from "@/components/ChatWithTrainer";
 
 function EnrolledCourseDetailsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -137,7 +140,7 @@ function EnrolledCourseDetailsPage() {
   }, [showConfetti]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#1c1d1f] text-white">
+    <div className="flex flex-col h-auto bg-[#1c1d1f] text-white">
       {showConfetti && <Confetti />}
       <div className="flex items-center justify-between p-4 bg-[#1c1d1f] border-b border-gray-700">
         <div className="flex items-center space-x-4">
@@ -181,6 +184,31 @@ function EnrolledCourseDetailsPage() {
           <div className="p-6 bg-[#1c1d1f]">
             <h2 className="text-2xl font-bold mb-2">{currentLecture?.title}</h2>
           </div>
+          {/* New Tabs Section */}
+          <Tabs defaultValue="reviews" className="p-6">
+            <TabsList className="grid w-full grid-cols-3 bg-[#1c1d1f]">
+              <TabsTrigger value="reviews" className="text-white">
+                Reviews
+              </TabsTrigger>
+              <TabsTrigger value="discussions" className="text-white">
+                Discussions
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="text-white">
+                Chat with Trainer
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="reviews">
+              <Reviews
+                courseId={courseProgressData?.data?.courseDetails?._id}
+              />
+            </TabsContent>
+            <TabsContent value="discussions">
+              <Discussions />
+            </TabsContent>
+            <TabsContent value="chat">
+              <ChatWithTrainer />
+            </TabsContent>
+          </Tabs>
         </div>
         <div
           className={`fixed top-[64px] right-0 bottom-0 w-[400px] bg-[#1c1d1f] border-l border-gray-700 transition-all duration-300 ${

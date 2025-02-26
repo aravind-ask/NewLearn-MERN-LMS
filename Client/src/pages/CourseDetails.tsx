@@ -31,6 +31,7 @@ import {
   Book,
   Link2,
   LinkIcon,
+  Star,
 } from "lucide-react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useDispatch, useSelector } from "react-redux";
@@ -54,6 +55,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useGetReviewsByCourseIdQuery } from "@/redux/services/ratingsApi";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -98,6 +100,21 @@ const CourseDetails = () => {
   function handleSetFreePreview(getCurrentVideoInfo) {
     setDisplayCurrentFreePreview(getCurrentVideoInfo.videoUrl);
   }
+
+  const {
+    data: ratingsData,
+    isLoading: isRatingsLoading,
+    isError: isRatingsError,
+  } = useGetReviewsByCourseIdQuery(courseId);
+
+  const ratings = ratingsData?.data || [];
+  const averageRating =
+    ratings.length > 0
+      ? (
+          ratings.reduce((sum, review) => sum + review.rating, 0) /
+          ratings.length
+        ).toFixed(1)
+      : null;
 
   const handleAddToCart = async () => {
     try {
@@ -145,7 +162,7 @@ const CourseDetails = () => {
     navigate("/checkout", { state: { courseDetails: course.data } });
   };
 
-  if (isLoading) return <Skeleton />;
+  if (isLoading || isRatingsLoading) return <Skeleton />;
   if (isError)
     return (
       <p className="text-red-600 flex justify-center items-center">
@@ -210,6 +227,17 @@ const CourseDetails = () => {
             {course?.students.length}{" "}
             {course?.students.length <= 1 ? "Student" : "Students"}
           </span>
+          {averageRating ? (
+            <span className="flex items-center">
+              <Star className="mr-1 h-4 w-4 text-yellow-500" />
+              {averageRating} ({ratings.length} Reviews)
+            </span>
+          ) : (
+            <span className="flex items-center">
+              <Star className="mr-1 h-4 w-4 text-gray-500" />
+              No ratings yet
+            </span>
+          )}
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-8 mt-8">

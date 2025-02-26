@@ -143,8 +143,10 @@ const AllCourses = () => {
                     <TableCell className="font-medium">
                       {course.title}
                     </TableCell>
-                    <TableCell>{course.enrolledStudents || 0}</TableCell>
-                    <TableCell>${course.revenue || 0}</TableCell>
+                    <TableCell>{course.students.length || 0}</TableCell>
+                    <TableCell>
+                      ${course.students.length * course.pricing || 0}
+                    </TableCell>
                     <TableCell className="text-right">
                       {/* <Button
                         className="cursor-pointer"
