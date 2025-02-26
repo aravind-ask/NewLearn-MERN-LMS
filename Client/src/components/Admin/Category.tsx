@@ -27,7 +27,6 @@ import { useState } from "react";
 
 const Category = () => {
   const { data: categories, isLoading, isError } = useGetCategoriesQuery();
-  console.log(categories);
   const [createCategory, { isLoading: isCreating }] =
     useCreateCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] =
@@ -38,14 +37,27 @@ const Category = () => {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const handleCreateCategory = async () => {
     if (categoryName.trim()) {
+      // Check for duplicates (case insensitive)
+      const isDuplicate = categories?.data?.some(
+        (category) => category.name.toLowerCase() === categoryName.toLowerCase()
+      );
+
+      if (isDuplicate) {
+        setErrorMessage("Category already exists.");
+        return;
+      }
+
       try {
         await createCategory({ name: categoryName }).unwrap();
         setCategoryName("");
+        setErrorMessage(""); // Clear any previous error message
       } catch (error) {
         console.error("Failed to create category:", error);
+        setErrorMessage("Failed to create category. Please try again.");
       }
     }
   };
@@ -57,7 +69,6 @@ const Category = () => {
 
   const handleUpdateCategory = async () => {
     if (editCategoryName.trim() && editingCategoryId) {
-      console.log(editingCategoryId, editCategoryName);
       try {
         await updateCategory({
           id: editingCategoryId,
@@ -100,9 +111,15 @@ const Category = () => {
                 <Input
                   id="category-name"
                   value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
+                  onChange={(e) => {
+                    setCategoryName(e.target.value);
+                    setErrorMessage(""); // Clear error message when user types
+                  }}
                   placeholder="Enter category name"
                 />
+                {errorMessage && (
+                  <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+                )}
               </div>
             </div>
             <DialogFooter>

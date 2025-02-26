@@ -19,10 +19,29 @@ export const paymentApi = api.injectEndpoints({
         body: paymentData,
       }),
     }),
+
+    // Fetch all payments
+    getAllPayments: builder.query({
+      query: () => ({
+        url: "/payments",
+        method: "GET",
+      }),
+    }),
+
+    // Fetch payments by date range
+    getPaymentsByDateRange: builder.query({
+      query: ({ startDate, endDate }) => ({
+        url: "/payments/date-range",
+        method: "GET",
+        params: { startDate, endDate },
+      }),
+    }),
   }),
 });
 
 export const {
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
+  useGetAllPaymentsQuery,
+  useGetPaymentsByDateRangeQuery,
 } = paymentApi;

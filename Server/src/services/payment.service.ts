@@ -3,6 +3,8 @@ import razorpay from "../utils/razorpay";
 import {
   createPayment,
   updatePaymentStatus,
+  getPaymentsByDateRange,
+  getAllPayments,
 } from "../repositories/payment.repository";
 import { CourseService } from "./course.service";
 import { enrollUserInCourses } from "../repositories/enrollment.repository";
@@ -94,4 +96,12 @@ export const verifyRazorpayPayment = async (paymentData: any) => {
     console.error("Error verifying payment:", error);
     return { success: false };
   }
+};
+
+export const getPaymentsByDate = async (startDate: Date, endDate: Date) => {
+  return await getPaymentsByDateRange(startDate, endDate);
+};
+
+export const getAllPaymentsService = async () => {
+  return await getAllPayments();
 };

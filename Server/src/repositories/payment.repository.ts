@@ -27,3 +27,19 @@ export const updatePaymentStatus = async (
   console.log("Updated payment record:", updatedPayment);
   return updatedPayment;
 };
+
+export const getAllPayments = async () => {
+  return await PaymentModel.find().exec();
+};
+
+export const getPaymentsByDateRange = async (
+  startDate: Date,
+  endDate: Date
+) => {
+  return await PaymentModel.find({
+    orderDate: {
+      $gte: startDate,
+      $lte: endDate,
+    },
+  }).exec();
+};
