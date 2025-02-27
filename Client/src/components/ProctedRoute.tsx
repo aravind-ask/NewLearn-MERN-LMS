@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import { useLogoutMutation } from "../redux/services/authApi";
-import { useGetUserStatusQuery } from "../redux/services/authApi"; // Add this import
+import { useGetUserStatusQuery } from "../redux/services/authApi";
 import Popup from "./PopUp";
 import { logout } from "@/redux/slices/authSlice";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProtectedRoute() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -25,6 +26,11 @@ export default function ProtectedRoute() {
   useEffect(() => {
     if (userStatus?.isBlocked) {
       setIsBlocked(true);
+      toast({
+        title: "error",
+        description: "You are blocked by the Admin!",
+        variant: "destructive",
+      });
     }
   }, [userStatus]);
 
@@ -33,6 +39,11 @@ export default function ProtectedRoute() {
       await logoutMutation({ userId: user.id });
       localStorage.removeItem("user");
       dispatch(logout());
+      toast({
+        title: "error",
+        description: "You are blocked, logging out!",
+        variant: "destructive",
+      });
       setIsBlocked(false);
       navigate("/login");
     }

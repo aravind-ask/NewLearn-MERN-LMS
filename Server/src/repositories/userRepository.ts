@@ -44,6 +44,7 @@ export const userRepository = {
   ): Promise<IUser | null> {
     return await User.findByIdAndUpdate(userId, updateData, { new: true });
   },
+
   async toggleBlockUser(userId: string, isBlocked: boolean) {
     console.log(userId, isBlocked);
     return await User.findByIdAndUpdate(
@@ -52,6 +53,7 @@ export const userRepository = {
       { new: true }
     );
   },
+  
   async updateUserRole(userId: string, role: string) {
     return await User.findByIdAndUpdate(userId, { role }, { new: true });
   },

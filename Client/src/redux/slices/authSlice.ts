@@ -7,6 +7,11 @@ type User = {
   email: string;
   role: "student" | "instructor" | "admin";
   photoUrl: string;
+  bio: string;
+  phoneNumber: string;
+  address: string;
+  dateOfBirth: string;
+  education: string;
   isBlocked: boolean;
 };
 
@@ -75,7 +80,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    .addMatcher(
+      .addMatcher(
         (action) => action.type === "/auth/refresh-token",
         (
           state,
@@ -149,8 +154,7 @@ const authSlice = createSlice({
           setLocalStorage("token", payload.data.accessToken);
           setLocalStorage("refreshToken", payload.data.refreshToken);
         }
-      )
-      
+      );
   },
 });
 

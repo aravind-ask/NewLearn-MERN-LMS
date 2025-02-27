@@ -123,16 +123,16 @@ const CartPage = () => {
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-bold">₹ {totalCartValue}</span>
                   </div>
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-600">Tax (18%)</span>
                     <span className="font-bold">
                       ₹ {(totalCartValue * 0.18).toFixed(2)}
                     </span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total</span>
                     <span className="font-bold">
-                      ₹ {(totalCartValue * 1.18).toFixed(2)}
+                      ₹ {totalCartValue}
                     </span>
                   </div>
                   <Button

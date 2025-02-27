@@ -7,13 +7,23 @@ class UserService {
     name?: string,
     email?: string,
     password?: string,
-    photoUrl?: string
+    photoUrl?: string,
+    bio?: string,
+    phoneNumber?: string,
+    address?: string,
+    dateOfBirth?: Date,
+    education?: string
   ) {
     const updates: any = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (password) updates.password = await bcrypt.hash(password, 10);
     if (photoUrl) updates.photoUrl = photoUrl;
+    if (bio) updates.bio = bio;
+    if (phoneNumber) updates.phoneNumber = phoneNumber;
+    if (address) updates.address = address;
+    if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
+    if (education) updates.education = education;
     return await userRepository.updateUser(userId, updates);
   }
   async getUsers(page: number, limit: number) {

@@ -32,7 +32,17 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, email, password, photoUrl } = req.body;
+    const {
+      name,
+      email,
+      password,
+      photoUrl,
+      bio,
+      phoneNumber,
+      address,
+      dateOfBirth,
+      education,
+    } = req.body;
     console.log("photp", req.body.photoUrl);
     if (!req.user) {
       errorResponse(res, "Unauthorized", 401);
@@ -45,7 +55,12 @@ export const updateProfile = async (
       name,
       email,
       password,
-      photoUrl
+      photoUrl,
+      bio,
+      phoneNumber,
+      address,
+      dateOfBirth,
+      education
     );
 
     if (!updatedUser) {
@@ -59,6 +74,12 @@ export const updateProfile = async (
       email: updatedUser.email,
       role: updatedUser.role,
       photoUrl: updatedUser.photoUrl,
+      bio: updatedUser.bio,
+      phoneNumber: updatedUser.phoneNumber,
+      address: updatedUser.address,
+      dateOfBirth: updatedUser.dateOfBirth,
+      education: updatedUser.education,
+      isBlocked: updatedUser.isBlocked,
     };
     successResponse(res, user, "Profile updated successfully!", 200);
   } catch (error: any) {

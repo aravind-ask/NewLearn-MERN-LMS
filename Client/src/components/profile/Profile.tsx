@@ -10,24 +10,31 @@ import {
   useGetPresignedUrlMutation,
 } from "@/redux/services/authApi";
 import { PasswordChange } from "../PasswordChange";
+import { Loader2, UploadCloud, Edit, Save } from "lucide-react"; // Icons for actions
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  console.log(user);
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const [getPresignedUrl] = useGetPresignedUrlMutation();
   const [isUploading, setIsUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     photoUrl: user?.photoUrl || "",
+    bio: user?.bio || "",
+    phoneNumber: user?.phoneNumber || "",
+    address: user?.address || "",
+    dateOfBirth: user?.dateOfBirth || "",
+    education: user?.education || "",
   });
-  const [change, setChange] = useState(false);
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setChange(true);
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
@@ -50,7 +57,6 @@ const Profile = () => {
       });
 
       setFormData({ ...formData, photoUrl: url });
-      setChange(true);
       setIsUploading(false);
     } catch (error) {
       console.error("Error uploading file", error);
@@ -75,7 +81,7 @@ const Profile = () => {
       }
       await updateProfile(formData).unwrap();
       alert("Profile updated successfully!");
-      setChange(false);
+      setIsEditing(false);
     } catch (error) {
       console.error("Update failed", error);
       if (error?.data && error.data?.errors) {
@@ -88,66 +94,230 @@ const Profile = () => {
   };
 
   return (
-    <Card className="p-6 w-full max-w-lg mx-auto">
-      <h2 className="text-xl font-bold mb-4">Profile Settings</h2>
-      {errors.general && <p className="text-red-500 mb-4">{errors.general}</p>}
-
-      <div className="flex items-center justify-center space-x-4 mb-4 relative">
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-          id="fileInput"
-        />
-        <div className="relative">
-          <img
-            src={formData.photoUrl}
-            alt="Profile"
-            className="w-32 h-32 rounded-full border cursor-pointer"
-            onClick={() => document.getElementById("fileInput")?.click()}
-          />
-          {isUploading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
-            </div>
-          )}
+    <div className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        Profile Settings
+      </h2>
+      {errors.general && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6">
+          {errors.general}
         </div>
-        {errors.photoUrl && <p className="text-red-500">{errors.photoUrl}</p>}
-      </div>
+      )}
 
-      {/* Name */}
-      <div className="mb-4">
-        <Label>Name</Label>
-        <Input
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          className={errors.name ? "border-red-500" : ""}
-        />
-        {errors.name && <p className="text-red-500">{errors.name}</p>}
-      </div>
+      {/* Display View */}
+      {!isEditing && (
+        <div className="space-y-6">
+          {/* Profile Picture */}
+          <div className="flex flex-col items-center">
+            <img
+              src={formData.photoUrl || "/default-avatar.png"}
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+          </div>
 
-      {/* Email */}
-      <div className="mb-4">
-        <Label>Email</Label>
-        <Input
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          disabled
-        />
-        {errors.email && <p className="text-red-500">{errors.email}</p>}
-      </div>
+          {/* User Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label className="text-gray-600">Name</Label>
+              <p className="text-gray-800 font-medium">{formData.name}</p>
+            </div>
+            <div>
+              <Label className="text-gray-600">Email</Label>
+              <p className="text-gray-800 font-medium">{formData.email}</p>
+            </div>
+            <div>
+              <Label className="text-gray-600">Phone Number</Label>
+              <p className="text-gray-800 font-medium">
+                {formData.phoneNumber}
+              </p>
+            </div>
+            <div>
+              <Label className="text-gray-600">Date of Birth</Label>
+              <p className="text-gray-800 font-medium">
+                {formData.dateOfBirth}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Address</Label>
+              <p className="text-gray-800 font-medium">{formData.address}</p>
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Education</Label>
+              <p className="text-gray-800 font-medium">{formData.education}</p>
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Bio</Label>
+              <p className="text-gray-800 font-medium">{formData.bio}</p>
+            </div>
+          </div>
 
-      {/* Save Button */}
-      <div className="flex justify-between">
-        <PasswordChange eMail={user?.email} />
-        <Button onClick={handleSubmit} disabled={isLoading || !change}>
-          {isLoading ? "Updating..." : "Update Profile"}
-        </Button>
-      </div>
-    </Card>
+          {/* Edit Button */}
+          <div className="flex justify-between mt-6 ">
+            <PasswordChange eMail={user?.email} />
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit View */}
+      {isEditing && (
+        <div className="space-y-6">
+          {/* Profile Picture Upload */}
+          <div className="flex flex-col items-center">
+            <div className="relative group">
+              <img
+                src={formData.photoUrl || "/default-avatar.png"}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => document.getElementById("fileInput")?.click()}
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <UploadCloud className="w-8 h-8 text-white" />
+              </div>
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              id="fileInput"
+            />
+            {errors.photoUrl && (
+              <p className="text-red-500 text-sm mt-2">{errors.photoUrl}</p>
+            )}
+          </div>
+
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label className="text-gray-600">Name</Label>
+              <Input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={`mt-1 ${errors.name ? "border-red-500" : ""}`}
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-gray-600">Email</Label>
+              <Input
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled
+                className="mt-1 bg-gray-100"
+              />
+            </div>
+            <div>
+              <Label className="text-gray-600">Phone Number</Label>
+              <Input
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className={`mt-1 ${errors.phoneNumber ? "border-red-500" : ""}`}
+              />
+              {errors.phoneNumber && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.phoneNumber}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-gray-600">Date of Birth</Label>
+              <Input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className={`mt-1 ${errors.dateOfBirth ? "border-red-500" : ""}`}
+              />
+              {errors.dateOfBirth && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.dateOfBirth}
+                </p>
+              )}
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Address</Label>
+              <Input
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className={`mt-1 ${errors.address ? "border-red-500" : ""}`}
+              />
+              {errors.address && (
+                <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+              )}
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Education</Label>
+              <Input
+                name="education"
+                value={formData.education}
+                onChange={handleChange}
+                className={`mt-1 ${errors.education ? "border-red-500" : ""}`}
+              />
+              {errors.education && (
+                <p className="text-red-500 text-sm mt-1">{errors.education}</p>
+              )}
+            </div>
+            <div className="col-span-2">
+              <Label className="text-gray-600">Bio</Label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className={`w-full p-3 mt-1 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  errors.bio ? "border-red-500" : "border-gray-300"
+                }`}
+                rows={4}
+              />
+              {errors.bio && (
+                <p className="text-red-500 text-sm mt-1">{errors.bio}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Save and Cancel Buttons */}
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button
+              onClick={() => setIsEditing(false)}
+              variant="outline"
+              className="border-gray-300 hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

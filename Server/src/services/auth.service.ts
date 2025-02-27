@@ -95,6 +95,11 @@ export const authService = {
         email: string;
         role: string;
         photoUrl?: string;
+        bio?: string;
+        phoneNumber?: string;
+        address?: string;
+        dateOfBirth?: Date;
+        education?: string;
         isBlocked: boolean;
       };
     } = {
@@ -106,6 +111,11 @@ export const authService = {
         email: user.email,
         role: user.role,
         photoUrl: user.photoUrl,
+        bio: user.bio,
+        phoneNumber: user.phoneNumber,
+        address: user.address,
+        dateOfBirth: user.dateOfBirth,
+        education: user.education,
         isBlocked: user.isBlocked!,
       },
     };

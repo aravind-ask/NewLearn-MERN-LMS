@@ -60,9 +60,9 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-auto bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-4 flex flex-col gap-4">
+      <aside className="w-64 sticky top-28 bg-white shadow-md p-4 flex flex-col gap-4">
         <h2 className="text-xl font-bold text-center mb-4">Dashboard</h2>
 
         {tabs.map((tab) => (

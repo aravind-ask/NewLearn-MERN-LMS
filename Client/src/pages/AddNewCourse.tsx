@@ -35,14 +35,12 @@ const AddNewCourse = () => {
   const params = useParams();
   const initialLoad = useRef(true);
 
-  // Set the current edited course ID from params
   useEffect(() => {
     if (params.courseId) {
       dispatch(setCurrentEditedCourseId(params.courseId));
     }
   }, [params.courseId, dispatch]);
 
-  // Fetch course details if editing an existing course
   const { data: courseDetails } = useGetCourseDetailsQuery(
     currentEditedCourseId,
     {
@@ -50,7 +48,6 @@ const AddNewCourse = () => {
     }
   );
 
-  // Update form data when courseDetails changes
   useEffect(() => {
     if (courseDetails && initialLoad.current) {
       const setCourseFormData = Object.keys(
@@ -62,13 +59,13 @@ const AddNewCourse = () => {
 
       dispatch(setCourseLandingFormData(setCourseFormData));
       dispatch(setCourseCurriculumFormData(courseDetails.data.curriculum));
-      initialLoad.current = false; // Prevent further updates
+      initialLoad.current = false; 
     }
   }, [courseDetails, dispatch]);
 
   useEffect(() => {
     return () => {
-      dispatch(resetCourseFormData()); // Reset the form data
+      dispatch(resetCourseFormData()); 
     };
   }, [dispatch]);
 
@@ -87,7 +84,6 @@ const AddNewCourse = () => {
 
       let response;
       if (currentEditedCourseId) {
-        // Update existing course
         const courseEditData = {
           courseId: currentEditedCourseId,
           ...courseData,
@@ -101,7 +97,6 @@ const AddNewCourse = () => {
           variant: "default",
         });
       } else {
-        // Create new course
         console.log("Creating course", courseData);
         response = await createCourse(courseData).unwrap();
         console.log("Course Created Successfully", response);

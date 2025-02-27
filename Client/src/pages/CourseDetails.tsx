@@ -96,7 +96,7 @@ const CourseDetails = () => {
 
   const getIndexOfFreePreviewUrl =
     course !== null
-      ? course?.data?.curriculum?.findIndex((section) =>
+      ? course?.curriculum?.findIndex((section) =>
           section.lectures.some((lecture) => lecture.freePreview)
         )
       : -1;
@@ -130,7 +130,7 @@ const CourseDetails = () => {
   const handleAddToCart = async () => {
     try {
       await addToCartApi(courseId).unwrap();
-      dispatch(addToCart(course?.data));
+      dispatch(addToCart(course));
     } catch (error) {
       console.error("Failed to add to cart:", error);
     }
@@ -148,7 +148,7 @@ const CourseDetails = () => {
   const handleAddToWishlist = async () => {
     try {
       await addToWishlistApi(courseId).unwrap();
-      dispatch(addToWishlist(course?.data));
+      dispatch(addToWishlist(course));
     } catch (error) {
       console.error("Failed to add to wishlist:", error);
     }
@@ -170,7 +170,7 @@ const CourseDetails = () => {
   }, [displayCurrentFreePreview]);
 
   const handleEnrollNow = () => {
-    navigate("/checkout", { state: { courseDetails: course.data } });
+    navigate("/checkout", { state: { courseDetails: course } });
   };
 
   if (isLoading || isRatingsLoading) return <Skeleton />;

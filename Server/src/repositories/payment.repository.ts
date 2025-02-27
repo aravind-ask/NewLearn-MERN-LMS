@@ -1,13 +1,12 @@
-// src/repositories/paymentRepository.ts
 import PaymentModel, { IPayment } from "../models/Payment";
 
 export const createPayment = async (paymentData: Partial<IPayment>) => {
   return await PaymentModel.create({
     ...paymentData,
-    paymentId: "pending", // Temporary value
-    payerId: "pending", // Temporary value
-    paymentStatus: "pending", // Default value
-    orderStatus: "pending", // Default value
+    paymentId: "pending", 
+    payerId: "pending", 
+    paymentStatus: "pending", 
+    orderStatus: "pending", 
   });
 };
 

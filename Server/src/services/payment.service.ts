@@ -1,4 +1,3 @@
-// src/services/paymentService.ts
 import razorpay from "../utils/razorpay";
 import {
   createPayment,
@@ -20,13 +19,11 @@ export const createRazorpayOrder = async (orderData: {
 }) => {
   const { amount, courses, userId, userName, userEmail } = orderData;
 
-  // Create Razorpay order
   const razorpayOrder = await razorpay.orders.create({
     amount: amount * 100,
     currency: "INR",
   });
 
-  // Create payment record in the database
   const payment = await createPayment({
     userId,
     userName,

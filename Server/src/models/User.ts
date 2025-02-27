@@ -14,6 +14,11 @@ export interface IUser extends Document {
   enrolledCourses?: string[];
   photoUrl?: string;
   refreshToken?: string;
+  bio?: string;
+  phoneNumber?: string;
+  address?: string;
+  dateOfBirth?: Date;
+  education?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -33,6 +38,11 @@ const UserSchema = new Schema<IUser>(
     enrolledCourses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
     photoUrl: { type: String, default: "" },
     refreshToken: { type: String, default: null },
+    bio: { type: String, default: "" },
+    phoneNumber: { type: String, default: "" },
+    address: { type: String, default: "" },
+    dateOfBirth: { type: Date, default: null },
+    education: { type: String, default: "" },
   },
   { timestamps: true }
 );

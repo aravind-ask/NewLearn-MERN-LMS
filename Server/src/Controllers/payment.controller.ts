@@ -1,4 +1,3 @@
-// src/controllers/paymentController.ts
 import { Request, Response } from "express";
 import {
   createRazorpayOrder,
