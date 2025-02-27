@@ -57,30 +57,33 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-4 flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-center mb-4">Admin Dashboard</h2>
-        {tabs.map((tab) => (
+      <div className="sticky top-28 h-full flex flex-col gap-4">
+        <aside className="w-64 h-full bg-white shadow-md p-4 flex flex-col gap-4 sticky top-28">
+          <h2 className="text-xl font-bold text-center mb-4">
+            Admin Dashboard
+          </h2>
+          {tabs.map((tab) => (
+            <Button
+              key={tab.key}
+              variant={selectedTab === tab.key ? "default" : "outline"}
+              onClick={() => setSelectedTab(tab.key)}
+              className="flex items-center gap-2 w-full justify-start"
+            >
+              {tab.icon}
+              {tab.label}
+            </Button>
+          ))}
+
           <Button
-            key={tab.key}
-            variant={selectedTab === tab.key ? "default" : "outline"}
-            onClick={() => setSelectedTab(tab.key)}
-            className="flex items-center gap-2 w-full justify-start"
+            variant="destructive"
+            onClick={handleLogout}
+            className="flex items-center gap-2 width-full justify-start"
           >
-            {tab.icon}
-            {tab.label}
+            <LogOut size={20} />
+            Logout
           </Button>
-        ))}
-
-        <Button
-          variant="destructive"
-          onClick={handleLogout}
-          className="flex items-center gap-2 width-full justify-start"
-        >
-          <LogOut size={20} />
-          Logout
-        </Button>
-      </aside>
-
+        </aside>
+      </div>
       {/* Main Content */}
       <main className="flex-1 p-6">
         <Card className="p-4">

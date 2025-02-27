@@ -29,9 +29,9 @@ import {
   Heart,
   ShoppingCart,
   Book,
-  Link2,
   LinkIcon,
   Star,
+  User2,
 } from "lucide-react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,6 +56,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useGetReviewsByCourseIdQuery } from "@/redux/services/ratingsApi";
+import { format } from "date-fns";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -228,12 +229,16 @@ const CourseDetails = () => {
               <LinkIcon className="mr-1 h-4 w-4" />
             </Link>
           </span>
-          <span>Created On {course?.date.split("T")[0]}</span>
+          <span>
+            Created On{" "}
+            {format(new Date(course.date), "MMM dd, yyyy")}
+          </span>
           <span className="flex items-center">
             <Globe className="mr-1 h-4 w-4" />
             {course?.primaryLanguage}
           </span>
-          <span>
+          <span className="flex items-center">
+            <User2 className="mr-1 h-4 w-4" />
             {course?.students.length}{" "}
             {course?.students.length <= 1 ? "Student" : "Students"}
           </span>

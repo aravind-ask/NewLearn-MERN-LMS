@@ -146,6 +146,9 @@ export const authApi = api.injectEndpoints({
         body,
       }),
     }),
+    getUserStatus: builder.query({
+      query: () => `/user/status`,
+    }),
   }),
 });
 
@@ -161,4 +164,5 @@ export const {
   useUpdateProfileMutation,
   useGetPresignedUrlMutation,
   useRefreshAccessTokenMutation,
+  useGetUserStatusQuery,
 } = authApi;

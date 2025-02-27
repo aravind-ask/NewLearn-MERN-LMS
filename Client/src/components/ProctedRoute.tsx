@@ -1,28 +1,40 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import { useLogoutMutation } from "../redux/services/authApi";
-import Popup from "./PopUp"; 
+import { useGetUserStatusQuery } from "../redux/services/authApi"; // Add this import
+import Popup from "./PopUp";
+import { logout } from "@/redux/slices/authSlice";
 
 export default function ProtectedRoute() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [isBlocked, setIsBlocked] = useState(false);
-  const [logout] = useLogoutMutation();
+  const [logoutMutation] = useLogoutMutation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { data: userStatus, refetch } = useGetUserStatusQuery(
+    {},
+    {
+      pollingInterval: 5000,
+      skip: !user,
+    }
+  );
 
   useEffect(() => {
-    if (user?.isBlocked) {
+    if (userStatus?.isBlocked) {
       setIsBlocked(true);
     }
-  }, [user]);
+  }, [userStatus]);
 
   const handleClosePopup = async () => {
-    setIsBlocked(false);
     if (user) {
-      await logout({ userId: user.id }).unwrap();
+      await logoutMutation({ userId: user.id });
       localStorage.removeItem("user");
-      navigate("/login"); 
+      dispatch(logout());
+      setIsBlocked(false);
+      navigate("/login");
     }
   };
 

@@ -50,7 +50,7 @@ const SalesPage: React.FC = () => {
     payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
   const totalOrders = payments?.length || 0;
   const successfulPayments =
-    payments?.filter((payment) => payment.paymentStatus === "success").length ||
+    payments?.filter((payment) => payment.paymentStatus === "completed").length ||
     0;
   const pendingPayments =
     payments?.filter((payment) => payment.paymentStatus === "pending").length ||

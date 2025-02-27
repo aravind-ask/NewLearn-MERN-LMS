@@ -5,6 +5,7 @@ import { errorResponse, successResponse } from "../utils/responseHandler";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
 import { fetchEnrolledCourses } from "../services/enrollment.service";
+import { User } from "../models/User";
 
 dotenv.config();
 
@@ -130,6 +131,24 @@ export const getStudentCourses = async (
     );
   } catch (error: any) {
     console.error("Error fetching student courses:", error);
+    errorResponse(res, "Internal Server Error", error.status || 500);
+  }
+};
+
+export const getUserStatus = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      errorResponse(res, "User not found", 404);
+      return;
+    }
+    res.json({ isBlocked: user?.isBlocked });
+  } catch (error: any) {
+    console.error("Error fetching user status:", error);
     errorResponse(res, "Internal Server Error", error.status || 500);
   }
 };

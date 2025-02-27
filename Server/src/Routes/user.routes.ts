@@ -4,6 +4,7 @@ import {
   getStudentCourses,
   getUploadUrl,
   getUsers,
+  getUserStatus,
   updateProfile,
 } from "../Controllers/user.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
@@ -30,5 +31,6 @@ router.get(
   authMiddleware.verifyAccessToken,
   getStudentCourses
 );
+router.get("/status", authMiddleware.verifyAccessToken, getUserStatus);
 
 export default router;
