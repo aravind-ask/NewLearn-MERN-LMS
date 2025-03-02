@@ -83,7 +83,7 @@ const AllCourses = () => {
       { id: "All", label: "All" },
       ...(categoriesData?.data
         ? categoriesData.data.map((cat) => ({
-            id: cat.name,
+            id: cat._id,
             label: cat.name,
           }))
         : []),

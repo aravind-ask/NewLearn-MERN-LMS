@@ -1,104 +1,96 @@
+// src/services/payment.service.ts
 import razorpay from "../utils/razorpay";
-import {
-  createPayment,
-  updatePaymentStatus,
-  getPaymentsByDateRange,
-  getAllPayments,
-} from "../repositories/payment.repository";
+import { IPaymentRepository } from "../repositories/interfaces/IPaymentRepository";
+import { IEnrollmentRepository } from "../repositories/interfaces/IEnrollmentRepository";
 import { CourseService } from "./course.service";
-import { enrollUserInCourses } from "../repositories/enrollment.repository";
+import { AppError } from "../utils/appError";
+import { IPayment } from "@/models/Payment";
 
-const courseService = new CourseService();
+export class PaymentService {
+  constructor(
+    private paymentRepo: IPaymentRepository,
+    private enrollmentRepo: IEnrollmentRepository,
+    private courseService: CourseService
+  ) {}
 
-export const createRazorpayOrder = async (orderData: {
-  amount: number;
-  courses: any[];
-  userId: string;
-  userName: string;
-  userEmail: string;
-}) => {
-  const { amount, courses, userId, userName, userEmail } = orderData;
+  async createRazorpayOrder(orderData: {
+    amount: number;
+    courses: {
+      courseId: string;
+      courseTitle: string;
+      courseImage: string;
+      coursePrice: number;
+      instructorId: string;
+      instructorName: string;
+    }[];
+    userId: string;
+    userName: string;
+    userEmail: string;
+  }) {
+    const { amount, courses, userId, userName, userEmail } = orderData;
 
-  const razorpayOrder = await razorpay.orders.create({
-    amount: amount * 100,
-    currency: "INR",
-  });
+    const razorpayOrder = await razorpay.orders.create({
+      amount: amount * 100, // Convert to paise
+      currency: "INR",
+    });
 
-  const payment = await createPayment({
-    userId,
-    userName,
-    userEmail,
-    orderId: razorpayOrder.id,
-    paymentMethod: "razorpay",
-    amount,
-    courses,
-  });
+    await this.paymentRepo.createPayment({
+      userId,
+      userName,
+      userEmail,
+      orderId: razorpayOrder.id,
+      paymentMethod: "razorpay",
+      amount,
+      courses,
+    });
 
-  return razorpayOrder;
-};
+    return razorpayOrder;
+  }
 
-export const verifyRazorpayPayment = async (paymentData: any) => {
-  const { razorpay_payment_id, razorpay_order_id } = paymentData;
+  async verifyRazorpayPayment(paymentData: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+  }): Promise<{ success: boolean }> {
+    const { razorpay_payment_id, razorpay_order_id } = paymentData;
 
-  console.log("Verifying payment with Razorpay...");
-  console.log("Payment ID:", razorpay_payment_id);
-  console.log("Order ID:", razorpay_order_id);
-
-  try {
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
-    console.log("Razorpay payment details:", payment);
+    if (payment.status !== "captured") {
+      throw new AppError("Payment not captured", 400);
+    }
 
-    if (payment.status === "captured") {
-      console.log("Payment captured. Updating payment status...");
-
-      const updatedPayment = await updatePaymentStatus(razorpay_order_id, {
+    const updatedPayment = await this.paymentRepo.updatePaymentStatus(
+      razorpay_order_id,
+      {
         paymentId: razorpay_payment_id,
         orderStatus: "completed",
         paymentStatus: "completed",
-      });
-
-      console.log("Updated payment record:", updatedPayment);
-
-      if (updatedPayment) {
-        console.log("Enrolling user in courses...");
-
-        const { userId, userName, userEmail, courses } = updatedPayment;
-        const enrollment = await enrollUserInCourses(userId, courses);
-
-        console.log("Enrollment result:", enrollment);
-
-        for (let course of courses) {
-          const data = {
-            studentId: userId,
-            studentName: userName,
-            studentEmail: userEmail,
-            paidAmount: course.coursePrice,
-          };
-          await courseService.updateCourseEnrollment(course.courseId, data);
-        }
-
-        return { success: true };
-      } else {
-        console.error(
-          "Payment record not found for orderId:",
-          razorpay_order_id
-        );
-        return { success: false };
       }
-    } else {
-      console.error("Payment not captured. Status:", payment.status);
-      return { success: false };
+    );
+
+    if (!updatedPayment) {
+      throw new AppError("Payment record not found", 404);
     }
-  } catch (error) {
-    console.error("Error verifying payment:", error);
-    return { success: false };
+
+    const { userId, userName, userEmail, courses } = updatedPayment;
+    await this.enrollmentRepo.enrollUserInCourses(userId, courses);
+
+    for (const course of courses) {
+      await this.courseService.updateCourseEnrollment(course.courseId, {
+        studentId: userId,
+        studentName: userName,
+        studentEmail: userEmail,
+        paidAmount: course.coursePrice,
+      });
+    }
+
+    return { success: true };
   }
-};
 
-export const getPaymentsByDate = async (startDate: Date, endDate: Date) => {
-  return await getPaymentsByDateRange(startDate, endDate);
-};
+  async getAllPayments(): Promise<IPayment[]> {
+    return await this.paymentRepo.getAllPayments();
+  }
 
-export const getAllPaymentsService = async () => {
-  return await getAllPayments();
-};
+  async getPaymentsByDate(startDate: Date, endDate: Date): Promise<IPayment[]> {
+    return await this.paymentRepo.getPaymentsByDateRange(startDate, endDate);
+  }
+}

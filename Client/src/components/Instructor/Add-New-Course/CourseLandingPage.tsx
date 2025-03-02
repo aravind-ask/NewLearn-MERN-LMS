@@ -39,7 +39,7 @@ const CourseLandingPage = () => {
   useEffect(() => {
     if (categoriesData) {
       const transformedCategories = categoriesData.data.map((category) => ({
-        id: category.name,
+        id: category._id,
         label: category.name,
       }));
 

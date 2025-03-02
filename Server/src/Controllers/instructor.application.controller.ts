@@ -1,64 +1,58 @@
+// src/controllers/instructorApplication.controller.ts
 import { Request, Response, NextFunction } from "express";
 import { InstructorApplicationService } from "../services/instructorApplication.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import mongoose from "mongoose";
 
-const instructorApplicationService = new InstructorApplicationService();
-
 interface CustomRequest extends Request {
-  user?: {
-    id: string;
-  };
+  user?: { id: string };
 }
 
 export class InstructorApplicationController {
-  static async applyForInstructor(
+  constructor(private instructorAppService: InstructorApplicationService) {}
+
+  async applyForInstructor(
     req: CustomRequest,
     res: Response,
     next: NextFunction
   ) {
     try {
       const userId = req.user?.id;
-      if (!userId) {
-        errorResponse(res, "User ID is required.", 400);
-      }
-      console.log(req.body);
-      const application = await instructorApplicationService.applyForInstructor(
+      const application = await this.instructorAppService.applyForInstructor(
         userId,
         req.body
       );
       successResponse(
         res,
         application,
-        "Application submitted successfully.",
+        "Application submitted successfully",
         201
       );
     } catch (error: any) {
-      console.log(error);
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 
-  static async getApplications(req: Request, res: Response) {
-    const { page = 1, limit = 10 } = req.query;
+  async getApplications(req: Request, res: Response, next: NextFunction) {
     try {
+      const { page = "1", limit = "10" } = req.query;
       const { applications, totalPages } =
-        await instructorApplicationService.getInstructorApplications(
-          page as number,
-          limit as number
+        await this.instructorAppService.getInstructorApplications(
+          Number(page),
+          Number(limit)
         );
       successResponse(
         res,
         { applications, totalPages },
-        "Instructor applications fetched successfully.",
+        "Instructor applications fetched successfully",
         200
       );
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      errorResponse(res, error.message, error.statusCode || 500);
     }
   }
 
-  static async reviewApplication(
+  async reviewApplication(
     req: CustomRequest,
     res: Response,
     next: NextFunction
@@ -66,14 +60,14 @@ export class InstructorApplicationController {
     try {
       const { applicationId } = req.params;
       const { status, rejectionReason } = req.body;
-      console.log(applicationId, status, rejectionReason);
 
       if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-        errorResponse(res, "Invalid application ID.", 400);
+        errorResponse(res, "Invalid application ID", 400);
+        return;
       }
 
       const updatedApplication =
-        await instructorApplicationService.reviewApplication(
+        await this.instructorAppService.reviewApplication(
           applicationId,
           status,
           rejectionReason
@@ -81,68 +75,61 @@ export class InstructorApplicationController {
       successResponse(
         res,
         updatedApplication,
-        "Application reviewed successfully.",
+        "Application reviewed successfully",
         200
       );
     } catch (error: any) {
-      console.log(error);
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 
-  static async getApplication(req: CustomRequest, res: Response) {
+  async getApplication(req: CustomRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
-      if (!userId) {
-        errorResponse(res, "Unauthorized", 400);
-      }
-      const application = await instructorApplicationService.getApplication(
+      const application = await this.instructorAppService.getApplication(
         userId
       );
       successResponse(
         res,
         application,
-        "Instructor application fetched successfully.",
+        "Instructor application fetched successfully",
         200
       );
     } catch (error: any) {
-      console.log(error);
       errorResponse(res, error.message, error.statusCode || 400);
     }
   }
-  static async getInstructorDetails(req: Request, res: Response) {
+
+  async getInstructorDetails(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.params.instructorId;
-
-      const application = await instructorApplicationService.getApplication(
-        userId
+      const { instructorId } = req.params;
+      const application = await this.instructorAppService.getApplication(
+        instructorId
       );
       successResponse(
         res,
         application,
-        "Instructor Details fetched successfully.",
+        "Instructor details fetched successfully",
         200
       );
     } catch (error: any) {
-      console.log(error);
       errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 
-  static async getApplicationDetails(req: Request, res: Response) {
+  async getApplicationDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const { applicationId } = req.params;
       const applicationDetails =
-        await instructorApplicationService.getApplicationDetails(applicationId);
+        await this.instructorAppService.getApplicationDetails(applicationId);
       successResponse(
         res,
         applicationDetails,
-        "Instructor application details fetched successfully.",
+        "Instructor application details fetched successfully",
         200
       );
     } catch (error: any) {
-      console.log(error);
-      errorResponse(res, error.message, 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 }

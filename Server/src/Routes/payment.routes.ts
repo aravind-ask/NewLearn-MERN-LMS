@@ -1,29 +1,50 @@
-// src/routes/paymentRoutes.ts
-import express from "express";
-import {
-  createOrder,
-  getAllPayments,
-  getPaymentsByDateRange,
-  verifyPayment,
-} from "../Controllers/payment.controller";
+// src/Routes/paymentRoutes.ts
+import express, { Router } from "express";
+import { PaymentRepository } from "../repositories/payment.repository";
+import { EnrollmentRepository } from "../repositories/enrollment.repository";
+import { CourseRepository } from "../repositories/course.repository";
+import { CourseService } from "../services/course.service";
+import { PaymentService } from "../services/payment.service";
+import { PaymentController } from "../Controllers/payment.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 
-const router = express.Router();
+// Initialize dependencies
+const paymentRepository = new PaymentRepository();
+const enrollmentRepository = new EnrollmentRepository();
+const courseRepository = new CourseRepository();
+const courseService = new CourseService(courseRepository);
+const paymentService = new PaymentService(
+  paymentRepository,
+  enrollmentRepository,
+  courseService
+);
+const paymentController = new PaymentController(paymentService);
 
-router.post("/create-order", authMiddleware.verifyAccessToken, createOrder);
-router.post("/verify", authMiddleware.verifyAccessToken, verifyPayment);
+const router: Router = express.Router();
+
+// Routes
+router.post(
+  "/create-order",
+  authMiddleware.verifyAccessToken,
+  paymentController.createOrder.bind(paymentController)
+);
+router.post(
+  "/verify",
+  authMiddleware.verifyAccessToken,
+  paymentController.verifyPayment.bind(paymentController)
+);
 router.get(
   "/",
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),
-  getAllPayments
+  paymentController.getAllPayments.bind(paymentController)
 );
 router.get(
   "/date-range",
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),
-  getPaymentsByDateRange
+  paymentController.getPaymentsByDateRange.bind(paymentController)
 );
 
 export default router;

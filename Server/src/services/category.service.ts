@@ -24,7 +24,7 @@ export class CategoryService {
     return this.categoryRepository.updateCategory(id, data);
   }
 
-  async deleteCategory(id: string): Promise<ICategory | null> {
+  async deleteCategory(id: string): Promise<ICategory | null> { 
     return this.categoryRepository.deleteCategory(id);
   }
 }

@@ -1,32 +1,24 @@
-import { ParsedQs } from "qs";
-import { CourseRepository } from "../repositories/course.repository";
-import { CreateCourseInput, EditCourseInput } from "../utils/course.dto";
+// src/services/course.service.ts
+import { ICourseRepository } from "../repositories/interfaces/ICourseRepository";
 import { ICourse } from "../models/Course";
+import { ICourseService } from "./interfaces/ICourseService";
+import { CreateCourseInput, EditCourseInput } from "../utils/course.dto";
+import mongoose from "mongoose";
 
-export class CourseService {
-  private courseRepo: CourseRepository;
+export class CourseService implements ICourseService {
+  constructor(private courseRepo: ICourseRepository) {}
 
-  constructor() {
-    this.courseRepo = new CourseRepository();
+  async createCourse(courseCreationData: CreateCourseInput): Promise<ICourse> {
+    return await this.courseRepo.createCourse(courseCreationData);
   }
 
-  async createCourse(data: CreateCourseInput): Promise<ICourse> {
-    try {
-      return await this.courseRepo.createCourse(data);
-    } catch (error) {
-      console.error("Service Error creating course:", error);
-      throw new Error("Service failed to create course");
-    }
-  }
-
-  async editCourse(data: EditCourseInput): Promise<ICourse | null> {
-    try {
-      const { courseId, ...updateData } = data;
-      return await this.courseRepo.updateCourse(courseId, updateData);
-    } catch (error) {
-      console.error("Service Error editing course:", error);
-      throw new Error("Service failed to edit course");
-    }
+  async editCourse(courseEditData: EditCourseInput): Promise<ICourse | null> {
+    const { courseId, ...updateData } = courseEditData;
+    const courseData = {
+      ...courseEditData,
+      category: new mongoose.Types.ObjectId(courseEditData.category),
+    };
+    return await this.courseRepo.updateCourse(courseId, courseData);
   }
 
   async updateCourseEnrollment(
@@ -37,13 +29,8 @@ export class CourseService {
       studentEmail: string;
       paidAmount: number;
     }
-  ) {
-    try {
-      return await this.courseRepo.updateCourseEnrollment(courseId, data);
-    } catch (error) {
-      console.error("Service Error updating course enrollment:", error);
-      throw new Error("Service failed to update course enrollment");
-    }
+  ): Promise<ICourse | null> {
+    return await this.courseRepo.updateCourseEnrollment(courseId, data);
   }
 
   async getAllCourses(
@@ -55,76 +42,54 @@ export class CourseService {
     sortBy?: string,
     sortOrder?: "asc" | "desc",
     excludeInstructorId?: string
-  ) {
-    try {
-      return await this.courseRepo.getAllCourses(
-        page,
-        limit,
-        search,
-        category,
-        difficulty,
-        sortBy,
-        sortOrder,
-        excludeInstructorId
-      );
-    } catch (error) {
-      console.error("Service Error getting all courses:", error);
-      throw new Error("Service failed to get all courses");
-    }
+  ): Promise<{
+    courses: ICourse[];
+    totalCourses: number;
+    totalPages?: number;
+  }> {
+    return await this.courseRepo.getAllCourses(
+      page,
+      limit,
+      search,
+      category,
+      difficulty,
+      sortBy,
+      sortOrder,
+      excludeInstructorId
+    );
   }
 
   async getCourseDetails(courseId: string): Promise<ICourse | null> {
-    try {
-      return await this.courseRepo.getCourseDetails(courseId);
-    } catch (error) {
-      console.error("Service Error getting course details:", error);
-      throw new Error("Service failed to get course details");
-    }
+    return await this.courseRepo.getCourseDetails(courseId);
   }
 
   async fetchInstructorCourses(
-    filter: {
-      instructorId: string;
-      title: {
-        $regex: string | ParsedQs | (string | ParsedQs)[];
-        $options: string;
-      };
-    },
+    filter: { instructorId: string; title: any },
     page: number,
     limit: number,
     sortOptions: { [key: string]: 1 | -1 }
-  ) {
-    if (!filter.instructorId) {
-      throw new Error("Instructor ID is required");
-    }
-
-    try {
-      const { courses, totalCourses } =
-        await this.courseRepo.getInstructorCourses(
-          filter,
-          page,
-          limit,
-          sortOptions
-        );
-
-      return {
-        courses,
-        totalCourses,
-        totalPages: Math.ceil(totalCourses / limit),
-        currentPage: page,
-      };
-    } catch (error) {
-      console.error("Service Error fetching instructor courses:", error);
-      throw new Error("Service failed to fetch instructor courses");
-    }
+  ): Promise<{
+    courses: ICourse[];
+    totalCourses: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    const { courses, totalCourses } =
+      await this.courseRepo.getInstructorCourses(
+        filter,
+        page,
+        limit,
+        sortOptions
+      );
+    return {
+      courses,
+      totalCourses,
+      totalPages: Math.ceil(totalCourses / limit),
+      currentPage: page,
+    };
   }
 
   async deleteCourse(courseId: string): Promise<ICourse | null> {
-    try {
-      return await this.courseRepo.deleteCourse(courseId);
-    } catch (error) {
-      console.error("Service Error deleting course:", error);
-      throw new Error("Service failed to delete course");
-    }
+    return await this.courseRepo.deleteCourse(courseId);
   }
 }

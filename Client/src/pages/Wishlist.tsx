@@ -53,7 +53,7 @@ const WishlistPage = () => {
       <div className="flex items-center justify-between mt-4 mb-8 gap-4">
         <div className="flex items-center gap-4">
           <Heart className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Your Wishlist</h1>
+          <h1 className="text-3xl font-bold">Wishlist</h1>
         </div>
         <Button
           onClick={() => navigate(-1)}

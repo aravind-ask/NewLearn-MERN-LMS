@@ -1,7 +1,11 @@
+// src/repositories/course.repository.ts
 import { ParsedQs } from "qs";
 import { Course } from "../models/Course";
 import { ICourse } from "../models/Course";
 import { CreateCourseInput } from "../utils/course.dto";
+import { Category } from "../models/Category";
+import { ICourseRepository } from "./interfaces/ICourseRepository";
+import mongoose from "mongoose";
 
 interface InstructorCoursesResult {
   courses: ICourse[];
@@ -9,10 +13,14 @@ interface InstructorCoursesResult {
   totalPages?: number;
 }
 
-export class CourseRepository {
-  async createCourse(data: CreateCourseInput): Promise<ICourse> {
+export class CourseRepository implements ICourseRepository {
+  async createCourse(courseCreationData: CreateCourseInput): Promise<ICourse> {
     try {
-      return await Course.create(data);
+      const courseData = {
+        ...courseCreationData,
+        category: new mongoose.Types.ObjectId(courseCreationData.category),
+      };
+      return await Course.create(courseData);
     } catch (error) {
       console.error("Error creating course:", error);
       throw new Error("Failed to create course");
@@ -21,7 +29,7 @@ export class CourseRepository {
 
   async findCourseById(courseId: string): Promise<ICourse | null> {
     try {
-      return await Course.findById(courseId);
+      return await Course.findById(courseId).populate("category").exec();
     } catch (error) {
       console.error("Error finding course by ID:", error);
       throw new Error("Failed to find course by ID");
@@ -33,7 +41,10 @@ export class CourseRepository {
     data: Partial<ICourse>
   ): Promise<ICourse | null> {
     try {
-      return await Course.findByIdAndUpdate(courseId, data, { new: true });
+      console.log("data", data);
+      return await Course.findByIdAndUpdate(courseId, data, { new: true })
+        .populate("category")
+        .exec();
     } catch (error) {
       console.error("Error updating course:", error);
       throw new Error("Failed to update course");
@@ -50,23 +61,17 @@ export class CourseRepository {
     }
   ): Promise<ICourse | null> {
     try {
-      const { studentId, studentName, studentEmail, paidAmount } = data;
-      console.log("Updating course enrollment:", data);
       return await Course.findByIdAndUpdate(
         courseId,
         {
           $addToSet: {
-            students: {
-              studentId,
-              studentName,
-              studentEmail,
-              paidAmount,
-              dateJoined: new Date(),
-            },
+            students: { ...data, dateJoined: new Date() },
           },
         },
         { new: true }
-      );
+      )
+        .populate("category")
+        .exec();
     } catch (error) {
       console.error("Error updating course enrollment:", error);
       throw new Error("Failed to update course enrollment");
@@ -82,14 +87,14 @@ export class CourseRepository {
     sortBy?: string,
     sortOrder: "asc" | "desc" = "desc",
     excludeInstructorId?: string
-  ): Promise<InstructorCoursesResult | null> {
+  ): Promise<{
+    courses: ICourse[];
+    totalCourses: number;
+    totalPages?: number;
+  }> {
     try {
       const query: any = {};
-
-      if (search) {
-        query.title = { $regex: search, $options: "i" };
-      }
-
+      if (search) query.title = { $regex: search, $options: "i" };
       if (category) query.category = category;
       if (difficulty) query.level = difficulty;
       if (excludeInstructorId)
@@ -99,9 +104,11 @@ export class CourseRepository {
       const sortDirection = sortOrder === "asc" ? 1 : -1;
 
       const courses = await Course.find(query)
+        .populate("category")
         .sort({ [sortField]: sortDirection })
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .exec();
 
       const totalCourses = await Course.countDocuments(query);
       const totalPages = Math.ceil(totalCourses / limit);
@@ -115,7 +122,7 @@ export class CourseRepository {
 
   async getCourseDetails(courseId: string): Promise<ICourse | null> {
     try {
-      return await Course.findById(courseId);
+      return await Course.findById(courseId).populate("category").exec();
     } catch (error) {
       console.error("Error getting course details:", error);
       throw new Error("Failed to get course details");
@@ -123,28 +130,21 @@ export class CourseRepository {
   }
 
   async getInstructorCourses(
-    filter: {
-      instructorId: string;
-      title: {
-        $regex: string | ParsedQs | (string | ParsedQs)[];
-        $options: string;
-      };
-    },
+    filter: { instructorId: string; title: { $regex: any; $options: string } },
     page: number,
     limit: number,
     sortOptions: { [key: string]: 1 | -1 }
-  ): Promise<InstructorCoursesResult> {
+  ): Promise<{ courses: ICourse[]; totalCourses: number }> {
     try {
       const skip = (page - 1) * limit;
-
       const courses = await Course.find(filter)
+        .populate("category")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
         .exec();
 
       const totalCourses = await Course.countDocuments(filter);
-
       return { courses, totalCourses };
     } catch (error) {
       console.error("Error getting instructor courses:", error);
@@ -154,7 +154,7 @@ export class CourseRepository {
 
   async deleteCourse(courseId: string): Promise<ICourse | null> {
     try {
-      return await Course.findByIdAndDelete(courseId);
+      return await Course.findByIdAndDelete(courseId).exec();
     } catch (error) {
       console.error("Error deleting course:", error);
       throw new Error("Failed to delete course");

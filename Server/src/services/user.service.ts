@@ -1,7 +1,12 @@
-import { userRepository } from "../repositories/userRepository";
+// src/services/user.service.ts
+import { IUserRepository } from "../repositories/interfaces/IUserRepository";
+import { IUser } from "../models/User";
 import bcrypt from "bcryptjs";
+import { NotFoundError } from "../utils/customError";
 
-class UserService {
+export class UserService {
+  constructor(private userRepo: IUserRepository) {}
+
   async updateProfile(
     userId: string,
     name?: string,
@@ -13,8 +18,8 @@ class UserService {
     address?: string,
     dateOfBirth?: Date,
     education?: string
-  ) {
-    const updates: any = {};
+  ): Promise<IUser> {
+    const updates: Partial<IUser> = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (password) updates.password = await bcrypt.hash(password, 10);
@@ -24,14 +29,30 @@ class UserService {
     if (address) updates.address = address;
     if (dateOfBirth) updates.dateOfBirth = dateOfBirth;
     if (education) updates.education = education;
-    return await userRepository.updateUser(userId, updates);
+
+    const updatedUser = await this.userRepo.updateUser(userId, updates);
+    if (!updatedUser) throw new NotFoundError("User not found");
+    return updatedUser;
   }
-  async getUsers(page: number, limit: number) {
-    return await userRepository.getAllUsers(page, limit);
+
+  async getUsers(
+    page: number,
+    limit: number
+  ): Promise<{ users: IUser[]; totalPages: number }> {
+    return await this.userRepo.getAllUsers(page, limit);
   }
-  async blockUser(userId: string, isBlocked: boolean) {
-    return await userRepository.toggleBlockUser(userId, isBlocked);
+
+  async blockUser(userId: string, isBlocked: boolean): Promise<IUser> {
+    const updatedUser = await this.userRepo.toggleBlockUser(userId, isBlocked);
+    if (!updatedUser) throw new NotFoundError("User not found");
+    return updatedUser;
+  }
+
+  async getUserStatus(userId: string): Promise<IUser> {
+    const user = await this.userRepo.findUserById(userId);
+    if (!user) throw new NotFoundError("User not found");
+    return user;
   }
 }
 
-export default new UserService();
+export default UserService; // Keep as a class for DI, not instantiated here

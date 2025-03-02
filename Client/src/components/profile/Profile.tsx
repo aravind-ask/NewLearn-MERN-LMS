@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,8 @@ import {
   useGetPresignedUrlMutation,
 } from "@/redux/services/authApi";
 import { PasswordChange } from "../PasswordChange";
-import { Loader2, UploadCloud, Edit, Save } from "lucide-react"; // Icons for actions
+import { Loader2, UploadCloud, Edit, Save } from "lucide-react";
+import { format } from "date-fns";
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -94,7 +94,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg">
+    <div className="max-w-auto mx-auto p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">
         Profile Settings
       </h2>
@@ -135,7 +135,8 @@ const Profile = () => {
             <div>
               <Label className="text-gray-600">Date of Birth</Label>
               <p className="text-gray-800 font-medium">
-                {formData.dateOfBirth}
+                {formData.dateOfBirth &&
+                  format(new Date(formData?.dateOfBirth), "dd/ mm/ yyyy")}
               </p>
             </div>
             <div className="col-span-2">

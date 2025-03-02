@@ -137,7 +137,7 @@ const InstructorCourses = () => {
             <TableBody>
               {data.data.courses?.length > 0 ? (
                 data.data?.courses.map((course) => (
-                  <TableRow key={course.id}>
+                  <TableRow key={course._id}>
                     <TableCell className="font-medium">
                       {course.title}
                     </TableCell>
@@ -151,7 +151,7 @@ const InstructorCourses = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          navigate(`/instructor/edit-course/${course?._id}`);
+                          navigate(`/instructor/edit-course/${course._id}`);
                         }}
                       >
                         <Edit className="h-6 w-6" />

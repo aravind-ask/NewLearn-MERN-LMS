@@ -1,44 +1,62 @@
+// src/repositories/payment.repository.ts
 import PaymentModel, { IPayment } from "../models/Payment";
+import { IPaymentRepository } from "./interfaces/IPaymentRepository";
 
-export const createPayment = async (paymentData: Partial<IPayment>) => {
-  return await PaymentModel.create({
-    ...paymentData,
-    paymentId: "pending", 
-    payerId: "pending", 
-    paymentStatus: "pending", 
-    orderStatus: "pending", 
-  });
-};
+export class PaymentRepository implements IPaymentRepository {
+  async createPayment(paymentData: Partial<IPayment>): Promise<IPayment> {
+    try {
+      return await PaymentModel.create({
+        ...paymentData,
+        paymentId: "pending",
+        payerId: "pending",
+        paymentStatus: "pending",
+        orderStatus: "pending",
+      });
+    } catch (error) {
+      throw new Error("Error creating payment");
+    }
+  }
 
-export const updatePaymentStatus = async (
-  orderId: string,
-  updateData: { paymentId?: string; orderStatus: string; paymentStatus: string }
-) => {
-  console.log("Updating payment status for orderId:", orderId);
-  console.log("Update data:", updateData);
+  async updatePaymentStatus(
+    orderId: string,
+    updateData: {
+      paymentId?: string;
+      orderStatus: string;
+      paymentStatus: string;
+    }
+  ): Promise<IPayment | null> {
+    try {
+      return await PaymentModel.findOneAndUpdate(
+        { orderId },
+        { $set: updateData },
+        { new: true }
+      ).exec();
+    } catch (error) {
+      throw new Error("Error updating payment status");
+    }
+  }
 
-  const updatedPayment = await PaymentModel.findOneAndUpdate(
-    { orderId },
-    { $set: updateData },
-    { new: true }
-  );
+  async getAllPayments(): Promise<IPayment[]> {
+    try {
+      return await PaymentModel.find().exec();
+    } catch (error) {
+      throw new Error("Error fetching all payments");
+    }
+  }
 
-  console.log("Updated payment record:", updatedPayment);
-  return updatedPayment;
-};
-
-export const getAllPayments = async () => {
-  return await PaymentModel.find().exec();
-};
-
-export const getPaymentsByDateRange = async (
-  startDate: Date,
-  endDate: Date
-) => {
-  return await PaymentModel.find({
-    orderDate: {
-      $gte: startDate,
-      $lte: endDate,
-    },
-  }).exec();
-};
+  async getPaymentsByDateRange(
+    startDate: Date,
+    endDate: Date
+  ): Promise<IPayment[]> {
+    try {
+      return await PaymentModel.find({
+        orderDate: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }).exec();
+    } catch (error) {
+      throw new Error("Error fetching payments by date range");
+    }
+  }
+}

@@ -32,6 +32,7 @@ import {
   LinkIcon,
   Star,
   User2,
+  BookIcon,
 } from "lucide-react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useDispatch, useSelector } from "react-redux";
@@ -229,9 +230,12 @@ const CourseDetails = () => {
               <LinkIcon className="mr-1 h-4 w-4" />
             </Link>
           </span>
+          <span className="flex items-center">
+            <BookIcon className="mr-1 h-4 w-4" />
+            {course?.category.name}
+          </span>
           <span>
-            Created On{" "}
-            {format(new Date(course.date), "MMM dd, yyyy")}
+            Created On {format(new Date(course.date), "MMM dd, yyyy")}
           </span>
           <span className="flex items-center">
             <Globe className="mr-1 h-4 w-4" />

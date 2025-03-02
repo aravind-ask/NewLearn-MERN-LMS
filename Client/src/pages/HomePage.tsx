@@ -55,7 +55,7 @@ export default function Homepage() {
               className="justify-start hover:bg-black hover:text-white hover:font-bold"
               variant="outline"
               key={categoryItem._id}
-              onClick={() => handleCategoryClick(categoryItem.name)}
+              onClick={() => handleCategoryClick(categoryItem._id)}
             >
               {categoryItem.name}
             </Button>
@@ -82,8 +82,12 @@ export default function Homepage() {
                 />
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{course.title}</h3>
-                  <p className="text-gray-700">Created By {course.instructorName}</p>
-                  <p className="text-gray-700 mb-2">Category: {course.category}</p>
+                  <p className="text-gray-700">
+                    Created By {course.instructorName}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    Category: {course.category.name}
+                  </p>
 
                   <p className="font-bold text-[16px]">₹ {course.pricing}</p>
                 </div>

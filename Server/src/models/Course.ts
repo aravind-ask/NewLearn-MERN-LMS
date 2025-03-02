@@ -1,3 +1,4 @@
+// src/models/Course.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface Lecture {
@@ -29,7 +30,7 @@ export interface ICourse extends Document {
   instructorName: string;
   date: Date;
   title: string;
-  category: string;
+  category: mongoose.Types.ObjectId;
   level: string;
   primaryLanguage: string;
   subtitle: string;
@@ -58,7 +59,7 @@ const CourseSchema = new Schema<ICourse>(
     instructorName: { type: String, required: true },
     date: { type: Date, required: true, default: Date.now },
     title: { type: String, required: true },
-    category: { type: String, required: true },
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     level: { type: String, required: true },
     primaryLanguage: { type: String, required: true },
     subtitle: { type: String, required: true },
@@ -72,6 +73,8 @@ const CourseSchema = new Schema<ICourse>(
         studentId: { type: String, required: true },
         studentName: { type: String, required: true },
         studentEmail: { type: String, required: true },
+        paidAmount: { type: Number, required: true },
+        dateJoined: { type: Date, default: Date.now },
       },
     ],
     curriculum: [SectionSchema],

@@ -1,5 +1,5 @@
+// src/controllers/course.controller.ts
 import { NextFunction, Request, Response } from "express";
-import { CourseService } from "../services/course.service";
 import {
   CreateCourseDto,
   EditCourseDto,
@@ -7,64 +7,77 @@ import {
   EditCourseInput,
 } from "../utils/course.dto";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import { tokenUtils } from "../utils/tokenUtils"; // Import tokenUtils to verify token
-import { checkEnrolled } from "../services/enrollment.service";
-
-const courseService = new CourseService();
+import { tokenUtils } from "../utils/tokenUtils";
+import { ICourseService } from "../services/interfaces/ICourseService";
+import { IEnrollmentService } from "@/services/interfaces/IEnrollmentService";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };
 }
 
 export class CourseController {
-  static async createCourse(req: Request, res: Response, next: NextFunction) {
+  constructor(
+    private courseService: ICourseService,
+    private enrollmentService: IEnrollmentService
+  ) {}
+
+  async createCourse(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const courseData = req.body;
+      const courseData: CreateCourseInput = CreateCourseDto.parse(req.body);
+      if (!req.user) throw new Error("Unauthorized");
+      courseData.instructorId = req.user.id;
+      // courseData.instructorName =
+      //   req.user.role === "instructor" ? "Instructor Name" : "";
 
-      const validatedData = CreateCourseDto.parse(courseData);
-
-      validatedData.pricing = Number(validatedData.pricing);
-
-      const newCourse = await courseService.createCourse({
-        ...validatedData,
-      });
-
-      successResponse(res, newCourse, "Course created Successfully", 201);
+      const newCourse = await this.courseService.createCourse(courseData);
+      successResponse(res, newCourse, "Course created successfully", 201);
     } catch (error: any) {
       errorResponse(res, error, error.status || 400);
     }
   }
 
-  static async editCourse(req: Request, res: Response, next: NextFunction) {
+  async editCourse(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const validatedData: EditCourseInput = EditCourseDto.parse(req.body);
-      const updatedCourse = await courseService.editCourse(validatedData);
 
+      const updatedCourse = await this.courseService.editCourse(validatedData);
       if (!updatedCourse) {
         errorResponse(res, { message: "Course not found" }, 404);
+        return;
       }
-
       successResponse(res, updatedCourse, "Course updated successfully", 200);
     } catch (error: any) {
       errorResponse(res, error, error.status || 400);
     }
   }
 
-  static async deleteCourse(req: Request, res: Response, next: NextFunction) {
+  async deleteCourse(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const { courseId } = req.params;
-      const deletedCourse = await courseService.deleteCourse(courseId);
-
+      const deletedCourse = await this.courseService.deleteCourse(courseId);
       if (!deletedCourse) {
         errorResponse(res, { message: "Course not found" }, 404);
+        return;
       }
-
       successResponse(res, {}, "Course deleted successfully", 200);
     } catch (error: any) {
       errorResponse(res, error, error.status || 400);
     }
   }
-  static async getAllCourses(
+
+  async getAllCourses(
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
@@ -88,9 +101,8 @@ export class CourseController {
         try {
           const decoded = tokenUtils.verifyAccessToken(token);
           req.user = { id: decoded.userId, role: decoded.role };
-          console.log("user", req.user);
           if (req.user?.role === "instructor") {
-            excludeInstructorId = req.user?.id;
+            excludeInstructorId = req.user.id;
           }
         } catch (error) {
           errorResponse(res, "Invalid or expired access token", 401);
@@ -98,9 +110,7 @@ export class CourseController {
         }
       }
 
-      console.log("excludeInstructorId", excludeInstructorId);
-
-      const result = await courseService.getAllCourses(
+      const result = await this.courseService.getAllCourses(
         Number(page),
         Number(limit),
         search as string,
@@ -116,7 +126,9 @@ export class CourseController {
       errorResponse(res, error, error.status || 400);
     }
   }
-  static async getInstructorCourses(
+
+  // Get courses for a specific instructor
+  async getInstructorCourses(
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
@@ -132,16 +144,15 @@ export class CourseController {
       const { sortBy = "createdAt", order = "desc", search = "" } = req.query;
 
       const filter = {
-        instructorId: instructorId,
+        instructorId,
         title: { $regex: search, $options: "i" },
       };
 
       const sortKey = typeof sortBy === "string" ? sortBy : "createdAt";
-
       const sortOptions: { [key: string]: 1 | -1 } = {};
       sortOptions[sortKey] = order === "desc" ? -1 : 1;
 
-      const result = await courseService.fetchInstructorCourses(
+      const result = await this.courseService.fetchInstructorCourses(
         filter,
         page,
         limit,
@@ -152,7 +163,8 @@ export class CourseController {
       errorResponse(res, error, error.status || 400);
     }
   }
-  static async getCourseDetails(
+
+  async getCourseDetails(
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
@@ -160,7 +172,8 @@ export class CourseController {
     try {
       const { courseId } = req.params;
       if (!courseId) {
-        errorResponse(res, { message: "Course not found" }, 404);
+        errorResponse(res, "Course not found", 404);
+        return;
       }
 
       const authHeader = req.headers.authorization;
@@ -170,12 +183,14 @@ export class CourseController {
         try {
           const decoded = tokenUtils.verifyAccessToken(token);
           req.user = { id: decoded.userId, role: decoded.role };
-          const isEnrolled = await checkEnrolled(req.user?.id, courseId);
+          const isEnrolled = await this.enrollmentService.checkEnrolled(
+            req.user.id,
+            courseId
+          );
           console.log("isEnrolled", isEnrolled);
           if (isEnrolled) {
             isCourseEnrolled = {
-              enolledId: isEnrolled._id,
-              courseId: courseId,
+              courseId,
             };
           }
         } catch (error) {
@@ -184,36 +199,34 @@ export class CourseController {
         }
       }
 
-      const courseDetails = await courseService.getCourseDetails(courseId);
-      const course = {
-        courseDetails,
-        isEnrolled: isCourseEnrolled,
-      };
-      console.log("course", course);
+      const courseDetails = await this.courseService.getCourseDetails(courseId);
+      if (!courseDetails) {
+        errorResponse(res, "Course not found", 404);
+        return;
+      }
+
+      const course = { courseDetails, isEnrolled: isCourseEnrolled };
       successResponse(res, course, "Course details fetched successfully", 200);
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 
-  static async checkCourseEnrollmentInfo(
+  async checkCourseEnrollmentInfo(
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ) {
     try {
-      const courseId = req.params.courseId;
       if (!req.user) {
         errorResponse(res, "Unauthorized", 401);
         return;
       }
-      const userId = req.user.id;
-      if (!courseId) {
-        errorResponse(res, { message: "Course not found" }, 404);
-      }
-
-      const isEnrolled = await checkEnrolled(userId, courseId);
-      console.log("isEnrolled", isEnrolled);
+      const { courseId } = req.params;
+      const isEnrolled = await this.enrollmentService.checkEnrolled(
+        req.user.id,
+        courseId
+      );
       successResponse(
         res,
         { isEnrolled },
@@ -221,8 +234,7 @@ export class CourseController {
         200
       );
     } catch (error: any) {
-      console.log(error);
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error.message, error.statusCode || 400);
     }
   }
 }

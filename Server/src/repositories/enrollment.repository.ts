@@ -1,39 +1,48 @@
-// src/repositories/enrollmentRepository.ts
+// src/repositories/enrollment.repository.ts
 import EnrollmentModel, { IEnrollment } from "../models/Enrollment";
+import { IEnrollmentRepository } from "./interfaces/IEnrollmentRepository";
 
-export const enrollUserInCourses = async (
-  userId: string,
-  courses: {
-    courseId: string;
-    courseTitle: string;
-    courseImage: string;
-    coursePrice: number;
-    instructorId: string;
-    instructorName: string;
-  }[]
-) => {
-  console.log("Enrolling user:", userId);
-  console.log("Courses to enroll:", courses);
+export class EnrollmentRepository implements IEnrollmentRepository {
+  async enrollUserInCourses(
+    userId: string,
+    courses: {
+      courseId: string;
+      courseTitle: string;
+      courseImage: string;
+      coursePrice: number;
+      instructorId: string;
+      instructorName: string;
+    }[]
+  ): Promise<IEnrollment> {
+    try {
+      const enrollment = await EnrollmentModel.findOneAndUpdate(
+        { userId },
+        { $addToSet: { courses: { $each: courses } } },
+        { upsert: true, new: true }
+      ).exec();
+      return enrollment;
+    } catch (error) {
+      throw new Error("Error enrolling user in courses");
+    }
+  }
 
-  const enrollment = await EnrollmentModel.findOneAndUpdate(
-    { userId },
-    { $addToSet: { courses: { $each: courses } } },
-    { upsert: true, new: true }
-  );
+  async isCourseEnrolled(userId: string, courseId: string): Promise<boolean> {
+    try {
+      const exists = await EnrollmentModel.exists({
+        userId,
+        "courses.courseId": courseId,
+      });
+      return !!exists;
+    } catch (error) {
+      throw new Error("Error checking course enrollment");
+    }
+  }
 
-  console.log("Enrollment result:", enrollment);
-  return enrollment;
-};
-
-export const isCourseEnrolled = async (userId: string, courseId: string) => {
-  const isEnrolled = await EnrollmentModel.exists({
-    userId: userId,
-    "courses.courseId": courseId,
-  });
-  return isEnrolled;
-};
-
-export const getEnrolledCourses = async (userId: string) => {
-  return await EnrollmentModel.findOne({ userId });
-  // return enrollment?.courses || [];
-};
+  async getEnrolledCourses(userId: string): Promise<IEnrollment | null> {
+    try {
+      return await EnrollmentModel.findOne({ userId }).exec();
+    } catch (error) {
+      throw new Error("Error fetching enrolled courses");
+    }
+  }
+}

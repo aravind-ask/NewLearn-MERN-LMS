@@ -1,41 +1,64 @@
-import { InstructorApplicationRepository } from "../repositories/InstructorApplicationRepository";
+// src/services/instructorApplication.service.ts
+import { IInstructorApplicationRepository } from "../repositories/interfaces/IInstructorApplicationRepository";
+import { IUserRepository } from "../repositories/interfaces/IUserRepository";
 import { BadRequestError, NotFoundError } from "../utils/customError";
-import { userRepository } from "../repositories/userRepository";
-
-const instructorApplicationRepository = new InstructorApplicationRepository();
+import { IInstructorApplication } from "../models/InstructorApplication";
 
 export class InstructorApplicationService {
-  async applyForInstructor(userId: string | undefined, applicationData: any) {
-    const existingApplication =
-      await instructorApplicationRepository.getApplicationById(userId);
-    if (existingApplication)
-      throw new BadRequestError(
-        "You have already applied for instructor verification."
-      );
+  constructor(
+    private instructorAppRepo: IInstructorApplicationRepository,
+    private userRepo: IUserRepository
+  ) {}
 
-    return await instructorApplicationRepository.createApplication({
+  async applyForInstructor(
+    userId: string | undefined,
+    applicationData: any
+  ): Promise<IInstructorApplication> {
+    if (!userId) throw new BadRequestError("User ID is required");
+
+    const existingApplication = await this.instructorAppRepo.getApplication(
+      userId
+    );
+    if (existingApplication) {
+      throw new BadRequestError(
+        "You have already applied for instructor verification"
+      );
+    }
+
+    return await this.instructorAppRepo.createApplication({
       user: userId,
       ...applicationData,
     });
   }
 
-  async getInstructorApplications(page: number, limit: number) {
-    return await instructorApplicationRepository.getApplications(
-      Number(page),
-      Number(limit)
-    );
+  async getInstructorApplications(
+    page: number,
+    limit: number
+  ): Promise<{
+    applications: IInstructorApplication[];
+    totalPages: number;
+  }> {
+    const { applications, totalPages } =
+      await this.instructorAppRepo.getApplications(page, limit);
+    return { applications, totalPages };
   }
 
-  async getApplication(userId: string | undefined) {
-    const application =
-      await instructorApplicationRepository.getApplication(userId);
+  async getApplication(
+    userId: string | undefined
+  ): Promise<IInstructorApplication> {
+    if (!userId) throw new BadRequestError("User ID is required");
+
+    const application = await this.instructorAppRepo.getApplication(userId);
     if (!application) throw new NotFoundError("Application not found");
     return application;
   }
 
-  async getApplicationDetails(applicationId: string) {
-    const application =
-      await instructorApplicationRepository.getApplicationById(applicationId);
+  async getApplicationDetails(
+    applicationId: string
+  ): Promise<IInstructorApplication> {
+    const application = await this.instructorAppRepo.getApplicationById(
+      applicationId
+    );
     if (!application) throw new NotFoundError("Application not found");
     return application;
   }
@@ -44,20 +67,22 @@ export class InstructorApplicationService {
     applicationId: string,
     status: "approved" | "rejected",
     rejectionReason?: string
-  ) {
-    const application =
-      await instructorApplicationRepository.getApplicationById(applicationId);
+  ): Promise<IInstructorApplication> {
+    const application = await this.instructorAppRepo.getApplicationById(
+      applicationId
+    );
     if (!application) throw new NotFoundError("Application not found");
 
     const updatedApplication =
-      await instructorApplicationRepository.updateApplicationStatus(
+      await this.instructorAppRepo.updateApplicationStatus(
         applicationId,
         status,
         rejectionReason
       );
+    if (!updatedApplication) throw new Error("Failed to update application");
 
     if (status === "approved") {
-      await userRepository.updateUserRole(
+      await this.userRepo.updateUserRole(
         application.user.toString(),
         "instructor"
       );
