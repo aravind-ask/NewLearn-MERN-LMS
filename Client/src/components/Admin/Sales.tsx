@@ -44,7 +44,10 @@ const SalesPage: React.FC = () => {
     }
   };
 
-  const payments = startDate && endDate ? paymentsByDateRange : allPayments;
+  console.log("allpayments: ", allPayments)
+  console.log("paymentsByDateRange: ", paymentsByDateRange)
+  const payments = startDate && endDate ? paymentsByDateRange?.data : allPayments?.data;
+  console.log("payment: ",payments)
 
   const totalSales =
     payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;

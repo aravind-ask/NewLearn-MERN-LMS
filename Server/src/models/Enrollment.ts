@@ -11,6 +11,7 @@ export interface IEnrollment extends Document {
     instructorId: string;
     instructorName: string;
     dateOfPurchase: Date;
+    courseProgressId: string;
   }[];
   createdAt: Date;
   updatedAt: Date;
@@ -28,6 +29,10 @@ const enrollmentSchema = new Schema<IEnrollment>(
         instructorId: { type: String, required: true },
         instructorName: { type: String, required: true },
         dateOfPurchase: { type: Date, default: Date.now },
+        courseProgressId: {
+          type: Schema.Types.ObjectId,
+          ref: "CourseProgress",
+        },
       },
     ],
   },

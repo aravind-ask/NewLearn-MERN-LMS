@@ -28,9 +28,7 @@ export default function Component() {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormErrors("");
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -66,48 +64,48 @@ export default function Component() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex items-center justify-center h-[calc(100vh-5rem)] p-20 bg-gradient-to-r from-gray-50 to-gray-100"
+      className="flex flex-col lg:flex-row items-center justify-center min-h-[calc(100vh-4rem)] bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-8 lg:py-0"
     >
-      {/* Welcome Message on the Left */}
+      {/* Welcome Message */}
       <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-1/2 flex items-center justify-center p-8"
+        className="w-full lg:w-1/2 flex items-center justify-center mb-8 lg:mb-0 lg:p-8"
       >
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Join Us Today!
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-md mx-auto">
             Start your journey with our world-class learning platform.
           </p>
         </div>
       </motion.div>
 
-      {/* Registration Form on the Right */}
+      {/* Registration Form */}
       <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-1/2 flex items-center justify-center p-8"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8"
       >
         <Card className="w-full max-w-md shadow-lg rounded-lg bg-white">
           <CardHeader className="space-y-1 p-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">
               Register
             </CardTitle>
-            <CardDescription className="text-gray-600">
-              Enter your information to create an account
+            <CardDescription className="text-gray-600 text-sm sm:text-base">
+              Create your account to get started
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="space-y-6">
               {formErrors && (
-                <p className="text-red-500 text-sm mb-4">{formErrors}</p>
+                <p className="text-red-500 text-sm">{formErrors}</p>
               )}
               {error && (
-                <p className="text-red-500 text-sm mb-4">
+                <p className="text-red-500 text-sm">
                   {(error as any).data?.message || "Registration failed"}
                 </p>
               )}
@@ -176,7 +174,7 @@ export default function Component() {
                     <button
                       type="button"
                       onClick={toggleShowPassword}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors"
                       aria-label="Toggle password visibility"
                     >
                       {showPassword ? (
@@ -190,22 +188,22 @@ export default function Component() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300"
                 >
                   {isLoading ? "Registering..." : "Register"}
                 </Button>
                 <div className="w-full">
                   <GoogleAuth />
                 </div>
-                <span className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 text-center">
                   Already have an account?{" "}
                   <Link
-                    to={"/login"}
-                    className="text-gray-900 hover:text-gray-700 transition-colors"
+                    to="/login"
+                    className="text-teal-600 hover:text-teal-700 transition-colors"
                   >
                     Login
                   </Link>
-                </span>
+                </div>
               </div>
             </form>
           </CardContent>

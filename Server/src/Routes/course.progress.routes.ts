@@ -16,7 +16,7 @@ router.post(
   )
 );
 router.get(
-  "/progress/:courseId",
+  "/:courseId",
   authMiddleware.verifyAccessToken,
   courseProgressController.getCurrentCourseProgress.bind(
     courseProgressController

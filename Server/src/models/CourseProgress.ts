@@ -12,6 +12,8 @@ export interface ICourseProgress extends Document {
   completed: boolean;
   completionDate: Date;
   lecturesProgress: LectureProgress[];
+  totalLectures: number;
+  viewedLectures: number;
 }
 
 const LectureProgressSchema = new mongoose.Schema<LectureProgress>({
@@ -27,6 +29,8 @@ const courseProgress = new mongoose.Schema<ICourseProgress>(
     completed: { type: Boolean },
     completionDate: { type: Date },
     lecturesProgress: [LectureProgressSchema],
+    totalLectures: { type: Number },
+    viewedLectures: { type: Number },
   },
   { timestamps: true }
 );

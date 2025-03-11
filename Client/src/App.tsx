@@ -25,6 +25,7 @@ import EnrolledCourseDetailsPage from "./pages/EnrolledCourseDetailsPage";
 import Profile from "./components/profile/Profile";
 import MyLearnings from "./components/profile/MyLearnings";
 import Certificates from "./components/profile/MyCertificates";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -97,6 +98,7 @@ function App() {
         </Routes>
         <Toaster />
       </div>
+      <Footer />
     </Router>
   );
 }

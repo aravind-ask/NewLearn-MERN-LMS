@@ -24,7 +24,7 @@ router.put(
   userController.updateProfile.bind(userController)
 );
 router.get(
-  "/users",
+  "/get-users",
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),
   userController.getUsers.bind(userController)

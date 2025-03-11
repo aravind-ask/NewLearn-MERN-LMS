@@ -1,4 +1,6 @@
+import Enrollment from "../models/Enrollment";
 import CourseProgress from "../models/CourseProgress";
+import { Course } from "../models/Course";
 
 export class CourseProgressRepository {
   async findCourseProgress(userId: string, courseId: string) {
@@ -14,6 +16,13 @@ export class CourseProgressRepository {
     courseId: string,
     lectureId: string
   ) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+    const totalLectures = course.curriculum.reduce((total, section) => {
+      return total + section.lectures.length;
+    }, 0);
     const progress = await CourseProgress.findOne({ userId, courseId });
 
     if (!progress) {
@@ -27,8 +36,17 @@ export class CourseProgressRepository {
             dateViewed: new Date(),
           },
         ],
+        totalLectures,
+        viewedLectures: 1,
       });
-      return newProgress.save();
+      await newProgress.save();
+
+      await Enrollment.findOneAndUpdate(
+        { userId, "courses.courseId": courseId },
+        { $set: { "courses.$.courseProgressId": newProgress._id } }
+      );
+
+      return newProgress;
     }
 
     const lectureProgress = progress.lecturesProgress.find(
@@ -44,6 +62,7 @@ export class CourseProgressRepository {
         viewed: true,
         dateViewed: new Date(),
       });
+      progress.viewedLectures = progress.viewedLectures + 1;
     }
 
     return progress.save();

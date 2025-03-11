@@ -1,12 +1,14 @@
 import { CourseProgressRepository } from "../repositories/course.progress.repository";
-import { Course } from "../models/Course";
 import EnrollmentModel from "../models/Enrollment";
+import { CourseRepository } from "../repositories/course.repository";
 
 export class CourseProgressService {
   private courseProgressRepository: CourseProgressRepository;
+  private courseRepo: CourseRepository;
 
   constructor() {
     this.courseProgressRepository = new CourseProgressRepository();
+    this.courseRepo = new CourseRepository();
   }
 
   async markCurrentLectureAsViewed(
@@ -20,7 +22,7 @@ export class CourseProgressService {
       lectureId
     );
 
-    const course = await Course.findById(courseId);
+    const course = await this.courseRepo.getCourseDetails(courseId);
     if (!course) {
       throw new Error("Course not found");
     }
@@ -59,7 +61,8 @@ export class CourseProgressService {
     );
 
     if (!progress || progress.lecturesProgress.length === 0) {
-      const course = await Course.findById(courseId);
+      const course = await this.courseRepo.getCourseDetails(courseId);
+
       if (!course) {
         throw new Error("Course not found");
       }
@@ -72,7 +75,7 @@ export class CourseProgressService {
       };
     }
 
-    const courseDetails = await Course.findById(courseId);
+    const courseDetails = await this.courseRepo.getCourseDetails(courseId);
 
     return {
       courseDetails,

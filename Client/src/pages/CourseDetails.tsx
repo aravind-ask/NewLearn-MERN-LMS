@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/accordion";
 import { useGetReviewsByCourseIdQuery } from "@/redux/services/ratingsApi";
 import { format } from "date-fns";
+import Loading from "@/components/Loading";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -174,7 +175,7 @@ const CourseDetails = () => {
     navigate("/checkout", { state: { courseDetails: course } });
   };
 
-  if (isLoading || isRatingsLoading) return <Skeleton />;
+  if (isLoading || isRatingsLoading) return <Loading />;
   if (isError)
     return (
       <p className="text-red-600 flex justify-center items-center">

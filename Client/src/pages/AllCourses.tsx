@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
 import debounce from "lodash.debounce";
 import { Skeleton } from "@/components/ui/skeleton";
+import Loading from "@/components/Loading";
 
 const AllCourses = () => {
   const [search, setSearch] = useState("");
@@ -113,7 +114,7 @@ const AllCourses = () => {
     navigate("/all-courses");
   };
 
-  if (isLoading || isCategoriesLoading) return <Skeleton />;
+  // if (isLoading || isCategoriesLoading) return <Loading />;
   if (isError) return <p>Failed to load courses</p>;
 
   return (
@@ -208,48 +209,53 @@ const AllCourses = () => {
               {coursesData?.data?.courses?.length} Results
             </span>
           </div>
-          <div className="space-y-4">
-            {coursesData?.data?.courses?.length > 0 ? (
-              coursesData.data.courses.map((course) => (
-                <Card
-                  key={course._id}
-                  className="cursor-pointer hover:bg-gray-100 hover:shadow-lg"
-                  onClick={() => navigate(`/course/${course._id}`)}
-                >
-                  <CardContent className="flex gap-4 p-4">
-                    <div className="w-48 h-32 flex-shrink-0">
-                      <img
-                        src={course.image}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-xl mb-2">
-                        {course.title}
-                      </CardTitle>
-                      <p className="text-sm text-gray-600 mb-1">
-                        Created By{" "}
-                        <span className="font-bold">
-                          {course.instructorName}
-                        </span>
-                      </p>
-                      <p className="text-[16px] text-gray-600 mt-3 mb-2">
-                        {`${course.curriculum?.length || 0} ${
-                          course.curriculum?.length <= 1
-                            ? "Lecture"
-                            : "Lectures"
-                        } - ${course.level.toUpperCase()} Level`}
-                      </p>
-                      <p className="font-bold text-lg">₹{course.pricing}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <h1 className="font-extrabold text-4xl">No Courses Found</h1>
-            )}
-          </div>
+          {isLoading || isCategoriesLoading ? (
+            <Loading />
+          ) : (
+            <div className="space-y-4">
+              {coursesData?.data?.courses?.length > 0 ? (
+                coursesData.data.courses.map((course) => (
+                  <Card
+                    key={course._id}
+                    className="cursor-pointer hover:bg-gray-100 hover:shadow-lg"
+                    onClick={() => navigate(`/course/${course._id}`)}
+                  >
+                    <CardContent className="flex gap-4 p-4">
+                      <div className="w-48 h-32 flex-shrink-0">
+                        <img
+                          src={course.image}
+                          alt={course.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-xl mb-2">
+                          {course.title}
+                        </CardTitle>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Created By{" "}
+                          <span className="font-bold">
+                            {course.instructorName}
+                          </span>
+                        </p>
+                        <p className="text-[16px] text-gray-600 mt-3 mb-2">
+                          {`${course.curriculum?.length || 0} ${
+                            course.curriculum?.length <= 1
+                              ? "Lecture"
+                              : "Lectures"
+                          } - ${course.level.toUpperCase()} Level`}
+                        </p>
+                        <p className="font-bold text-lg">₹{course.pricing}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <h1 className="font-extrabold text-4xl">No Courses Found</h1>
+              )}
+            </div>
+          )}
+
           <Pagination className="mt-6">
             <PaginationContent>
               <PaginationItem className="cursor-pointer">

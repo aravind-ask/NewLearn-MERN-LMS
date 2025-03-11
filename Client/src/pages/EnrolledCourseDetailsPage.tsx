@@ -7,15 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VideoPlayer from "@/components/VideoPlayer";
 import {
   useMarkLectureAsViewedMutation,
@@ -34,6 +33,7 @@ import {
   BarChart,
   Users,
   MessageCircle,
+  Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
@@ -51,19 +51,14 @@ function EnrolledCourseDetailsPage() {
   const [showCourseCompleteDialog, setShowCourseCompleteDialog] =
     useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isSideBarOpen, setIsSideBarOpen] = useState(true);
+  const [isSideBarOpen, setIsSideBarOpen] = useState(false); // Closed by default on mobile
   const { courseId } = useParams();
 
-  const userId = user?.id;
-
   const { data: courseProgressData, refetch: refetchCourseProgress } =
-    useGetCourseProgressQuery({
-      courseId,
-    });
+    useGetCourseProgressQuery({ courseId });
   const [markLectureAsViewed] = useMarkLectureAsViewedMutation();
   const [resetCourseProgress] = useResetCourseProgressMutation();
 
-  // Calculate total lectures and viewed lectures
   const totalLectures =
     courseProgressData?.data?.courseDetails?.curriculum.flatMap(
       (section) => section.lectures
@@ -71,8 +66,6 @@ function EnrolledCourseDetailsPage() {
   const viewedLectures = courseProgressData?.data?.progress?.length || 0;
   const progressPercentage =
     totalLectures > 0 ? Math.round((viewedLectures / totalLectures) * 100) : 0;
-
-  // Check if all lectures are viewed
   const allLecturesViewed =
     totalLectures > 0 && viewedLectures === totalLectures;
 
@@ -85,7 +78,6 @@ function EnrolledCourseDetailsPage() {
           setShowCourseCompleteDialog(true);
           setShowConfetti(true);
         }
-
         if (courseProgressData?.data?.progress?.length === 0) {
           setCurrentLecture(
             courseProgressData?.data?.courseDetails?.curriculum[0]?.lectures[0]
@@ -95,13 +87,11 @@ function EnrolledCourseDetailsPage() {
             courseProgressData?.data?.progress.findLast(
               (item) => item.viewed
             )?.lectureId;
-
           if (lastViewedLectureId) {
             const nextLecture =
               courseProgressData?.data?.courseDetails?.curriculum
                 .flatMap((section) => section.lectures)
                 .find((lecture) => lecture._id === lastViewedLectureId);
-
             setCurrentLecture(nextLecture);
           }
         }
@@ -111,20 +101,13 @@ function EnrolledCourseDetailsPage() {
 
   const handleProgressUpdate = async (lecture) => {
     if (lecture) {
-      await markLectureAsViewed({
-        courseId,
-        lectureId: lecture._id,
-      }).unwrap();
-
+      await markLectureAsViewed({ courseId, lectureId: lecture._id }).unwrap();
       refetchCourseProgress();
     }
   };
 
   async function handleRewatchCourse() {
-    await resetCourseProgress({
-      courseId,
-    }).unwrap();
-
+    await resetCourseProgress({ courseId }).unwrap();
     setCurrentLecture(null);
     setShowConfetti(false);
     setShowCourseCompleteDialog(false);
@@ -140,235 +123,267 @@ function EnrolledCourseDetailsPage() {
   }, [showConfetti]);
 
   return (
-    <div className="flex flex-col h-auto bg-[#1c1d1f] text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       {showConfetti && <Confetti />}
-      <div className="flex items-center justify-between p-4 bg-[#1c1d1f] border-b border-gray-700">
-        <div className="flex items-center space-x-4">
+      {/* Fixed Header */}
+      <header className="fixed top-15 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center space-x-3">
           <Button
             onClick={() => navigate("/profile/my-courses")}
-            className="bg-white text-black hover:bg-gray-100"
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="text-gray-700 hover:bg-gray-100"
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Go to My Courses Page
+            <ChevronLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-lg font-bold hidden md:block">
+          <h1 className="text-xl font-semibold text-gray-800 truncate max-w-[calc(100vw-10rem)] lg:max-w-[calc(100vw-24rem)]">
             {courseProgressData?.data?.courseDetails?.title}
           </h1>
         </div>
         <Button
           onClick={() => setIsSideBarOpen(!isSideBarOpen)}
-          className="bg-white hover:bg-gray-100"
+          variant="ghost"
+          size="icon"
+          className="lg:hidden text-gray-700 hover:bg-gray-100"
         >
-          {isSideBarOpen ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
+          <Menu className="h-6 w-6" />
         </Button>
-      </div>
-      <div className="flex flex-1 overflow-hidden">
-        <div
-          className={`flex-1 ${
-            isSideBarOpen ? "mr-[400px]" : ""
-          } transition-all duration-300`}
-        >
-          <VideoPlayer
-            width="100%"
-            height="500px"
-            url={currentLecture?.videoUrl}
-            onProgressUpdate={handleProgressUpdate}
-            progressData={currentLecture}
-          />
-          <div className="p-6 bg-[#1c1d1f]">
-            <h2 className="text-2xl font-bold mb-2">{currentLecture?.title}</h2>
-          </div>
-          {/* New Tabs Section */}
-          <Tabs defaultValue="reviews" className="p-6">
-            <TabsList className="grid w-full grid-cols-3 bg-[#1c1d1f]">
-              <TabsTrigger value="reviews" className="text-white">
+      </header>
+
+      {/* Main Layout */}
+      <div className="flex flex-1 pt-10">
+        {/* Main Content (Left) */}
+        <main className="flex-1 w-full lg:w-[calc(100%-20rem)] p-4 lg:p-6 bg-gray-50">
+          {/* Video Player */}
+          <section className="mb-6 p-10">
+            <div className="relative bg-black rounded-lg overflow-hidden shadow-lg">
+              <VideoPlayer
+                width="100%"
+                height="clamp(240px, 50vh, 600px)"
+                url={currentLecture?.videoUrl}
+                onProgressUpdate={handleProgressUpdate}
+                progressData={currentLecture}
+              />
+            </div>
+            <div className="mt-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {currentLecture?.title}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {viewedLectures} / {totalLectures} Lectures •{" "}
+                {progressPercentage}% Complete
+              </p>
+            </div>
+          </section>
+
+          <Tabs
+            defaultValue="reviews"
+            className="bg-white rounded-lg shadow-sm"
+          >
+            <TabsList className="flex bg-gray-50 border-b border-gray-200">
+              <TabsTrigger
+                value="reviews"
+                className="flex-1 py-3 text-gray-700 data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-t-md"
+              >
                 Reviews
               </TabsTrigger>
-              <TabsTrigger value="discussions" className="text-white">
+              <TabsTrigger
+                value="discussions"
+                className="flex-1 py-3 text-gray-700 data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-t-md"
+              >
                 Discussions
               </TabsTrigger>
-              <TabsTrigger value="chat" className="text-white">
+              <TabsTrigger
+                value="chat"
+                className="flex-1 py-3 text-gray-700 data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-t-md"
+              >
                 Chat with Trainer
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="reviews">
+            <TabsContent value="reviews" className="p-4">
               <Reviews
                 courseId={courseProgressData?.data?.courseDetails?._id}
               />
             </TabsContent>
-            <TabsContent value="discussions">
+            <TabsContent value="discussions" className="p-4">
               <Discussions />
             </TabsContent>
-            <TabsContent value="chat">
+            <TabsContent value="chat" className="p-4">
               <ChatWithTrainer />
             </TabsContent>
           </Tabs>
-        </div>
-        <div
-          className={`fixed top-[64px] right-0 bottom-0 w-[400px] bg-[#1c1d1f] border-l border-gray-700 transition-all duration-300 ${
-            isSideBarOpen ? "translate-x-0" : "translate-x-full"
+        </main>
+
+        {/* Sidebar (Right) */}
+        <aside
+          className={`fixed lg:static top-14 right-0 w-full lg:w-80 h-[calc(100vh-3.5rem)] lg:h-auto bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 z-40 ${
+            isSideBarOpen
+              ? "translate-x-0"
+              : "translate-x-full lg:translate-x-0"
           }`}
         >
-          <Tabs defaultValue="content" className="h-full flex flex-col mt-6">
-            <TabsList className="grid bg-[#1c1d1f] w-full grid-cols-2 p-0 h-14">
-              <TabsTrigger
-                value="content"
-                className="text-white rounded-none h-full hover:bg-gray-700"
-              >
-                Course Content
-              </TabsTrigger>
-              <TabsTrigger
-                value="overview"
-                className="text-white rounded-none h-full hover:bg-gray-700"
-              >
-                Overview
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="content">
-              <ScrollArea className="h-full">
-                <div className="p-4 space-y-4">
-                  <div className="w-full bg-gray-700 rounded-full h-2.5">
-                    <div
-                      className="bg-green-500 h-2.5 rounded-full"
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Course Content
+            </h3>
+            <Button
+              onClick={() => setIsSideBarOpen(false)}
+              variant="ghost"
+              size="icon"
+              className="lg:hidden text-gray-700 hover:bg-gray-100"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="p-4">
+            <div className="mb-6">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-teal-500 h-2.5 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                {progressPercentage}% Complete • {viewedLectures}/
+                {totalLectures} Lectures
+              </p>
+            </div>
+            <ScrollArea className="h-[calc(100vh-12rem)] lg:h-[calc(100vh-16rem)]">
+              <Accordion type="single" collapsible className="space-y-3">
+                {courseProgressData?.data?.courseDetails?.curriculum.map(
+                  (section, index) => (
+                    <AccordionItem
+                      key={section._id}
+                      value={`item-${index}`}
+                      className="border border-gray-200 rounded-md"
+                    >
+                      <AccordionTrigger className="text-gray-800 font-semibold bg-gray-50 hover:bg-gray-100 p-4 text-base">
+                        {section.title}
+                      </AccordionTrigger>
+                      <AccordionContent className="p-2">
+                        {section.lectures.map((lecture) => (
+                          <div
+                            key={lecture._id}
+                            onClick={() => setCurrentLecture(lecture)}
+                            className={`flex items-center space-x-3 p-3 rounded-md cursor-pointer text-sm ${
+                              currentLecture?._id === lecture._id
+                                ? "bg-teal-50 text-teal-900 font-medium"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {courseProgressData?.data?.progress?.find(
+                              (p) => p.lectureId === lecture._id
+                            )?.viewed ? (
+                              <Check className="h-5 w-5 text-teal-500 flex-shrink-0" />
+                            ) : (
+                              <Play className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                            )}
+                            <span className="truncate">{lecture.title}</span>
+                          </div>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )
+                )}
+              </Accordion>
+              {/* Overview Section */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                  Overview
+                </h4>
+                <div className="space-y-4 text-gray-600 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>
+                      Instructor:{" "}
+                      {courseProgressData?.data?.courseDetails?.instructorName}
+                    </span>
                   </div>
-                  <Accordion type="single" collapsible>
-                    {courseProgressData?.data?.courseDetails?.curriculum.map(
-                      (section, index) => (
-                        <AccordionItem
-                          key={section._id}
-                          value={`item-${index}`}
-                        >
-                          <AccordionTrigger className="text-white font-bold hover:bg-gray-700 p-2 rounded-lg">
-                            {section.title}
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            {section.lectures.map((lecture) => (
-                              <div
-                                className="flex items-center space-x-2 text-sm text-white font-bold cursor-pointer hover:bg-gray-700 p-2 rounded-lg"
-                                key={lecture._id}
-                                onClick={() => setCurrentLecture(lecture)}
-                              >
-                                {courseProgressData?.data?.progress?.find(
-                                  (progressItem) =>
-                                    progressItem.lectureId === lecture._id
-                                )?.viewed ? (
-                                  <Check className="h-4 w-4 text-green-500" />
-                                ) : (
-                                  <Play className="h-4 w-4" />
-                                )}
-                                <span>{lecture?.title}</span>
-                              </div>
-                            ))}
-                          </AccordionContent>
-                        </AccordionItem>
-                      )
-                    )}
-                  </Accordion>
-                </div>
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="overview" className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="p-4">
-                  <h2 className="text-xl font-bold mb-4">About this course</h2>
-                  <p className="text-gray-400">
-                    {courseProgressData?.data?.courseDetails?.description}
-                  </p>
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Instructor:{" "}
-                        {
-                          courseProgressData?.data?.courseDetails
-                            ?.instructorName
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Category:{" "}
-                        {courseProgressData?.data?.courseDetails?.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <BarChart className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Level: {courseProgressData?.data?.courseDetails?.level}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Language:{" "}
-                        {
-                          courseProgressData?.data?.courseDetails
-                            ?.primaryLanguage
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MessageCircle className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Welcome Message:{" "}
-                        {
-                          courseProgressData?.data?.courseDetails
-                            ?.welcomeMessage
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">
-                        Students Enrolled:{" "}
-                        {
-                          courseProgressData?.data?.courseDetails?.students
-                            ?.length
-                        }
-                      </span>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span>
+                      Category:{" "}
+                      {courseProgressData?.data?.courseDetails?.category?.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <BarChart className="h-4 w-4" />
+                    <span>
+                      Level: {courseProgressData?.data?.courseDetails?.level}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Globe className="h-4 w-4" />
+                    <span>
+                      Language:{" "}
+                      {courseProgressData?.data?.courseDetails?.primaryLanguage}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>
+                      Welcome:{" "}
+                      {courseProgressData?.data?.courseDetails?.welcomeMessage}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4" />
+                    <span>
+                      Students:{" "}
+                      {
+                        courseProgressData?.data?.courseDetails?.students
+                          ?.length
+                      }
+                    </span>
                   </div>
                 </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
-        </div>
+              </div>
+            </ScrollArea>
+          </div>
+        </aside>
       </div>
+
+      {/* Dialogs */}
       <Dialog open={lockCourse}>
-        <DialogContent className="sm:w-[425px] bg-white">
+        <DialogContent className="sm:max-w-md bg-white rounded-lg">
           <DialogHeader>
-            <DialogTitle>You can't view this page</DialogTitle>
+            <DialogTitle>Access Restricted</DialogTitle>
             <DialogDescription>
-              Please purchase this course to get access
+              You need to purchase this course to view its content.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => navigate("/All-courses")}>
+            <Button
+              onClick={() => navigate("/all-courses")}
+              className="bg-teal-500 hover:bg-teal-600 text-white"
+            >
               Browse Courses
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showCourseCompleteDialog}>
-        <DialogContent showOverlay={false} className="sm:w-[425px] bg-white">
+        <DialogContent className="sm:max-w-md bg-white rounded-lg">
           <DialogHeader>
-            <DialogTitle>Congratulations!</DialogTitle>
-            <DialogDescription className="flex flex-col gap-3">
-              <Label>You have completed the course</Label>
-              <div className="flex flex-row gap-3">
-                <Button onClick={() => navigate("/profile/my-courses")}>
-                  My Courses Page
+            <DialogTitle className="text-teal-500">
+              Congratulations!
+            </DialogTitle>
+            <DialogDescription className="space-y-4">
+              <p>You’ve successfully completed the course!</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={() => navigate("/profile/my-courses")}
+                  className="bg-teal-500 hover:bg-teal-600 text-white"
+                >
+                  My Courses
                 </Button>
-                <Button onClick={handleRewatchCourse}>Rewatch Course</Button>
+                <Button
+                  onClick={handleRewatchCourse}
+                  variant="outline"
+                  className="border-teal-500 text-teal-500 hover:bg-teal-50"
+                >
+                  Rewatch Course
+                </Button>
               </div>
             </DialogDescription>
           </DialogHeader>

@@ -9,10 +9,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
@@ -25,7 +24,7 @@ import {
 } from "@/redux/services/authApi";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; // Added useLocation
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { useToast } from "../hooks/use-toast";
@@ -36,6 +35,7 @@ export default function Component() {
   const [forgotPassword] = useForgotPasswordMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation(); // Added for location.state
   const [login, { isLoading, error }] = useLoginMutation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState("");
@@ -84,11 +84,9 @@ export default function Component() {
         return;
       }
       const response = await login(form).unwrap();
-
       console.log("Login Successful", response);
-      console.log("User Role", response.data.user.role);
       if (response.data.user.role === "admin") {
-        <Navigate to="/dashboard" />;
+        navigate("/dashboard");
       } else {
         navigate("/");
       }
@@ -146,50 +144,50 @@ export default function Component() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex items-center justify-center h-[calc(100vh-5rem)] p-20 bg-gradient-to-r from-gray-50 to-gray-100"
+      className="flex flex-col lg:flex-row items-center justify-center min-h-[calc(100vh-4rem)] bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-8 lg:py-0"
     >
-      {/* Welcome Message on the Left */}
+      {/* Welcome Message */}
       <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-1/2 flex items-center justify-center p-8"
+        className="w-full lg:w-1/2 flex items-center justify-center mb-8 lg:mb-0 lg:p-8"
       >
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Welcome Back!
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-md mx-auto">
             Unlock your potential with our world-class learning platform.
           </p>
         </div>
       </motion.div>
 
-      {/* Login Form on the Right */}
+      {/* Login Form */}
       <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-1/2 flex items-center justify-center p-8"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8"
       >
         <Card className="w-full max-w-md shadow-lg rounded-lg bg-white">
           <CardHeader className="space-y-1 p-6">
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">
               Login
             </CardTitle>
-            <CardDescription className="text-gray-600">
-              Enter your email and password to login to your account
+            <CardDescription className="text-gray-600 text-sm sm:text-base">
+              Enter your email and password to login
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <p className="text-red-500 text-sm mb-4">
+                <p className="text-red-500 text-sm">
                   {(error as any).data?.message || "Login failed"}
                 </p>
               )}
               {formErrors && (
-                <p className="text-red-500 text-sm mb-4">{formErrors}</p>
+                <p className="text-red-500 text-sm">{formErrors}</p>
               )}
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -225,7 +223,7 @@ export default function Component() {
                     <button
                       type="button"
                       onClick={toggleShowPassword}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors"
                       aria-label="Toggle password visibility"
                     >
                       {showPassword ? (
@@ -239,29 +237,30 @@ export default function Component() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300"
                 >
                   {isLoading ? "Logging in..." : "Login"}
                 </Button>
                 <div className="w-full">
                   <GoogleAuth />
                 </div>
-                <span className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <Link
-                    to={"/signup"}
-                    className="text-gray-900 hover:text-gray-700 transition-colors"
+                <div className="flex flex-col sm:flex-row justify-between text-sm text-gray-600 gap-2">
+                  <span>
+                    Don't have an account?{" "}
+                    <Link
+                      to="/signup"
+                      className="text-teal-600 hover:text-teal-700 transition-colors"
+                    >
+                      Register
+                    </Link>
+                  </span>
+                  <span
+                    className="cursor-pointer text-teal-600 hover:text-teal-700 transition-colors"
+                    onClick={handleForgotPasswordClick}
                   >
-                    Register
-                  </Link>
-                </span>
-                <br></br>
-                <span
-                  className="cursor-pointer text-sm text-gray-900 hover:text-gray-700 transition-colors"
-                  onClick={handleForgotPasswordClick}
-                >
-                  Forgot password?
-                </span>
+                    Forgot password?
+                  </span>
+                </div>
               </div>
             </form>
           </CardContent>
@@ -280,7 +279,7 @@ export default function Component() {
             </DialogTitle>
             {!isOtpSent ? (
               <DialogDescription className="text-gray-600">
-                Enter your email to receive a one-time password (OTP).
+                Enter your email to receive an OTP.
               </DialogDescription>
             ) : (
               <DialogDescription className="text-gray-600">
@@ -292,8 +291,8 @@ export default function Component() {
           <div className="grid gap-4 py-4">
             {!isOtpSent ? (
               <>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right text-gray-700">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700">
                     Email
                   </Label>
                   <Input
@@ -302,24 +301,22 @@ export default function Component() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="col-span-3 border-gray-300"
+                    className="w-full border-gray-300"
                   />
                   {errors.email && (
-                    <p className="text-red-500 col-span-4 text-sm">
-                      {errors.email}
-                    </p>
+                    <p className="text-red-500 text-sm">{errors.email}</p>
                   )}
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
                   <Button
                     onClick={handleSendOtp}
-                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white"
+                    className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white"
                   >
                     Send OTP
                   </Button>
                   <Button
                     onClick={() => setIsForgotPasswordModalOpen(false)}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800"
+                    className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800"
                   >
                     Close
                   </Button>
@@ -327,8 +324,8 @@ export default function Component() {
               </>
             ) : (
               <>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="otp" className="text-right text-gray-700">
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="text-gray-700">
                     OTP
                   </Label>
                   <Input
@@ -337,19 +334,14 @@ export default function Component() {
                     name="otp"
                     value={formData.otp}
                     onChange={handleOtpChange}
-                    className="col-span-3 border-gray-300"
+                    className="w-full border-gray-300"
                   />
                   {errors.otp && (
-                    <p className="text-red-500 col-span-4 text-sm">
-                      {errors.otp}
-                    </p>
+                    <p className="text-red-500 text-sm">{errors.otp}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="newPassword"
-                    className="text-right text-gray-700"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-gray-700">
                     New Password
                   </Label>
                   <Input
@@ -358,45 +350,40 @@ export default function Component() {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleOtpChange}
-                    className="col-span-3 border-gray-300"
+                    className="w-full border-gray-300"
                   />
                   {errors.newPassword && (
-                    <p className="text-red-500 col-span-4 text-sm">
-                      {errors.newPassword}
-                    </p>
+                    <p className="text-red-500 text-sm">{errors.newPassword}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="confPassword"
-                    className="text-right text-gray-700"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="confPassword" className="text-gray-700">
                     Confirm Password
                   </Label>
                   <Input
                     id="confPassword"
-                    type="text"
+                    type="password" // Changed to password for security
                     name="confPassword"
                     value={formData.confPassword}
                     onChange={handleOtpChange}
-                    className="col-span-3 border-gray-300"
+                    className="w-full border-gray-300"
                   />
                   {errors.confPassword && (
-                    <p className="text-red-500 col-span-4 text-sm">
+                    <p className="text-red-500 text-sm">
                       {errors.confPassword}
                     </p>
                   )}
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
                   <Button
                     onClick={handleSubmitOtp}
-                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white"
+                    className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white"
                   >
                     Submit OTP
                   </Button>
                   <Button
                     onClick={() => setIsForgotPasswordModalOpen(false)}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800"
+                    className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800"
                   >
                     Close
                   </Button>

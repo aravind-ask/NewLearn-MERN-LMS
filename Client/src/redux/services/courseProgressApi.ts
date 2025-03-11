@@ -15,7 +15,7 @@ export const courseProgressApi = api.injectEndpoints({
     // Get current course progress
     getCourseProgress: builder.query({
       query: ({ courseId }) => ({
-        url: `/progress/progress/${courseId}`,
+        url: `/progress/${courseId}`,
       }),
       providesTags: ["CourseProgress"],
     }),

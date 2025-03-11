@@ -40,7 +40,10 @@ export class EnrollmentRepository implements IEnrollmentRepository {
 
   async getEnrolledCourses(userId: string): Promise<IEnrollment | null> {
     try {
-      return await EnrollmentModel.findOne({ userId }).exec();
+      return await EnrollmentModel.findOne({ userId })
+        .populate("courses.courseProgressId")
+        .populate("courses.courseId")
+        .exec();
     } catch (error) {
       throw new Error("Error fetching enrolled courses");
     }

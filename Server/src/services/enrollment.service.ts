@@ -33,4 +33,4 @@ export class EnrollmentService implements IEnrollmentService {
   }
 }
 
-export default EnrollmentService; // Export as class for DI
+export default EnrollmentService; 

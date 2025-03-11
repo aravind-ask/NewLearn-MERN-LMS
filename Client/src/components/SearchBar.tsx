@@ -24,22 +24,23 @@ export default function SearchBar() {
     handleSearch(value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      navigate(`/courses?search=${encodeURIComponent(query)}`);
-    }
-  };
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (query.trim()) {
+  //     navigate(`/courses?search=${encodeURIComponent(query)}`);
+  //   }
+  // };
 
   return (
-    <div className="relative w-full max-w-xs">
-      <form onSubmit={handleSubmit}>
+    <div className="hidden lg:flex items-center flex-1 max-w-xs mx-4">
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          type="text"
+          type="search"
           value={query}
           onChange={handleInputChange}
           placeholder="Search..."
-          className="w-100 py-2 h-10 pl-4 pr-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="pl-10 py-2 border-gray-300 focus:border-teal-500 focus:ring-teal-500 rounded-full"
           aria-label="Search"
         />
         <button
@@ -47,9 +48,8 @@ export default function SearchBar() {
           className="absolute -right-20 -top-1 mt-2 mr-2 p-1 rounded-full text-gray-500 hover:text-gray-700"
           aria-label="Perform search"
         >
-          <Search className="w-6 h-6" />
         </button>
-      </form>
+      </div>
     </div>
   );
 }
