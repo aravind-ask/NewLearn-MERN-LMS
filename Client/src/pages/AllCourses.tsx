@@ -48,7 +48,7 @@ const AllCourses = () => {
   }, [searchQuery, categoryQuery]);
 
   const { data: categoriesData, isLoading: isCategoriesLoading } =
-    useGetCategoriesQuery();
+    useGetCategoriesQuery({});
 
   const {
     data: coursesData,
@@ -82,8 +82,8 @@ const AllCourses = () => {
   const filterOptions = {
     Category: [
       { id: "All", label: "All" },
-      ...(categoriesData?.data
-        ? categoriesData.data.map((cat) => ({
+      ...(categoriesData?.data?.data
+        ? categoriesData.data.data.map((cat) => ({
             id: cat._id,
             label: cat.name,
           }))

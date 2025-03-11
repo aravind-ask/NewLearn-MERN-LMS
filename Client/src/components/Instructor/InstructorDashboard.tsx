@@ -1,18 +1,37 @@
+import { useState } from "react";
 import { IndianRupee, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+import { DataTable } from "../../components/DataTable";
 
-const InstructorDashboard = ({ data }) => {
-  console.log(data);
+interface Student {
+  studentName: string;
+  studentEmail: string;
+}
 
-  function calculateTotalStudentsAndProfit() {
+interface Course {
+  title: string;
+  students: Student[];
+  pricing: number;
+}
+
+interface InstructorData {
+  data: {
+    courses: Course[];
+  };
+}
+
+interface StudentListItem {
+  courseTitle: string;
+  studentName: string;
+  studentEmail: string;
+}
+
+const InstructorDashboard = ({ data }: { data: InstructorData }) => {
+  const [page, setPage] = useState(1);
+  const limit = 5; // Number of students per page
+
+  // Calculate totals and student list
+  const calculateTotalStudentsAndProfit = () => {
     const { totalStudents, totalProfit, studentList } =
       data.data.courses.reduce(
         (acc, course) => {
@@ -29,72 +48,95 @@ const InstructorDashboard = ({ data }) => {
           });
           return acc;
         },
-        { totalStudents: 0, totalProfit: 0, studentList: [] }
+        {
+          totalStudents: 0,
+          totalProfit: 0,
+          studentList: [] as StudentListItem[],
+        }
       );
     return { totalStudents, totalProfit, studentList };
-  }
+  };
 
-  console.log(calculateTotalStudentsAndProfit());
+  const { totalStudents, totalProfit, studentList } =
+    calculateTotalStudentsAndProfit();
+  const totalPages = Math.ceil(studentList.length / limit);
+
+  // Paginate the student list
+  const paginatedStudentList = studentList.slice(
+    (page - 1) * limit,
+    page * limit
+  );
 
   const config = [
     {
       icon: Users,
       label: "Students",
-      value: calculateTotalStudentsAndProfit().totalStudents,
+      value: totalStudents,
     },
     {
       icon: IndianRupee,
       label: "Revenue",
-      value: calculateTotalStudentsAndProfit().totalProfit,
+      value: totalProfit,
+    },
+  ];
+
+  const columns = [
+    {
+      header: "Course",
+      accessor: "courseTitle",
+      render: (student: StudentListItem) => (
+        <span className="font-bold text-gray-900">{student.courseTitle}</span>
+      ),
+    },
+    {
+      header: "Student Name",
+      accessor: "studentName",
+    },
+    {
+      header: "Student Email",
+      accessor: "studentEmail",
     },
   ];
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {config.map((item, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card key={index} className="border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gray-50 border-b">
+              <CardTitle className="text-sm font-medium text-gray-700">
                 {item.label}
               </CardTitle>
-              <item.icon className="h-4 w-4 text-muted-foreground " />
+              <item.icon className="h-4 w-4 text-gray-500" />
             </CardHeader>
-            <CardContent className="text-2xl font-bold">
-              {item.value}
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-gray-900">
+                {item.label === "Revenue" ? `₹${item.value}` : item.value}
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Student List</CardTitle>
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="bg-gray-50 border-b">
+          <CardTitle className="text-xl font-semibold text-gray-800">
+            Student List
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Student Email</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calculateTotalStudentsAndProfit().studentList.map(
-                  (student, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-bold">
-                        {student.courseTitle}
-                      </TableCell>
-                      <TableCell>{student.studentName}</TableCell>
-                      <TableCell>{student.studentEmail}</TableCell>
-                    </TableRow>
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </div>
+        <CardContent className="p-6">
+          <DataTable
+            columns={columns}
+            data={paginatedStudentList}
+            isLoading={false} // Data is passed as prop, no loading state needed
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+          {studentList.length === 0 && (
+            <div className="text-center py-10 text-gray-500">
+              No students enrolled yet
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

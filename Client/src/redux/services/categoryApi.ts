@@ -3,7 +3,10 @@ import { api } from "./apiSetup";
 export const categoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getCategories: builder.query({
-      query: () => "/categories",
+      query: ({ page, limit }) => ({
+        url: "/categories",
+        params: { page, limit },
+      }),
       providesTags: ["Categories"],
     }),
     createCategory: builder.mutation({

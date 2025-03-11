@@ -8,8 +8,14 @@ export class CategoryService {
     this.categoryRepository = new CategoryRepository();
   }
 
-  async getAllCategories(): Promise<ICategory[]> {
-    return this.categoryRepository.getAllCategories();
+  async getAllCategories(
+    page: number,
+    limit: number
+  ): Promise<{ categories: ICategory[]; total: number }> {
+    if (page < 1 || limit < 1) {
+      throw new Error("Page and limit must be positive numbers");
+    }
+    return this.categoryRepository.getAllCategories(page, limit);
   }
 
   async createCategory(name: string, description?: string): Promise<ICategory> {
@@ -24,7 +30,7 @@ export class CategoryService {
     return this.categoryRepository.updateCategory(id, data);
   }
 
-  async deleteCategory(id: string): Promise<ICategory | null> { 
+  async deleteCategory(id: string): Promise<ICategory | null> {
     return this.categoryRepository.deleteCategory(id);
   }
 }

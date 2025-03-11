@@ -1,5 +1,6 @@
 // src/models/Course.ts
 import mongoose, { Schema, Document } from "mongoose";
+import { IOffer } from "./Offers";
 
 export interface Lecture {
   title: string;
@@ -37,6 +38,7 @@ export interface ICourse extends Document {
   description?: string;
   image: string;
   pricing: number;
+  offer?: mongoose.Types.ObjectId | IOffer;
   objectives: string;
   welcomeMessage: string;
   students: [
@@ -66,6 +68,7 @@ const CourseSchema = new Schema<ICourse>(
     description: { type: String },
     image: { type: String, required: true },
     pricing: { type: Number, required: true },
+    offer: { type: Schema.Types.ObjectId, ref: "Offer", required: false },
     objectives: { type: String, required: true },
     welcomeMessage: { type: String, required: true },
     students: [

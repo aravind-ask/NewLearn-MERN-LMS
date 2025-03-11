@@ -30,7 +30,7 @@ const CourseLandingPage = () => {
   );
 
   const { data: categoriesData, isLoading: isCategoriesLoading } =
-    useGetCategoriesQuery();
+    useGetCategoriesQuery({});
 
   const [dynamicFormControls, setDynamicFormControls] = useState<
     typeof courseLandingPageFormControls
@@ -38,7 +38,7 @@ const CourseLandingPage = () => {
 
   useEffect(() => {
     if (categoriesData) {
-      const transformedCategories = categoriesData.data.map((category) => ({
+      const transformedCategories = categoriesData.data.data.map((category) => ({
         id: category._id,
         label: category.name,
       }));

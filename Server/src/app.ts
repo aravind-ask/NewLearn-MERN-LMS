@@ -13,6 +13,7 @@ import wishlistRoutes from "./Routes/wishlist.routes";
 import paymentRoutes from "./Routes/payment.routes";
 import progressRoutes from "./Routes/course.progress.routes";
 import ratingsRoutes from "./Routes/ratings.routes";
+import offerRoutes from "./Routes/offer.routes";
 import multer from "multer";
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/reviews", ratingsRoutes);
+app.use("/api/offers", offerRoutes);
 
 app.use(
   (

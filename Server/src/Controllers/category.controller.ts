@@ -15,10 +15,30 @@ export class CategoryController {
     next: NextFunction
   ) => {
     try {
-      const categories = await this.categoryService.getAllCategories();
-      successResponse(res, categories, "Categories fetched successfully", 200);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const { categories, total } = await this.categoryService.getAllCategories(
+        page,
+        limit
+      );
+      successResponse(
+        res,
+        {
+          data: categories,
+          total,
+          page,
+          totalPages: Math.ceil(total / limit),
+        },
+        "Categories fetched successfully",
+        200
+      );
     } catch (error: any) {
-      errorResponse(res, error.message, error.status || 500);
+      errorResponse(
+        res,
+        error.message || "Failed to fetch categories",
+        error.status || 500
+      );
     }
   };
 

@@ -1,10 +1,17 @@
 import { Category, ICategory } from "../models/Category";
 
 export class CategoryRepository {
-  async getAllCategories(): Promise<ICategory[]> {
-    return Category.find();
+  async getAllCategories(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ categories: ICategory[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const [categories, total] = await Promise.all([
+      Category.find().skip(skip).limit(limit).lean(),
+      Category.countDocuments(),
+    ]);
+    return { categories, total };
   }
-
   async getCategoryById(id: string): Promise<ICategory | null> {
     return Category.findById(id);
   }

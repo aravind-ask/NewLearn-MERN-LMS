@@ -12,6 +12,7 @@ import { RootState } from "@/redux/store";
 import AdminInstructorRequests from "@/components/Admin/InstructorRequests";
 import Category from "@/components/Admin/Category";
 import AllCourses from "@/components/Admin/Courses";
+import Offers from "@/components/Admin/Offers";
 
 const AdminDashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -33,6 +34,11 @@ const AdminDashboard = () => {
       key: "category",
       label: "Category",
       icon: <ScanFace size={20} />,
+    },
+    {
+      key: "offers",
+      label: "Offers",
+      icon: <Award size={20} />,
     },
     {
       key: "sales",
@@ -92,6 +98,7 @@ const AdminDashboard = () => {
           {selectedTab === "sales" && <Sales />}
           {selectedTab === "instructorRequests" && <AdminInstructorRequests />}
           {selectedTab === "category" && <Category />}
+          {selectedTab === "offers" && <Offers />}
         </Card>
       </main>
     </div>
