@@ -93,4 +93,7 @@ export class PaymentService {
   async getPaymentsByDate(startDate: Date, endDate: Date): Promise<IPayment[]> {
     return await this.paymentRepo.getPaymentsByDateRange(startDate, endDate);
   }
+  async getUserPaymentHistory(userId: string, page: number, limit: number) {
+    return await this.paymentRepo.getUserPaymentHistory(userId, page, limit);
+  }
 }

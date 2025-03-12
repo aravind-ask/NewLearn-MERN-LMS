@@ -8,6 +8,7 @@ import {
 } from "../utils/course.dto";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { tokenUtils } from "../utils/tokenUtils";
+import { HttpStatus } from "../utils/statusCodes";
 import { ICourseService } from "../services/interfaces/ICourseService";
 import { IEnrollmentService } from "@/services/interfaces/IEnrollmentService";
 
@@ -30,13 +31,16 @@ export class CourseController {
       const courseData: CreateCourseInput = CreateCourseDto.parse(req.body);
       if (!req.user) throw new Error("Unauthorized");
       courseData.instructorId = req.user.id;
-      // courseData.instructorName =
-      //   req.user.role === "instructor" ? "Instructor Name" : "";
 
       const newCourse = await this.courseService.createCourse(courseData);
-      successResponse(res, newCourse, "Course created successfully", 201);
+      successResponse(
+        res,
+        newCourse,
+        "Course created successfully",
+        HttpStatus.CREATED
+      );
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -50,12 +54,21 @@ export class CourseController {
 
       const updatedCourse = await this.courseService.editCourse(validatedData);
       if (!updatedCourse) {
-        errorResponse(res, { message: "Course not found" }, 404);
+        errorResponse(
+          res,
+          { message: "Course not found" },
+          HttpStatus.NOT_FOUND
+        );
         return;
       }
-      successResponse(res, updatedCourse, "Course updated successfully", 200);
+      successResponse(
+        res,
+        updatedCourse,
+        "Course updated successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -68,12 +81,16 @@ export class CourseController {
       const { courseId } = req.params;
       const deletedCourse = await this.courseService.deleteCourse(courseId);
       if (!deletedCourse) {
-        errorResponse(res, { message: "Course not found" }, 404);
+        errorResponse(
+          res,
+          { message: "Course not found" },
+          HttpStatus.NOT_FOUND
+        );
         return;
       }
-      successResponse(res, {}, "Course deleted successfully", 200);
+      successResponse(res, {}, "Course deleted successfully", HttpStatus.OK);
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -105,7 +122,11 @@ export class CourseController {
             excludeInstructorId = req.user.id;
           }
         } catch (error) {
-          errorResponse(res, "Invalid or expired access token", 401);
+          errorResponse(
+            res,
+            "Invalid or expired access token",
+            HttpStatus.UNAUTHORIZED
+          );
           return;
         }
       }
@@ -121,13 +142,17 @@ export class CourseController {
         excludeInstructorId
       );
 
-      successResponse(res, result, "Courses fetched successfully", 200);
+      successResponse(
+        res,
+        result,
+        "Courses fetched successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
 
-  // Get courses for a specific instructor
   async getInstructorCourses(
     req: AuthenticatedRequest,
     res: Response,
@@ -135,7 +160,7 @@ export class CourseController {
   ) {
     try {
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
       const instructorId = req.user.id;
@@ -158,9 +183,14 @@ export class CourseController {
         limit,
         sortOptions
       );
-      successResponse(res, result, "Courses fetched successfully", 200);
+      successResponse(
+        res,
+        result,
+        "Courses fetched successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
-      errorResponse(res, error, error.status || 400);
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -172,7 +202,7 @@ export class CourseController {
     try {
       const { courseId } = req.params;
       if (!courseId) {
-        errorResponse(res, "Course not found", 404);
+        errorResponse(res, "Course not found", HttpStatus.NOT_FOUND);
         return;
       }
 
@@ -187,28 +217,38 @@ export class CourseController {
             req.user.id,
             courseId
           );
-          console.log("isEnrolled", isEnrolled);
           if (isEnrolled) {
-            isCourseEnrolled = {
-              courseId,
-            };
+            isCourseEnrolled = { courseId };
           }
         } catch (error) {
-          errorResponse(res, "Invalid or expired access token", 401);
+          errorResponse(
+            res,
+            "Invalid or expired access token",
+            HttpStatus.UNAUTHORIZED
+          );
           return;
         }
       }
 
       const courseDetails = await this.courseService.getCourseDetails(courseId);
       if (!courseDetails) {
-        errorResponse(res, "Course not found", 404);
+        errorResponse(res, "Course not found", HttpStatus.NOT_FOUND);
         return;
       }
 
       const course = { courseDetails, isEnrolled: isCourseEnrolled };
-      successResponse(res, course, "Course details fetched successfully", 200);
+      successResponse(
+        res,
+        course,
+        "Course details fetched successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -219,7 +259,7 @@ export class CourseController {
   ) {
     try {
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
       const { courseId } = req.params;
@@ -231,10 +271,14 @@ export class CourseController {
         res,
         { isEnrolled },
         "Enrollment info fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 }

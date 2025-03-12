@@ -65,7 +65,7 @@ const Category = () => {
       setErrorMessage("Category name is required.");
       return;
     }
-    const isDuplicate = categories?.data?.some(
+    const isDuplicate = categories?.data?.data?.some(
       (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
     );
     if (isDuplicate) {
@@ -164,14 +164,14 @@ const Category = () => {
                 Create Category
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md bg-white">
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">
                   Create New Category
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
+                <div className="bg-white">
                   <Label htmlFor="category-name" className="text-gray-700">
                     Category Name
                   </Label>

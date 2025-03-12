@@ -6,6 +6,7 @@ import { errorResponse, successResponse } from "../utils/responseHandler";
 import { v4 as uuidv4 } from "uuid";
 import EnrollmentService from "../services/enrollment.service";
 import { IUser } from "../models/User";
+import { HttpStatus } from "../utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string };
@@ -21,14 +22,15 @@ export class UserController {
     try {
       const { fileName } = req.body;
       const url = await getPresignedUrl(fileName);
-      successResponse(
-        res,
-        { url, key: `uploads/${uuidv4()}-${Date.now()}-${fileName}` },
-        "Upload URL generated",
-        200
-      );
+      res
+        .status(HttpStatus.OK)
+        .json({ url, key: `uploads/${uuidv4()}-${Date.now()}-${fileName}` });
     } catch (error: any) {
-      errorResponse(res, "Error generating upload URL", 500);
+      errorResponse(
+        res,
+        "Error generating upload URL",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -50,7 +52,7 @@ export class UserController {
         education,
       } = req.body;
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
 
@@ -80,7 +82,12 @@ export class UserController {
         education: updatedUser.education,
         isBlocked: updatedUser.isBlocked,
       };
-      successResponse(res, userResponse, "Profile updated successfully", 200);
+      successResponse(
+        res,
+        userResponse,
+        "Profile updated successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 500);
     }
@@ -101,7 +108,11 @@ export class UserController {
         200
       );
     } catch (error: any) {
-      errorResponse(res, "Error fetching users", 500);
+      errorResponse(
+        res,
+        "Error fetching users",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -113,10 +124,14 @@ export class UserController {
         res,
         updatedUser,
         `User ${isBlocked ? "blocked" : "unblocked"} successfully`,
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, "Error updating block status", 500);
+      errorResponse(
+        res,
+        "Error updating block status",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -127,7 +142,7 @@ export class UserController {
   ) {
     try {
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
       const userId = req.user.id;
@@ -137,7 +152,11 @@ export class UserController {
       const { courses, totalPages } =
         await this.enrollmentService.fetchEnrolledCourses(userId, page, limit);
       if (!courses.length) {
-        errorResponse(res, "No courses found for this student", 404);
+        errorResponse(
+          res,
+          "No courses found for this student",
+          HttpStatus.NOT_FOUND
+        );
         return;
       }
       successResponse(
@@ -150,7 +169,7 @@ export class UserController {
       errorResponse(
         res,
         error.message || "Error fetching student courses",
-        error.statusCode || 500
+        error.statusCode
       );
     }
   }
@@ -162,7 +181,7 @@ export class UserController {
   ) {
     try {
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
       const user: IUser = await this.userService.getUserStatus(req.user.id);
@@ -170,10 +189,10 @@ export class UserController {
         res,
         { isBlocked: user.isBlocked },
         "User status fetched",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, "Error fetching user status", error.statusCode || 500);
+      errorResponse(res, "Error fetching user status", error.statusCode);
     }
   }
 }

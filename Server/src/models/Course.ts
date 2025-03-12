@@ -18,11 +18,13 @@ const LectureSchema = new Schema<Lecture>({
 
 export interface Section {
   title: string;
+  description: string;
   lectures: Lecture[];
 }
 
 const SectionSchema = new Schema<Section>({
   title: { type: String, required: true },
+  description: { type: String },
   lectures: [LectureSchema],
 });
 

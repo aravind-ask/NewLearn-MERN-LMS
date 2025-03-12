@@ -1,4 +1,3 @@
-// components/ui/DataTable.tsx
 import React from "react";
 import {
   Table,
@@ -80,6 +79,8 @@ export function DataTable<T>({
                 >
                   {typeof column.accessor === "function"
                     ? column.accessor(item)
+                    : column.render
+                    ? column.render(item)
                     : (item[column.accessor] as React.ReactNode)}
                 </TableCell>
               ))}

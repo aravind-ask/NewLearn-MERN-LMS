@@ -101,24 +101,24 @@ const AllCourses = () => {
         `$${course.students.length * course.pricing || 0}`,
       align: "right",
     },
-    {
-      header: "Actions",
-      accessor: (course: Course) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDeleteConfirm(course.id);
-          }}
-          disabled={isDeleting}
-          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-        >
-          <Trash2 className="h-5 w-5" />
-        </Button>
-      ),
-      align: "right",
-    },
+    // {
+    //   header: "Actions",
+    //   accessor: (course: Course) => (
+    //     <Button
+    //       variant="ghost"
+    //       size="sm"
+    //       onClick={(e) => {
+    //         e.stopPropagation();
+    //         setDeleteConfirm(course.id);
+    //       }}
+    //       disabled={isDeleting}
+    //       className="text-red-600 hover:text-red-800 hover:bg-red-50"
+    //     >
+    //       <Trash2 className="h-5 w-5" />
+    //     </Button>
+    //   ),
+    //   align: "right",
+    // },
   ];
 
   if (isError) {

@@ -46,5 +46,11 @@ router.get(
   authorizeRoles(["admin"]),
   paymentController.getPaymentsByDateRange.bind(paymentController)
 );
+router.get(
+  "/payment-history",
+  authMiddleware.verifyAccessToken,
+  // authorizeRoles(["student"]),
+  paymentController.getUserPaymentHistory.bind(paymentController)
+);
 
 export default router;

@@ -12,7 +12,7 @@ import {
 import { Button } from "../ui/button";
 import { Watch, BookOpen, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 interface Course {
   courseId: string;
@@ -113,17 +113,31 @@ const MyLearnings = () => {
                       <Clock className="w-4 h-4 mr-2" />
                       {course.courseProgressId?.viewedLectures} Completed
                     </div>
-                    <div className="space-y-2">
-                      <Progress
-                        value={progress}
-                        className="w-full h-3 rounded-full bg-gray-200"
+                    <ProgressPrimitive.Root
+                      value={progress}
+                      className="w-full h-3 rounded-full bg-gray-200 overflow-hidden"
+                    >
+                      <ProgressPrimitive.Indicator
+                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                        style={{ width: `${progress}%` }}
                       />
-                      <p className="text-xs text-gray-500 text-center">
-                        {progress === 100
-                          ? "Course Completed!"
-                          : `${course.courseProgressId?.viewedLectures} of ${course.courseProgressId?.totalLectures} lectures completed`}
-                      </p>
-                    </div>{" "}
+                    </ProgressPrimitive.Root>
+                    {course.courseProgressId?.viewedLectures &&
+                    course?.courseProgressId?.totalLectures ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-500 text-center">
+                          {progress === 100
+                            ? "Course Completed!"
+                            : `${course.courseProgressId?.viewedLectures} of ${course.courseProgressId?.totalLectures} lectures completed`}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-500 text-center">
+                          Start Learning now!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
 

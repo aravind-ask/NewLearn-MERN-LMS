@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { InstructorApplicationService } from "../services/instructorApplication.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import mongoose from "mongoose";
+import { HttpStatus } from "@/utils/statusCodes";
 
 interface CustomRequest extends Request {
   user?: { id: string };
@@ -26,10 +27,14 @@ export class InstructorApplicationController {
         res,
         application,
         "Application submitted successfully",
-        201
+        HttpStatus.CREATED
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -45,10 +50,10 @@ export class InstructorApplicationController {
         res,
         { applications, totalPages },
         "Instructor applications fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 500);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 
@@ -62,7 +67,7 @@ export class InstructorApplicationController {
       const { status, rejectionReason } = req.body;
 
       if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-        errorResponse(res, "Invalid application ID", 400);
+        errorResponse(res, "Invalid application ID", HttpStatus.BAD_REQUEST);
         return;
       }
 
@@ -76,10 +81,10 @@ export class InstructorApplicationController {
         res,
         updatedApplication,
         "Application reviewed successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 
@@ -93,10 +98,10 @@ export class InstructorApplicationController {
         res,
         application,
         "Instructor application fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 
@@ -110,10 +115,10 @@ export class InstructorApplicationController {
         res,
         application,
         "Instructor details fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 
@@ -126,10 +131,10 @@ export class InstructorApplicationController {
         res,
         applicationDetails,
         "Instructor application details fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 400);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 }

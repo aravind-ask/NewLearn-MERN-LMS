@@ -51,7 +51,7 @@ const InstructorCourses = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { data, isLoading, isError } = useGetInstructorCoursesQuery({
+  const { data, isLoading, isError, refetch } = useGetInstructorCoursesQuery({
     page,
     limit,
     sortBy,
@@ -66,6 +66,7 @@ const InstructorCourses = () => {
       await deleteCourse(deleteConfirm).unwrap();
       toast.success("Course deleted successfully");
       setDeleteConfirm(null);
+      refetch();
     } catch (error) {
       toast.error("Failed to delete course");
     }
@@ -204,7 +205,7 @@ const InstructorCourses = () => {
         open={!!deleteConfirm}
         onOpenChange={() => setDeleteConfirm(null)}
       >
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent className="sm:max-w-md bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold">
               Delete Course

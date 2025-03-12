@@ -1,7 +1,7 @@
-// src/controllers/auth.controller.ts
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/auth.service";
 import { successResponse, errorResponse } from "../utils/responseHandler";
+import { HttpStatus } from "@/utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string };
@@ -14,7 +14,7 @@ export class AuthController {
     try {
       const { name, email, password } = req.body;
       const user = await this.authService.register(name, email, password);
-      successResponse(res, user, "OTP sent successfully", 201);
+      successResponse(res, user, "OTP sent successfully", HttpStatus.CREATED);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -24,7 +24,7 @@ export class AuthController {
     try {
       const { email } = req.body;
       const data = await this.authService.sendOtp(email);
-      successResponse(res, data, "OTP sent successfully", 200);
+      successResponse(res, data, "OTP sent successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -34,7 +34,7 @@ export class AuthController {
     try {
       const { email, otp } = req.body;
       const data = await this.authService.verifyOtp(email, otp);
-      successResponse(res, data, "OTP verified successfully", 200);
+      successResponse(res, data, "OTP verified successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -44,7 +44,7 @@ export class AuthController {
     try {
       const { email, password } = req.body;
       const data = await this.authService.login(email, password);
-      successResponse(res, data, "Login successful", 200);
+      successResponse(res, data, "Login successful", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -54,9 +54,9 @@ export class AuthController {
     try {
       const { token } = req.body;
       const data = await this.authService.authenticateGoogleUser(token);
-      successResponse(res, data, "Google Login Successful", 200);
+      successResponse(res, data, "Google Login Successful", HttpStatus.OK);
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 500);
+      errorResponse(res, error.message, error.statusCode);
     }
   }
 
@@ -64,9 +64,9 @@ export class AuthController {
     try {
       const { refreshToken } = req.body;
       const tokens = await this.authService.refreshAccessToken(refreshToken);
-      successResponse(res, tokens, "Token refreshed successfully", 200);
+      successResponse(res, tokens, "Token refreshed successfully", HttpStatus.OK);
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 401);
+      errorResponse(res, error.message, error.statusCode || HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -78,7 +78,7 @@ export class AuthController {
     try {
       const { curPassword, newPassword } = req.body;
       if (!req.user) {
-        errorResponse(res, "Unauthorized", 401);
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
         return;
       }
       const result = await this.authService.changePassword({
@@ -86,7 +86,7 @@ export class AuthController {
         curPassword,
         newPassword,
       });
-      successResponse(res, null, "Password changed successfully", 200);
+      successResponse(res, null, "Password changed successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -100,7 +100,7 @@ export class AuthController {
         otp,
         newPassword,
       });
-      successResponse(res, result, "Password changed successfully", 200);
+      successResponse(res, result, "Password changed successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }
@@ -110,7 +110,7 @@ export class AuthController {
     try {
       const { userId } = req.body;
       const result = await this.authService.logout(userId);
-      successResponse(res, result, "Logged out successfully", 200);
+      successResponse(res, result, "Logged out successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(res, error.message, error.statusCode || 400);
     }

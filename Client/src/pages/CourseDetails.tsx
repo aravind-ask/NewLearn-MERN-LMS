@@ -111,12 +111,12 @@ const CourseDetails = () => {
     data: ratingsData,
     isLoading: isRatingsLoading,
     isError: isRatingsError,
-  } = useGetReviewsByCourseIdQuery(courseId);
+  } = useGetReviewsByCourseIdQuery({ courseId });
   console.log("ratingsData", ratingsData);
 
   useEffect(() => {
     // const ratings = ratingsData?.data || [];
-    setRatings(ratingsData || []);
+    setRatings(ratingsData?.data?.reviews || []);
     const averageRating =
       ratings.length > 0
         ? (
@@ -298,6 +298,7 @@ const CourseDetails = () => {
                       {section.title}
                     </AccordionTrigger>
                     <AccordionContent>
+                      {section.description && <p className="mb-5">{section.description}</p>}
                       <ul className="space-y-2">
                         {section.lectures.map((lecture, lectureIndex) => (
                           <li

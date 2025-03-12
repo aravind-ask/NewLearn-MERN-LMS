@@ -9,6 +9,7 @@ const LectureDto = z.object({
 
 const SectionDto = z.object({
   title: z.string(),
+  description: z.string(),
   lectures: z.array(LectureDto),
 });
 

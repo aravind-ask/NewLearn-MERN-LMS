@@ -28,6 +28,7 @@ export interface Lecture {
 
 export interface Section {
   title: string;
+  description: string;
   lectures: Lecture[];
 }
 
@@ -202,6 +203,7 @@ export const courseLandingInitialFormData: InitialFormData = {
 export const courseCurriculumInitialFormData: Section[] = [
   {
     title: "New Section",
+    description: "",
     lectures: [
       {
         title: "",

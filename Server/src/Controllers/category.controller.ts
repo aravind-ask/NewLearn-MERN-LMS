@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { CategoryService } from "../services/category.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import { HttpStatus } from "@/utils/statusCodes";
 
 export class CategoryController {
   private categoryService: CategoryService;
@@ -31,13 +32,13 @@ export class CategoryController {
           totalPages: Math.ceil(total / limit),
         },
         "Categories fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Failed to fetch categories",
-        error.status || 500
+        error.status
       );
     }
   };
@@ -49,7 +50,7 @@ export class CategoryController {
         name,
         description
       );
-      successResponse(res, category, "Category created successfully", 201);
+      successResponse(res, category, "Category created successfully", HttpStatus.CREATED);
     } catch (error: any) {
       errorResponse(res, error.message, error.status || 400);
     }
@@ -64,16 +65,16 @@ export class CategoryController {
         id,
         name
       );
-      if (!updatedCategory) errorResponse(res, "Category not found", 404);
+      if (!updatedCategory) errorResponse(res, "Category not found", HttpStatus.NOT_FOUND);
 
       successResponse(
         res,
         updatedCategory,
         "Category updated successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.status || 500);
+      errorResponse(res, error.message, error.status);
     }
   };
 
@@ -81,11 +82,11 @@ export class CategoryController {
     try {
       const { id } = req.params;
       const deletedCategory = await this.categoryService.deleteCategory(id);
-      if (!deletedCategory) errorResponse(res, "Category not found", 404);
+      if (!deletedCategory) errorResponse(res, "Category not found", HttpStatus.NOT_FOUND);
 
-      successResponse(res, null, "Category deleted successfully", 200);
+      successResponse(res, null, "Category deleted successfully", HttpStatus.OK);
     } catch (error: any) {
-      errorResponse(res, error.message, error.status || 500);
+      errorResponse(res, error.message, error.status);
     }
   };
 }

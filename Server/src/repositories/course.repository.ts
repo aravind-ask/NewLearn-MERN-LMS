@@ -1,9 +1,6 @@
-// src/repositories/course.repository.ts
-import { ParsedQs } from "qs";
 import { Course } from "../models/Course";
 import { ICourse } from "../models/Course";
 import { CreateCourseInput } from "../utils/course.dto";
-import { Category } from "../models/Category";
 import { ICourseRepository } from "./interfaces/ICourseRepository";
 import mongoose from "mongoose";
 

@@ -13,4 +13,9 @@ export interface IPaymentRepository {
   ): Promise<IPayment | null>;
   getAllPayments(): Promise<IPayment[]>;
   getPaymentsByDateRange(startDate: Date, endDate: Date): Promise<IPayment[]>;
+  getUserPaymentHistory(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }>;
 }

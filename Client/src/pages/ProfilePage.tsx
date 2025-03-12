@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Book, Award, LogOut, ShoppingCart, Heart } from "lucide-react";
+import { Home, Book, Award, LogOut, ShoppingCart, Heart, ShoppingBag } from "lucide-react";
 import Profile from "@/components/profile/Profile";
 import MyLearnings from "@/components/profile/MyLearnings";
 import Certificates from "@/components/profile/MyCertificates";
@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import WishlistPage from "./Wishlist";
 import CartPage from "./Cart";
+import PaymentHistory from "@/components/profile/PaymentHistory";
 
 const ProfilePage = () => {
   const location = useLocation();
@@ -31,9 +32,13 @@ const ProfilePage = () => {
       label: "Certificates",
       icon: <Award size={20} />,
     },
+    {
+      key: "paymentHistory",
+      label: "Purchase History",
+      icon: <ShoppingBag size={20} />,
+    },
   ];
 
-  // Sync the selected tab with the current route
   useEffect(() => {
     const currentTab = location.pathname.split("/").pop();
     if (currentTab && tabs.some((tab) => tab.key === currentTab)) {
@@ -95,6 +100,7 @@ const ProfilePage = () => {
           {selectedTab === "wishlist" && <WishlistPage />}
           {selectedTab === "my-courses" && <MyLearnings />}
           {selectedTab === "certificates" && <Certificates />}
+          {selectedTab === "paymentHistory" && <PaymentHistory />}
         </Card>
       </main>
     </div>

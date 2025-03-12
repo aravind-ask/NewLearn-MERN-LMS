@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import VideoPlayer from "@/components/VideoPlayer";
 import { courseCurriculumInitialFormData } from "@/config/CourseConfigs";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
@@ -74,6 +75,18 @@ const Curriculum = () => {
     });
     dispatch(setCourseCurriculumFormData(updatedSections));
   };
+  const handleSectionDescriptionChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    sectionIndex: number
+  ) => {
+    const updatedSections = courseCurriculumFormData.map((section, idx) => {
+      if (idx === sectionIndex) {
+        return { ...section, description: e.target.value };
+      }
+      return section;
+    });
+    dispatch(setCourseCurriculumFormData(updatedSections));
+  };
 
   const handleCourseTitleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -138,6 +151,7 @@ const Curriculum = () => {
         headers: { "Content-Type": file.type },
       });
       console.log("Video upload response:", res);
+      console.log(url);
 
       const videoUrl = url.split("?")[0];
       dispatch(setUploadedVideoUrl(videoUrl));
@@ -281,7 +295,6 @@ const Curriculum = () => {
   };
 
   const isCourseCurriculumFormDatavalid = () => {
-    // Guard against undefined or empty array
     if (!courseCurriculumFormData || courseCurriculumFormData.length === 0) {
       return false;
     }
@@ -334,6 +347,19 @@ const Curriculum = () => {
                 >
                   Add Lecture
                 </Button>
+              </div>
+              <div className="flex gap-5 items-center mt-5">
+                <h3 className="font-semibold">Section Description</h3>
+                <Textarea
+                  name={`section-description-${sectionIndex + 1}`}
+                  // type="text"
+                  placeholder="Enter Section Description"
+                  className="max-w-96"
+                  value={section.description}
+                  onChange={(e) =>
+                    handleSectionDescriptionChange(e, sectionIndex)
+                  }
+                />
               </div>
               <div className="mt-6 space-y-4">
                 {section.lectures.map((lecture, lectureIndex) => (

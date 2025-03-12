@@ -9,8 +9,15 @@ export default class RatingService {
   }
 
   // Get all reviews for a course
-  async getReviewsByCourseId(courseId: string): Promise<IRating[]> {
-    return await this.ratingRepository.getReviewsByCourseId(courseId);
+  async getReviewsByCourseId(
+    courseId: string,
+    limit: number,
+    offset: number
+  ): Promise<{ reviews: IRating[]; total: number }> {
+    if (!courseId) throw new Error("Course ID is required");
+    if (limit < 1 || offset < 0)
+      throw new Error("Invalid pagination parameters");
+    return this.ratingRepository.getReviewsByCourseId(courseId, limit, offset);
   }
 
   // Create a new review

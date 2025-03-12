@@ -36,6 +36,13 @@ export const paymentApi = api.injectEndpoints({
         params: { startDate, endDate },
       }),
     }),
+    getPaymentHistory: builder.query({
+      query: ({ page, limit }) => ({
+        url: "/payments/payment-history",
+        method: "GET",
+        params: { page, limit },
+      }),
+    }),
   }),
 });
 
@@ -44,4 +51,5 @@ export const {
   useVerifyRazorpayPaymentMutation,
   useGetAllPaymentsQuery,
   useGetPaymentsByDateRangeQuery,
+  useGetPaymentHistoryQuery,
 } = paymentApi;

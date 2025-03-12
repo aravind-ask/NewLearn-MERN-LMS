@@ -1,7 +1,11 @@
-// src/controllers/payment.controller.ts
 import { Request, Response, NextFunction } from "express";
 import { PaymentService } from "../services/payment.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import { HttpStatus } from "@/utils/statusCodes";
+
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
 
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
@@ -16,12 +20,12 @@ export class PaymentController {
         userName,
         userEmail,
       });
-      successResponse(res, order, "Order created successfully", 200);
+      successResponse(res, order, "Order created successfully", HttpStatus.OK);
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Failed to create order",
-        error.statusCode || 500
+        error.statusCode
       );
     }
   }
@@ -31,12 +35,17 @@ export class PaymentController {
       const { success } = await this.paymentService.verifyRazorpayPayment(
         req.body
       );
-      successResponse(res, { success }, "Payment verified successfully", 200);
+      successResponse(
+        res,
+        { success },
+        "Payment verified successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Payment verification failed",
-        error.statusCode || 500
+        error.statusCode
       );
     }
   }
@@ -44,12 +53,17 @@ export class PaymentController {
   async getAllPayments(req: Request, res: Response, next: NextFunction) {
     try {
       const payments = await this.paymentService.getAllPayments();
-      successResponse(res, payments, "Payments fetched successfully", 200);
+      successResponse(
+        res,
+        payments,
+        "Payments fetched successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Error fetching payments",
-        error.statusCode || 500
+        error.statusCode
       );
     }
   }
@@ -65,12 +79,45 @@ export class PaymentController {
         new Date(startDate as string),
         new Date(endDate as string)
       );
-      successResponse(res, payments, "Payments fetched successfully", 200);
+      successResponse(
+        res,
+        payments,
+        "Payments fetched successfully",
+        HttpStatus.OK
+      );
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Error fetching payments by date range",
-        error.statusCode || 500
+        error.statusCode
+      );
+    }
+  }
+
+  async getUserPaymentHistory(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req?.user?.id;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const { payments, totalPages } =
+        await this.paymentService.getUserPaymentHistory(userId!, page, limit);
+      successResponse(
+        res,
+        { payments, totalPages },
+        "User payment history fetched successfully",
+        HttpStatus.OK
+      );
+    } catch (error: any) {
+      console.log(error);
+      errorResponse(
+        res,
+        error.message || "Error fetching user payment history",
+        error.statusCode
       );
     }
   }

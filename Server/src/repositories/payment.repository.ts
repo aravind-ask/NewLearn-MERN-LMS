@@ -59,4 +59,23 @@ export class PaymentRepository implements IPaymentRepository {
       throw new Error("Error fetching payments by date range");
     }
   }
+
+  async getUserPaymentHistory(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const payments = await PaymentModel.find({ userId })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+      const totalPayments = await PaymentModel.countDocuments({ userId });
+      const totalPages = Math.ceil(totalPayments / limit);
+      return { payments, totalPages };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 }
