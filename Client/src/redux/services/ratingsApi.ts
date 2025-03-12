@@ -4,10 +4,11 @@ export const ratingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Get all reviews for a course
     getReviewsByCourseId: builder.query({
-      query: (courseId) => ({
+      query: ({ courseId, limit, offset }) => ({
         url: `/reviews/${courseId}`,
+        params: { limit, offset },
       }),
-      providesTags: (result, error, courseId) => [
+      providesTags: (result, error, { courseId }) => [
         { type: "Reviews", id: courseId },
       ],
     }),

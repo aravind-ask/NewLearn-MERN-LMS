@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import RatingService from "../services/rating.service";
+import { errorResponse, successResponse } from "../utils/responseHandler";
 
 export default class RatingController {
   private ratingService: RatingService;
@@ -12,11 +13,26 @@ export default class RatingController {
   async getReviewsByCourseId(req: Request, res: Response) {
     try {
       const { courseId } = req.params;
-      const reviews = await this.ratingService.getReviewsByCourseId(courseId);
-      res.status(200).json(reviews);
+      const limit = parseInt(req.query.limit as string) || 5;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const { reviews, total } = await this.ratingService.getReviewsByCourseId(
+        courseId,
+        limit,
+        offset
+      );
+      successResponse(
+        res,
+        { reviews, total },
+        "Reviews fetched successfully",
+        200
+      );
     } catch (error: any) {
-      console.log(error);
-      res.status(500).json({ message: error.message });
+      errorResponse(
+        res,
+        error.message || "Failed to fetch reviews",
+        error.status || 500
+      );
     }
   }
 

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
 import {
   Carousel,
   CarouselContent,
@@ -21,7 +22,7 @@ export default function Homepage() {
 
   // Fetch categories
   const { data: categoriesData, isLoading: isCategoriesLoading } =
-    useGetCategoriesQuery();
+    useGetCategoriesQuery({});
 
   // Fetch featured courses
   const { data: coursesData, isLoading: isCoursesLoading } = useGetCoursesQuery(
@@ -128,15 +129,36 @@ export default function Homepage() {
                               by {course.instructorName}
                             </p>
                             <div className="space-y-2">
-                              <Progress
+                              <ProgressPrimitive.Root
                                 value={progress}
-                                className="h-2 bg-gray-200 rounded-full"
-                              />
-                              <p className="text-xs text-gray-500">
+                                className="w-full h-3 rounded-full bg-gray-200 overflow-hidden"
+                              >
+                                <ProgressPrimitive.Indicator
+                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </ProgressPrimitive.Root>
+                              {course.courseProgressId?.viewedLectures &&
+                              course?.courseProgressId?.totalLectures ? (
+                                <div className="space-y-2">
+                                  <p className="text-xs text-gray-500 text-center">
+                                    {progress === 100
+                                      ? "Course Completed!"
+                                      : `${course.courseProgressId?.viewedLectures} of ${course.courseProgressId?.totalLectures} lectures completed`}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <p className="text-xs text-gray-500 text-center">
+                                    Start Learning now!
+                                  </p>
+                                </div>
+                              )}
+                              {/* <p className="text-xs text-gray-500">
                                 {progress}% Complete (
                                 {course.courseProgressId?.viewedLectures}/
                                 {course.courseProgressId?.totalLectures})
-                              </p>
+                              </p> */}
                             </div>
                           </div>
                         </div>
@@ -161,7 +183,7 @@ export default function Homepage() {
             Explore Categories
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {categoriesData?.data.map((categoryItem) => (
+            {categoriesData?.data?.data.map((categoryItem) => (
               <Button
                 key={categoryItem._id}
                 variant="outline"

@@ -111,12 +111,12 @@ const CourseDetails = () => {
     data: ratingsData,
     isLoading: isRatingsLoading,
     isError: isRatingsError,
-  } = useGetReviewsByCourseIdQuery(courseId);
+  } = useGetReviewsByCourseIdQuery({ courseId });
   console.log("ratingsData", ratingsData);
 
   useEffect(() => {
     // const ratings = ratingsData?.data || [];
-    setRatings(ratingsData || []);
+    setRatings(ratingsData?.data?.reviews || []);
     const averageRating =
       ratings.length > 0
         ? (

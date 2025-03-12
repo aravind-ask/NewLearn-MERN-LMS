@@ -2,8 +2,16 @@ import { IRating } from "../models/Ratings";
 import Rating from "../models/Ratings";
 
 export default class RatingRepository {
-  async getReviewsByCourseId(courseId: string): Promise<IRating[]> {
-    return await Rating.find({ courseId }).exec();
+  async getReviewsByCourseId(
+    courseId: string,
+    limit: number,
+    offset: number
+  ): Promise<{ reviews: IRating[]; total: number }> {
+    const [reviews, total] = await Promise.all([
+      Rating.find({ courseId }).skip(offset).limit(limit).lean().exec(),
+      Rating.countDocuments({ courseId }),
+    ]);
+    return { reviews, total };
   }
 
   async getReviewById(reviewId: string): Promise<IRating | null> {

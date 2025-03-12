@@ -1,29 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   useGetOffersQuery,
   useCreateOfferMutation,
   useUpdateOfferMutation,
   useDeleteOfferMutation,
 } from "@/redux/services/offersApi";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { DataTable } from "@/components/DataTable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Edit, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,205 +19,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-
-// Form schema
-const offerSchema = z.object({
-  title: z.string().min(3).max(100),
-  description: z.string().max(500).optional(),
-  discountPercentage: z.number().min(0).max(100),
-  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Invalid date format",
-  }),
-  endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Invalid date format",
-  }),
-});
-
-// Reusable Offer Form Component
-const OfferForm = ({
-  offer,
-  onClose,
-}: {
-  offer?: any;
-  onClose: () => void;
-}) => {
-  const [createOffer, { isLoading: isCreating }] = useCreateOfferMutation();
-  const [updateOffer, { isLoading: isUpdating }] = useUpdateOfferMutation();
-
-  const form = useForm<z.infer<typeof offerSchema>>({
-    resolver: zodResolver(offerSchema),
-    defaultValues: offer
-      ? {
-          title: offer.title,
-          description: offer.description || "",
-          discountPercentage: offer.discountPercentage,
-          startDate: new Date(offer.startDate).toISOString().split("T")[0],
-          endDate: new Date(offer.endDate).toISOString().split("T")[0],
-        }
-      : {
-          title: "",
-          description: "",
-          discountPercentage: 0,
-          startDate: "",
-          endDate: "",
-        },
-  });
-
-  const onSubmit = async (values: z.infer<typeof offerSchema>) => {
-    try {
-      if (offer) {
-        await updateOffer({
-          id: offer._id,
-          offerData: values,
-        }).unwrap();
-        toast({
-          title: "Success",
-          description: "Offer updated successfully",
-        });
-      } else {
-        await createOffer(values).unwrap();
-        toast({
-          title: "Success",
-          description: "Offer created successfully",
-        });
-      }
-      onClose();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    }
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="discountPercentage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Discount Percentage</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="startDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="endDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>End Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <DialogFooter>
-          <Button type="submit" disabled={isCreating || isUpdating}>
-            {isCreating || isUpdating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : offer ? (
-              "Update"
-            ) : (
-              "Create"
-            )}
-          </Button>
-        </DialogFooter>
-      </form>
-    </Form>
-  );
-};
+import OfferForm from "./OfferForm";
 
 const Offers = () => {
   const [page, setPage] = useState(1);
   const [openForm, setOpenForm] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<any | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const limit = 10;
+
   const {
     data: offersData,
     isLoading,
     isError,
     error,
   } = useGetOffersQuery({ page, limit });
+  const [createOffer, { isLoading: isCreating }] = useCreateOfferMutation();
+  const [updateOffer, { isLoading: isUpdating }] = useUpdateOfferMutation();
   const [deleteOffer, { isLoading: isDeleting }] = useDeleteOfferMutation();
-  const [updateOffer] = useUpdateOfferMutation();
 
   const offers = offersData?.data || [];
-  const totalItems = offersData?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / limit);
+  const totalPages = Math.ceil((offersData?.pagination?.total || 0) / limit);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     try {
-      await deleteOffer(id).unwrap();
+      await deleteOffer(deleteConfirm).unwrap();
       toast({
         title: "Success",
         description: "Offer deleted successfully",
       });
+      setDeleteConfirm(null);
     } catch (err) {
       toast({
         variant: "destructive",
@@ -267,6 +86,74 @@ const Offers = () => {
     setOpenForm(true);
   };
 
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      render: (offer: any) => (
+        <span className="font-medium">{offer.title}</span>
+      ),
+    },
+    {
+      header: "Discount",
+      accessor: "discountPercentage",
+      render: (offer: any) => `${offer.discountPercentage}%`,
+    },
+    {
+      header: "Category",
+      accessor: "category",
+      render: (offer: any) => offer.category?.name || "All",
+    },
+    {
+      header: "Start Date",
+      accessor: "startDate",
+      render: (offer: any) => new Date(offer.startDate).toLocaleDateString(),
+    },
+    {
+      header: "End Date",
+      accessor: "endDate",
+      render: (offer: any) => new Date(offer.endDate).toLocaleDateString(),
+    },
+    {
+      header: "Status",
+      accessor: "isActive",
+      render: (offer: any) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleToggleStatus(offer)}
+        >
+          {offer.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      ),
+    },
+    {
+      header: "Actions",
+      accessor: (offer: any) => (
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEdit(offer)}
+            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteConfirm(offer._id)}
+            disabled={isDeleting}
+            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+      align: "right",
+    },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -296,7 +183,7 @@ const Offers = () => {
               Create New Offer
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white">
+          <DialogContent className="bg-white sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
                 {selectedOffer ? "Edit Offer" : "Create Offer"}
@@ -310,143 +197,73 @@ const Offers = () => {
             <OfferForm
               offer={selectedOffer}
               onClose={() => setOpenForm(false)}
+              createOffer={createOffer}
+              updateOffer={updateOffer}
+              isCreating={isCreating}
+              isUpdating={isUpdating}
             />
           </DialogContent>
         </Dialog>
       </div>
 
-      {offers.length === 0 ? (
-        <Alert>
-          <AlertTitle>No Offers Found</AlertTitle>
-          <AlertDescription>
-            There are currently no offers available. Create a new offer to get
-            started.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <>
-          <Card>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Discount</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {offers.map((offer) => (
-                  <TableRow key={offer._id}>
-                    <TableCell>{offer.title}</TableCell>
-                    <TableCell>{offer.discountPercentage}%</TableCell>
-                    <TableCell>{offer.category?.name || "All"}</TableCell>
-                    <TableCell>
-                      {new Date(offer.startDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(offer.endDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleStatus(offer)}
-                      >
-                        {offer.isActive ? "Deactivate" : "Activate"}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(offer)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={isDeleting}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="bg-white">
-                            <DialogHeader>
-                              <DialogTitle>Confirm Deletion</DialogTitle>
-                              <DialogDescription>
-                                Are you sure you want to delete the offer "
-                                {offer.title}"? This action cannot be undone.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button
-                                variant="destructive"
-                                onClick={() => handleDelete(offer._id)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  "Delete"
-                                )}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => page > 1 && setPage(page - 1)}
-                    className={
-                      page === 1 ? "pointer-events-none opacity-50" : ""
-                    }
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (pageNum) => (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        onClick={() => setPage(pageNum)}
-                        isActive={page === pageNum}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => page < totalPages && setPage(page + 1)}
-                    className={
-                      page === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="bg-gray-50 border-b">
+          <CardTitle className="text-xl font-semibold text-gray-800">
+            Offer List
+          </CardTitle>
+        </CardHeader>
+        <div className="p-6">
+          <DataTable
+            columns={columns}
+            data={offers}
+            isLoading={isLoading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+          {offers.length === 0 && (
+            <div className="text-center py-10 text-gray-500">
+              No offers found. Create a new offer to get started.
+            </div>
           )}
-        </>
-      )}
+        </div>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this offer? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirm(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
