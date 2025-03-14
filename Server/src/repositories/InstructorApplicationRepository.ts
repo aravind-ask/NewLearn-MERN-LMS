@@ -18,6 +18,22 @@ export class InstructorApplicationRepository
     }
   }
 
+  async updateApplication(
+    applicationId: string,
+    data: any
+  ): Promise<IInstructorApplication> {
+    const application = await InstructorApplication.findByIdAndUpdate(
+      applicationId,
+      { ...data, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).exec();
+
+    if (!application) {
+      throw new Error("Application not found");
+    }
+    return application;
+  }
+
   async getApplications(
     page: number,
     limit: number

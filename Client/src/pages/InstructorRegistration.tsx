@@ -1,6 +1,7 @@
 import {
   useApplyForInstructorMutation,
   useGetInstructorApplicationQuery,
+  useUpdateInstructorApplicationMutation,
 } from "@/redux/services/instructorApi";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import Loading from "@/components/Loading";
 
 type InstructorFormData = {
   fullName: string;
@@ -38,11 +40,15 @@ type InstructorFormData = {
 
 const InstructorRegistration = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const [applyForInstructor, { isLoading }] = useApplyForInstructorMutation();
+  const [applyForInstructor, { isLoading: isApplying }] =
+    useApplyForInstructorMutation();
+  const [updateInstructorApplication, { isLoading: isUpdating }] =
+    useUpdateInstructorApplicationMutation();
   const [certificateFiles, setCertificateFiles] = useState<File[]>([]);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [getPresignedUrl] = useGetPresignedUrlMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStatusModalOpen, setStatusIsModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
@@ -50,6 +56,7 @@ const InstructorRegistration = () => {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<InstructorFormData>();
   const { data: application, isLoading: isApplicationLoading } =
@@ -63,47 +70,52 @@ const InstructorRegistration = () => {
     if (application?.data) {
       if (application.data.status === "approved") {
         navigate("/instructor/dashboard");
-      } else if (application.data.status === "rejected") {
+      } else if (
+        application.data.status === "rejected" ||
+        application.data.status === "pending"
+      ) {
         setRejectionReason(application.data.rejectionReason);
-        setIsModalOpen(true);
+        setStatusIsModalOpen(true);
+        // Pre-fill form with existing data
+        reset({
+          fullName: application.data.fullName,
+          email: application.data.email,
+          phone: application.data.phone,
+          qualification: application.data.qualification,
+          experience: application.data.experience,
+          skills: application.data.skills,
+          bio: application.data.bio,
+          linkedinProfile: application.data.linkedinProfile,
+          profilePicture: application.data.profilePicture,
+          certificates: application.data.certificates,
+        });
       }
     }
-  }, [user, setValue, navigate, application]);
+  }, [user, setValue, navigate, application, reset]);
 
   const validateForm = (data: InstructorFormData) => {
     const errors: Record<string, string> = {};
-
-    if (!data.fullName || data.fullName.length < 3) {
+    if (!data.fullName || data.fullName.length < 3)
       errors.fullName = "Full name must be at least 3 characters.";
-    }
-    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
       errors.email = "Invalid email format.";
-    }
-    if (!data.phone || data.phone.length < 10) {
+    if (!data.phone || data.phone.length < 10)
       errors.phone = "Phone number must be at least 10 digits.";
-    }
-    if (!data.qualification || data.qualification.length < 2) {
+    if (!data.qualification || data.qualification.length < 2)
       errors.qualification = "Qualification is required.";
-    }
-    if (!data.experience || data.experience < 0) {
+    if (!data.experience || data.experience < 0)
       errors.experience = "Experience must be a positive number.";
-    }
-    if (!data.skills || data.skills.length < 3) {
+    if (!data.skills || data.skills.length < 3)
       errors.skills = "At least one skill is required.";
-    }
-    if (!data.bio || data.bio.length < 10) {
+    if (!data.bio || data.bio.length < 10)
       errors.bio = "Bio must be at least 10 characters.";
-    }
     if (
       data.linkedinProfile &&
       !/^https?:\/\/.+\..+$/.test(data.linkedinProfile)
-    ) {
+    )
       errors.linkedinProfile = "Enter a valid LinkedIn profile URL.";
-    }
-    if (certificateFiles.length === 0) {
+    if (certificateFiles.length === 0 && !data.certificates?.length)
       errors.certificates = "At least one certificate is required.";
-    }
-
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -145,7 +157,7 @@ const InstructorRegistration = () => {
         body: file,
         headers: { "Content-Type": file.type },
       });
-      setValue("profilePicture", key);
+      setValue("profilePicture", url);
     }
   };
 
@@ -156,28 +168,21 @@ const InstructorRegistration = () => {
     }
 
     try {
-      const payload = {
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        qualification: data.qualification,
-        experience: data.experience,
-        skills: data.skills,
-        bio: data.bio,
-        linkedinProfile: data.linkedinProfile,
-        profilePicture: data.profilePicture,
-        certificates: data.certificates,
-      };
+      const payload = { ...data };
+      const isReapplying = application?.data?.status === "rejected";
 
-      console.log("Payload:", payload);
-
-      const response = await applyForInstructor(payload).unwrap();
-      console.log("Backend Response:", response);
-
-      toast.success("Application submitted successfully!");
+      if (isReapplying) {
+        await updateInstructorApplication({
+          applicationId: application?.data?._id,
+          data: payload,
+        }).unwrap();
+        toast.success("Application updated successfully!");
+      } else {
+        await applyForInstructor(payload).unwrap();
+        toast.success("Application submitted successfully!");
+      }
       setIsModalOpen(true);
     } catch (error: any) {
-      console.error("Backend Error:", error); 
       toast.error(error?.data?.message || "Failed to submit application.");
     }
   };
@@ -187,15 +192,18 @@ const InstructorRegistration = () => {
     navigate("/");
   };
 
-  if (isApplicationLoading || isLoading) {
-    return <Skeleton className="h-full w-full" />;
+  const handleReapply = () => {
+    setStatusIsModalOpen(false);
+  };
+
+  if (isApplicationLoading || isApplying || isUpdating) {
+    return <Loading />;
   }
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Apply to Become an Instructor</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Profile Picture */}
         <div>
           <Label htmlFor="profilePicture">Profile Picture</Label>
           <Input
@@ -208,8 +216,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.profilePicture}</p>
           )}
         </div>
-
-        {/* Full Name */}
         <div>
           <Label>Full Name</Label>
           <Input {...register("fullName")} placeholder="John Doe" />
@@ -217,8 +223,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.fullName}</p>
           )}
         </div>
-
-        {/* Email */}
         <div>
           <Label>Email</Label>
           <Input
@@ -231,8 +235,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.email}</p>
           )}
         </div>
-
-        {/* Phone */}
         <div>
           <Label>Phone Number</Label>
           <Input type="tel" {...register("phone")} placeholder="9876543210" />
@@ -240,8 +242,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.phone}</p>
           )}
         </div>
-
-        {/* Qualification */}
         <div>
           <Label>Qualification</Label>
           <Input
@@ -252,8 +252,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.qualification}</p>
           )}
         </div>
-
-        {/* Experience */}
         <div>
           <Label>Years of Experience</Label>
           <Input
@@ -265,8 +263,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.experience}</p>
           )}
         </div>
-
-        {/* Skills */}
         <div>
           <Label>Skills (comma separated)</Label>
           <Input
@@ -277,8 +273,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.skills}</p>
           )}
         </div>
-
-        {/* Bio */}
         <div>
           <Label>Bio</Label>
           <Textarea
@@ -289,8 +283,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.bio}</p>
           )}
         </div>
-
-        {/* LinkedIn Profile */}
         <div>
           <Label>LinkedIn Profile (optional)</Label>
           <Input
@@ -301,8 +293,6 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.linkedinProfile}</p>
           )}
         </div>
-
-        {/* Certificates Upload */}
         <div>
           <Label>Upload Certificates</Label>
           <Input
@@ -315,14 +305,15 @@ const InstructorRegistration = () => {
             <p className="text-red-500 text-sm">{formErrors.certificates}</p>
           )}
         </div>
-
-        {/* Submit Button */}
-        <Button type="submit" disabled={isLoading || isApplicationLoading}>
-          {isLoading ? "Submitting..." : "Submit Application"}
+        <Button type="submit" disabled={isApplying || isUpdating}>
+          {isApplying || isUpdating
+            ? "Submitting..."
+            : application?.data?.status === "rejected"
+            ? "Reapply"
+            : "Submit Application"}
         </Button>
       </form>
 
-      {/* Success Modal */}
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
         <DialogContent className="text-center bg-white">
           <DialogHeader>
@@ -338,8 +329,10 @@ const InstructorRegistration = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Rejection Modal */}
-      <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
+      <Dialog
+        open={isStatusModalOpen}
+        onOpenChange={() => setStatusIsModalOpen(false)}
+      >
         <DialogContent className="text-center bg-white">
           <DialogHeader>
             <DialogTitle>Application {application?.data?.status}</DialogTitle>
@@ -347,15 +340,24 @@ const InstructorRegistration = () => {
           {application?.data?.status === "rejected" ? (
             <>
               <p>
-                Your application has been rejected due to the following reasons.
+                Your application has been rejected due to the following reasons:
               </p>
               <p>{rejectionReason}</p>
+              <DialogFooter className="gap-4">
+                <Button onClick={handleReapply}>Reapply</Button>
+                <Button onClick={() => navigate("/")}>Go to Home</Button>
+              </DialogFooter>
             </>
           ) : (
-            <p>
-              Your application is under review. You will be notified once it is
-              approved.
-            </p>
+            <>
+              <p>
+                Your application is under review. You will be notified once it
+                is approved.
+              </p>
+              <DialogFooter>
+                <Button onClick={() => navigate("/")}>Go to Home</Button>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>

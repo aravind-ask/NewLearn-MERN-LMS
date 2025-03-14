@@ -1,9 +1,12 @@
-// src/repositories/IInstructorApplicationRepository.ts
 import { IInstructorApplication } from "../../models/InstructorApplication";
 
 export interface IInstructorApplicationRepository {
   createApplication(
     data: Partial<IInstructorApplication>
+  ): Promise<IInstructorApplication>;
+  updateApplication(
+    applicationId: string,
+    data: any
   ): Promise<IInstructorApplication>;
   getApplications(
     page: number,

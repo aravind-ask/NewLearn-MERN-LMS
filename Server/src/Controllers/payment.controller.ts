@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { PaymentService } from "../services/payment.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import { HttpStatus } from "@/utils/statusCodes";
+import { HttpStatus } from "../utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string };

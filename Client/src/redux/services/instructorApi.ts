@@ -9,6 +9,13 @@ export const instructorApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    updateInstructorApplication: builder.mutation({
+      query: ({ applicationId, data }) => ({
+        url: `/instructor/re-apply/${applicationId}`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
     getInstructorApplications: builder.query({
       query: ({ page, limit }) => ({
         url: `/instructor/applications?page=${page}&limit=${limit}`,
@@ -55,6 +62,7 @@ export const instructorApi = api.injectEndpoints({
 
 export const {
   useApplyForInstructorMutation,
+  useUpdateInstructorApplicationMutation,
   useGetInstructorApplicationsQuery,
   useGetInstructorApplicationQuery,
   useReviewInstructorApplicationMutation,

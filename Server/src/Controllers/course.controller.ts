@@ -1,4 +1,3 @@
-// src/controllers/course.controller.ts
 import { NextFunction, Request, Response } from "express";
 import {
   CreateCourseDto,
@@ -10,7 +9,7 @@ import { errorResponse, successResponse } from "../utils/responseHandler";
 import { tokenUtils } from "../utils/tokenUtils";
 import { HttpStatus } from "../utils/statusCodes";
 import { ICourseService } from "../services/interfaces/ICourseService";
-import { IEnrollmentService } from "@/services/interfaces/IEnrollmentService";
+import { IEnrollmentService } from "../services/interfaces/IEnrollmentService";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };

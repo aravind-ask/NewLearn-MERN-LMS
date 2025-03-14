@@ -181,7 +181,7 @@ const AdminInstructorRequests = () => {
           setRejectionReason("");
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>
               Confirm{" "}

@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { InstructorApplicationService } from "../services/instructorApplication.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import mongoose from "mongoose";
-import { HttpStatus } from "@/utils/statusCodes";
+import { HttpStatus } from "../utils/statusCodes";
 
 interface CustomRequest extends Request {
   user?: { id: string };
@@ -28,6 +28,32 @@ export class InstructorApplicationController {
         application,
         "Application submitted successfully",
         HttpStatus.CREATED
+      );
+    } catch (error: any) {
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  async updateApplication(
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { applicationId } = req.params;
+      const application = await this.instructorAppService.updateApplication(
+        applicationId,
+        req.body
+      );
+      successResponse(
+        res,
+        application,
+        "Application updated successfully",
+        HttpStatus.OK
       );
     } catch (error: any) {
       errorResponse(

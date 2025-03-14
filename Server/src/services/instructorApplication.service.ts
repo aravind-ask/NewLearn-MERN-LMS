@@ -31,6 +31,43 @@ export class InstructorApplicationService {
     });
   }
 
+  async updateApplication(
+    applicationId: string,
+    data: any
+  ): Promise<IInstructorApplication> {
+
+    // const existingApplication = await this.instructorAppRepo.getApplication(
+    //   userId
+    // );
+    // if (!existingApplication) {
+    //   throw new Error("No application found to update");
+    // }
+
+    // const applicationId = existingApplication?._id.toString();
+    // return await this.instructorAppRepo.updateApplication(applicationId, {
+    //   ...data,
+    //   status: "pending",
+    //   rejectionReason: null,
+    // });
+
+    const application = await this.instructorAppRepo.getApplicationById(
+      applicationId
+    );
+    if (!application) throw new NotFoundError("Application not found");
+
+    const updatedApplication = await this.instructorAppRepo.updateApplication(
+      applicationId,
+      {
+        ...data,
+        status: "pending",
+        rejectionReason: null,
+      }
+    );
+    if (!updatedApplication) throw new Error("Failed to update application");
+
+    return updatedApplication;
+  }
+
   async getInstructorApplications(
     page: number,
     limit: number

@@ -36,6 +36,11 @@ router.post(
   authMiddleware.verifyAccessToken,
   instructorAppController.applyForInstructor.bind(instructorAppController)
 );
+router.put(
+  "/re-apply/:applicationId",
+  authMiddleware.verifyAccessToken,
+  instructorAppController.updateApplication.bind(instructorAppController)
+);
 router.get(
   "/applications",
   authMiddleware.verifyAccessToken,

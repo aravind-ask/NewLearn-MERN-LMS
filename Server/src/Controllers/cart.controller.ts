@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as cartService from "../services/cart.service";
 import { successResponse } from "../utils/responseHandler";
+import { HttpStatus } from "../utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string };
@@ -15,7 +16,7 @@ export const addToCart = async (
     const { courseId } = req.body;
     const userId = (req as AuthenticatedRequest).user.id;
     const cartItem = await cartService.addToCart(userId, courseId);
-    successResponse(res, cartItem, "Course added to cart", 201);
+    successResponse(res, cartItem, "Course added to cart", HttpStatus.CREATED);
   } catch (error) {
     next(error);
   }
@@ -30,7 +31,7 @@ export const removeFromCart = async (
     const { courseId } = req.body;
     const userId = (req as AuthenticatedRequest).user.id;
     await cartService.removeFromCart(userId, courseId);
-    successResponse(res, null, "Course removed from cart", 200);
+    successResponse(res, null, "Course removed from cart", HttpStatus.OK);
   } catch (error) {
     next(error);
   }
@@ -44,7 +45,7 @@ export const getCart = async (
   try {
     const userId = (req as AuthenticatedRequest).user.id;
     const cart = await cartService.getCart(userId);
-    successResponse(res, cart, "Cart fetched successfully", 200);
+    successResponse(res, cart, "Cart fetched successfully", HttpStatus.OK);
   } catch (error) {
     next(error);
   }

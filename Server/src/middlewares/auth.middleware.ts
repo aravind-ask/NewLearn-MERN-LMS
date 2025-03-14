@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { tokenUtils } from "../utils/tokenUtils";
 import { errorResponse } from "../utils/responseHandler";
-import { HttpStatus } from "@/utils/statusCodes";
+import { HttpStatus } from "../utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };

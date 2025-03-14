@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AvatarDropdown } from "./AvatarDropDown"; // Assuming this exists
 import SearchBar from "./SearchBar";
+import { logout } from "@/redux/slices/authSlice";
+import { useLogoutMutation } from "@/redux/services/authApi";
 
 export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -26,6 +28,20 @@ export default function Navbar() {
   // const { cart, wishlist } = useSelector((state: RootState) => state.user);
   const role = user?.role;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [logoutMutation] = useLogoutMutation();
+  const handleLogout = async () => {
+    try {
+      if (!user) {
+        throw new Error("No user found");
+      }
+      await logoutMutation({ userId: user.id });
+      dispatch(logout());
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   // Admin Navbar
   if (role === "admin") {
@@ -35,6 +51,9 @@ export default function Navbar() {
           <h1 className="text-xl font-semibold">Admin Dashboard</h1>
           <p className="text-sm">Managing NewLearn with Excellence</p>
         </div>
+        <Button variant="outline" className="w-20 ml-4" onClick={handleLogout}>
+          Logout
+        </Button>
       </header>
     );
   }
