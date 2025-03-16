@@ -16,6 +16,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Loading from "@/components/Loading";
+import { Badge } from "@/components/ui/badge";
 
 export default function Homepage() {
   const navigate = useNavigate();
@@ -40,10 +41,6 @@ export default function Homepage() {
   const handleCategoryClick = (categoryId) => {
     navigate(`/all-courses?category=${categoryId}`);
   };
-
-  // if (isCategoriesLoading || isCoursesLoading || isStudentCoursesLoading) {
-  //   return <Loading />;
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -154,11 +151,6 @@ export default function Homepage() {
                                   </p>
                                 </div>
                               )}
-                              {/* <p className="text-xs text-gray-500">
-                                {progress}% Complete (
-                                {course.courseProgressId?.viewedLectures}/
-                                {course.courseProgressId?.totalLectures})
-                              </p> */}
                             </div>
                           </div>
                         </div>
@@ -210,36 +202,64 @@ export default function Homepage() {
               coursesData.data.courses.map((course) => (
                 <div
                   key={course._id}
-                  className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
+                  className="border rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-white relative"
                   onClick={() => navigate(`/course/${course._id}`)}
                 >
+                  {/* Course Image */}
                   <img
                     src={course.image}
                     alt={course.title}
                     className="w-full h-48 object-cover"
                   />
+
+                  {/* Offer Badge */}
+                  {course.appliedOffer && (
+                    <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white">
+                      {course.appliedOffer.discountPercentage}% OFF
+                    </Badge>
+                  )}
+
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
+                    {/* Course Title */}
+                    <h3 className="text-lg font-semibold text-gray-800 line-clamp-2 min-h-[3rem]">
                       {course.title}
                     </h3>
-                    <p className="text-sm text-gray-600">
+
+                    {/* Instructor and Category */}
+                    <p className="text-sm text-gray-600 mt-1">
                       by {course.instructorName}
                     </p>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-500 mb-2">
                       {course.category.name}
                     </p>
-                    <div className="flex justify-between items-center">
-                      <p className="font-bold text-teal-600">
-                        ₹ {course.pricing}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-purple-600 hover:text-purple-800"
-                      >
-                        Learn More
-                      </Button>
+
+                    {/* Pricing Section */}
+                    <div className="flex flex-col gap-1 mb-3">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xl font-bold text-teal-600">
+                          ₹{course.discountedPrice || course.pricing}
+                        </p>
+                        {course.discountedPrice && (
+                          <p className="text-sm text-gray-500 line-through">
+                            ₹{course.pricing}
+                          </p>
+                        )}
+                      </div>
+                      {course.appliedOffer && (
+                        <p className="text-xs text-green-600">
+                          {course.appliedOffer.title} Applied
+                        </p>
+                      )}
                     </div>
+
+                    {/* Action Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-teal-500 text-teal-600 hover:bg-teal-50"
+                    >
+                      Learn More
+                    </Button>
                   </div>
                 </div>
               ))

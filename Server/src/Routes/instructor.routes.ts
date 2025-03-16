@@ -11,6 +11,8 @@ import { CourseService } from "../services/course.service";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
 import EnrollmentService from "../services/enrollment.service";
 import { CourseController } from "../Controllers/course.controller";
+import { OfferService } from "../services/offer.service";
+import { OfferRepository } from "../repositories/offer.repository";
 
 // Initialize dependencies
 const instructorAppRepository = new InstructorApplicationRepository();
@@ -23,8 +25,8 @@ const instructorAppController = new InstructorApplicationController(
   instructorAppService
 );
 const courseRepository = new CourseRepository();
-const courseService = new CourseService(courseRepository);
-const enrollmentRepository = new EnrollmentRepository();
+const offerService = new OfferService(new OfferRepository());
+const courseService = new CourseService(new CourseRepository(), offerService);const enrollmentRepository = new EnrollmentRepository();
 const enrollmentService = new EnrollmentService(enrollmentRepository);
 const courseController = new CourseController(courseService, enrollmentService);
 

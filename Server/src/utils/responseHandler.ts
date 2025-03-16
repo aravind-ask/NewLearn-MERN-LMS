@@ -15,6 +15,6 @@ export const errorResponse = (res: Response, error: any, status = HttpStatus.INT
   console.error(error);
   return res.status(status).json({
     success: false,
-    message: error.message || "Internal Server Error",
+    message: error || "Internal Server Error",
   });
 };

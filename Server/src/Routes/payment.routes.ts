@@ -8,12 +8,14 @@ import { PaymentService } from "../services/payment.service";
 import { PaymentController } from "../Controllers/payment.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
+import { OfferService } from "../services/offer.service";
+import { OfferRepository } from "../repositories/offer.repository";
 
-// Initialize dependencies
 const paymentRepository = new PaymentRepository();
 const enrollmentRepository = new EnrollmentRepository();
 const courseRepository = new CourseRepository();
-const courseService = new CourseService(courseRepository);
+const offerService = new OfferService(new OfferRepository());
+const courseService = new CourseService(new CourseRepository(), offerService);
 const paymentService = new PaymentService(
   paymentRepository,
   enrollmentRepository,

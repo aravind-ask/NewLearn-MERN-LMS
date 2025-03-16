@@ -51,7 +51,7 @@ const MyLearnings = () => {
   if (isError) {
     return (
       <div className="text-center py-10 text-red-500">
-        Failed to fetch enrolled courses.
+        {isError}
       </div>
     );
   }

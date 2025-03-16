@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -26,6 +25,7 @@ import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
 import debounce from "lodash.debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import Loading from "@/components/Loading";
+import { Badge } from "@/components/ui/badge";
 
 const AllCourses = () => {
   const [search, setSearch] = useState("");
@@ -114,13 +114,12 @@ const AllCourses = () => {
     navigate("/all-courses");
   };
 
-  // if (isLoading || isCategoriesLoading) return <Loading />;
   if (isError) return <p>Failed to load courses</p>;
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col md:flex-row gap-4">
-        <aside className=" w-full md:w-64 space-y-4">
+        <aside className="w-full md:w-64 space-y-4">
           <div className="sticky top-28">
             <h1 className="text-3xl font-bold mb-4 mt-4">All Courses</h1>
             {Object.keys(filterOptions).map((keyItem) => (
@@ -217,35 +216,59 @@ const AllCourses = () => {
                 coursesData.data.courses.map((course) => (
                   <Card
                     key={course._id}
-                    className="cursor-pointer hover:bg-gray-100 hover:shadow-lg"
+                    className="cursor-pointer hover:bg-gray-50 hover:shadow-lg transition-all duration-300 relative"
                     onClick={() => navigate(`/course/${course._id}`)}
                   >
                     <CardContent className="flex gap-4 p-4">
-                      <div className="w-48 h-32 flex-shrink-0">
+                      <div className="w-48 h-32 flex-shrink-0 relative">
                         <img
                           src={course.image}
                           alt={course.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover rounded-md"
                         />
+                        {/* Discount Badge */}
+                        {course.appliedOffer && (
+                          <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white">
+                            {course.appliedOffer.discountPercentage}% OFF
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2">
-                          {course.title}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600 mb-1">
-                          Created By{" "}
-                          <span className="font-bold">
-                            {course.instructorName}
-                          </span>
-                        </p>
-                        <p className="text-[16px] text-gray-600 mt-3 mb-2">
-                          {`${course.curriculum?.length || 0} ${
-                            course.curriculum?.length <= 1
-                              ? "Lecture"
-                              : "Lectures"
-                          } - ${course.level.toUpperCase()} Level`}
-                        </p>
-                        <p className="font-bold text-lg">₹{course.pricing}</p>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <CardTitle className="text-xl mb-2 line-clamp-2">
+                            {course.title}
+                          </CardTitle>
+                          <p className="text-sm text-gray-600 mb-1">
+                            Created By{" "}
+                            <span className="font-bold">
+                              {course.instructorName}
+                            </span>
+                          </p>
+                          <p className="text-[16px] text-gray-600 mb-2">
+                            {`${course.curriculum?.length || 0} ${
+                              course.curriculum?.length <= 1
+                                ? "Lecture"
+                                : "Lectures"
+                            } - ${course.level.toUpperCase()} Level`}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xl font-bold text-teal-600">
+                              ₹{course.discountedPrice || course.pricing}
+                            </p>
+                            {course.discountedPrice && (
+                              <p className="text-sm text-gray-500 line-through">
+                                ₹{course.pricing}
+                              </p>
+                            )}
+                          </div>
+                          {course.appliedOffer && (
+                            <p className="text-xs text-green-600">
+                              {course.appliedOffer.title} Applied
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -268,28 +291,33 @@ const AllCourses = () => {
                 />
               </PaginationItem>
 
-              {Array.from({ length: coursesData?.data.totalPages }, (_, i) => (
-                <PaginationItem key={i} className="cursor-pointer">
-                  <PaginationLink
-                    onClick={() => setPage(i + 1)}
-                    isActive={page === i + 1}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {Array.from(
+                { length: coursesData?.data?.totalPages || 0 },
+                (_, i) => (
+                  <PaginationItem key={i} className="cursor-pointer">
+                    <PaginationLink
+                      onClick={() => setPage(i + 1)}
+                      isActive={page === i + 1}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
 
               <PaginationItem className="cursor-pointer">
                 <PaginationNext
                   onClick={() =>
                     setPage((prev) =>
-                      Math.min(coursesData?.data?.totalPages, prev + 1)
+                      Math.min(coursesData?.data?.totalPages || 1, prev + 1)
                     )
                   }
                   disabled={page === coursesData?.data?.totalPages}
                   className={`cursor-pointer ${
                     page >= coursesData?.data?.totalPages
-                  }? "opacity-50 cursor-not-allowed" : ""`}
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 />
               </PaginationItem>
             </PaginationContent>

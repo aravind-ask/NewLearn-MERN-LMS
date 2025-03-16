@@ -7,9 +7,12 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import EnrollmentService from "../services/enrollment.service";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
+import { OfferService } from "../services/offer.service";
+import { OfferRepository } from "../repositories/offer.repository";
 
 const courseRepository = new CourseRepository();
-const courseService = new CourseService(courseRepository);
+const offerService = new OfferService(new OfferRepository());
+const courseService = new CourseService(new CourseRepository(), offerService);
 const enrollmentRepository = new EnrollmentRepository();
 const enrollmentService = new EnrollmentService(enrollmentRepository);
 const courseController = new CourseController(courseService, enrollmentService);
