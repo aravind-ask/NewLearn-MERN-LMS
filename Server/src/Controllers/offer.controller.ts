@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { OfferService } from "../services/offer.service";
-import { IOffer } from "../models/Offers";
 
 export class OfferController {
   constructor(private offerService: OfferService) {}

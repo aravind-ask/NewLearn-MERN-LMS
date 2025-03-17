@@ -59,6 +59,7 @@ import {
 import { useGetReviewsByCourseIdQuery } from "@/redux/services/ratingsApi";
 import { format } from "date-fns";
 import Loading from "@/components/Loading";
+import { Badge } from "@/components/ui/badge";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -68,8 +69,6 @@ const CourseDetails = () => {
     useGetCourseDetailsQuery(courseId);
 
   const course = data?.data?.courseDetails;
-
-  console.log("course", course);
 
   const [displayCurrentFreePreview, setDisplayCurrentFreePreview] =
     useState(null);
@@ -86,15 +85,15 @@ const CourseDetails = () => {
   const [ratings, setRatings] = useState([]);
   const [averageRating, setAverageRating] = useState<string | null>(null);
 
-  const {
-    data: instructorCourses,
-    isLoading: isInstructorCoursesLoading,
-    isError: isInstructorCoursesError,
-  } = useGetInstructorCoursesQuery({
-    instructorId: course?.data?.instructorId,
-    page: 1,
-    limit: 5,
-  });
+  // const {
+  //   data: instructorCourses,
+  //   isLoading: isInstructorCoursesLoading,
+  //   isError: isInstructorCoursesError,
+  // } = useGetInstructorCoursesQuery({
+  //   instructorId: course?.data?.instructorId,
+  //   page: 1,
+  //   limit: 5,
+  // });
 
   const getIndexOfFreePreviewUrl =
     course !== null
@@ -112,10 +111,8 @@ const CourseDetails = () => {
     isLoading: isRatingsLoading,
     isError: isRatingsError,
   } = useGetReviewsByCourseIdQuery({ courseId });
-  console.log("ratingsData", ratingsData);
 
   useEffect(() => {
-    // const ratings = ratingsData?.data || [];
     setRatings(ratingsData?.data?.reviews || []);
     const averageRating =
       ratings.length > 0
@@ -125,13 +122,11 @@ const CourseDetails = () => {
           ).toFixed(1)
         : null;
     setAverageRating(averageRating);
-    console.log("ratings", ratings);
-    console.log("averageRating", averageRating);
   }, [ratingsData, courseId, data]);
 
   const handleAddToCart = async () => {
     try {
-      await addToCartApi(courseId).unwrap();
+      await addToCartApi({ courseId, offer: course?.appliedOffer }).unwrap();
       dispatch(addToCart(course));
     } catch (error) {
       console.error("Failed to add to cart:", error);
@@ -186,10 +181,11 @@ const CourseDetails = () => {
   if (data?.data?.isEnrolled) {
     const isEnrolled = data?.data?.isEnrolled.courseId.toString();
     return <Navigate to={`/course/${isEnrolled}/learn`} />;
-    // navigate(`/course/${isEnrolled}/learn`);
   }
 
-  const isInCart = cart?.data?.some((item) => item._id === courseId);
+  const isInCart = cart?.data?.items?.some(
+    (item) => item.course._id === courseId
+  );
   const isInWishlist = wishlist?.data?.some((item) => item._id === courseId);
 
   return (
@@ -298,7 +294,9 @@ const CourseDetails = () => {
                       {section.title}
                     </AccordionTrigger>
                     <AccordionContent>
-                      {section.description && <p className="mb-5">{section.description}</p>}
+                      {section.description && (
+                        <p className="mb-5">{section.description}</p>
+                      )}
                       <ul className="space-y-2">
                         {section.lectures.map((lecture, lectureIndex) => (
                           <li
@@ -329,8 +327,7 @@ const CourseDetails = () => {
               </Accordion>
             </CardContent>
           </Card>
-          {/* Display other courses by the same instructor */}
-          <Card className="mb-8">
+          {/* <Card className="mb-8">
             <CardHeader>
               <CardTitle>Courses by the same instructor</CardTitle>
             </CardHeader>
@@ -356,12 +353,12 @@ const CourseDetails = () => {
                 </ul>
               )}
             </CardContent>
-          </Card>
+          </Card> */}
         </main>
         <aside className="w-full md:w-[500px]">
           <Card className="sticky top-22">
             <CardContent className="p-6">
-              <div className="aspect-video mb-4 rounded-lg flex items-center justify-center">
+              <div className="aspect-video mb-4 rounded-lg flex items-center justify-center relative">
                 <VideoPlayer
                   url={
                     getIndexOfFreePreviewUrl !== -1
@@ -376,12 +373,33 @@ const CourseDetails = () => {
                   width="450px"
                   height="250px"
                 />
+                {/* Discount Badge */}
+                {course?.appliedOffer && (
+                  <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white">
+                    {course.appliedOffer.discountPercentage}% OFF
+                  </Badge>
+                )}
               </div>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">₹ {course?.pricing}</span>
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-teal-600">
+                    ₹{course?.discountedPrice || course?.pricing}
+                  </span>
+                  {course?.discountedPrice && (
+                    <span className="text-xl text-gray-500 line-through">
+                      ₹{course?.pricing}
+                    </span>
+                  )}
+                </div>
+                {course?.appliedOffer && (
+                  <p className="text-sm text-green-600">
+                    {course.appliedOffer.title} Applied - Ends{" "}
+                    {format(new Date(course.appliedOffer.endDate), "MMM dd")}
+                  </p>
+                )}
               </div>
               <Button
-                className="w-full mb-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold"
+                className="w-full mb-2 cursor-pointer bg-teal-500 hover:bg-teal-600 text-white"
                 onClick={handleEnrollNow}
               >
                 <Book className="mr-2 h-4 w-4" />

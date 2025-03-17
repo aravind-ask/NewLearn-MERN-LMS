@@ -1,52 +1,98 @@
-import { Request, Response, NextFunction } from "express";
-import * as cartService from "../services/cart.service";
-import { successResponse } from "../utils/responseHandler";
+// src/controllers/cart.controller.ts
+import { Request, Response } from "express";
+import { CartService } from "../services/cart.service";
+import { ICartItem } from "../models/Cart";
+import { Types } from "mongoose";
+import { errorResponse, successResponse } from "../utils/responseHandler";
 import { HttpStatus } from "../utils/statusCodes";
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string };
+  user?: { id: string };
 }
 
-export const addToCart = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { courseId } = req.body;
-    const userId = (req as AuthenticatedRequest).user.id;
-    const cartItem = await cartService.addToCart(userId, courseId);
-    successResponse(res, cartItem, "Course added to cart", HttpStatus.CREATED);
-  } catch (error) {
-    next(error);
-  }
-};
+export class CartController {
+  constructor(private cartService: CartService) {}
 
-export const removeFromCart = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { courseId } = req.body;
-    const userId = (req as AuthenticatedRequest).user.id;
-    await cartService.removeFromCart(userId, courseId);
-    successResponse(res, null, "Course removed from cart", HttpStatus.OK);
-  } catch (error) {
-    next(error);
-  }
-};
+  async addToCart(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        errorResponse(res, "Unauthorized", HttpStatus.UNAUTHORIZED);
+        return;
+      }
 
-export const getCart = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = (req as AuthenticatedRequest).user.id;
-    const cart = await cartService.getCart(userId);
-    successResponse(res, cart, "Cart fetched successfully", HttpStatus.OK);
-  } catch (error) {
-    next(error);
+      const cartItem: ICartItem = {
+        course: new Types.ObjectId(req.body.courseId) as Types.ObjectId,
+        offer: req.body.offer
+          ? {
+              _id: req.body.offer._id,
+              title: req.body.offer.title,
+              description: req.body.offer.description,
+              discountPercentage: req.body.offer.discountPercentage,
+            }
+          : null,
+      };
+
+      const cart = await this.cartService.addToCart(userId, cartItem);
+      successResponse(res, cart, "Course added to cart", HttpStatus.OK);
+    } catch (error) {
+      const err = error as Error;
+      errorResponse(
+        res,
+        "Internal Server Error",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
-};
+
+  async removeFromCart(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const { courseId } = req.params;
+
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const cart = await this.cartService.removeFromCart(userId, courseId);
+      successResponse(res, cart, "Course removed from cart", HttpStatus.OK);
+    } catch (error) {
+      const err = error as Error;
+      errorResponse(
+        res,
+        "Internal Server Error",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getCart(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const cart = await this.cartService.getCart(userId);
+      successResponse(
+        res,
+        cart || { userId: new Types.ObjectId(userId), items: [] },
+        "Cart retrieved",
+        HttpStatus.OK
+      );
+    } catch (error) {
+      const err = error as Error;
+      errorResponse(
+        res,
+        "Internal Server Error",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+}

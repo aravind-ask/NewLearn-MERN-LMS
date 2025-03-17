@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ShoppingCart, CreditCard, Wallet, Gift, Loader } from "lucide-react";
 import { useState } from "react";
-import Razorpay from "razorpay";
 import {
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
@@ -14,6 +13,7 @@ import {
 import { useGetCartQuery } from "@/redux/services/courseApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { Badge } from "@/components/ui/badge";
 
 const CheckoutPage = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -25,7 +25,7 @@ const CheckoutPage = () => {
   const itemsToCheckout = courseDetails ? [courseDetails] : cartItems;
 
   const [couponCode, setCouponCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+  const [paymentMethod, setPaymentMethod] = useState("paypal");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -35,9 +35,33 @@ const CheckoutPage = () => {
   const [verifyRazorpayPayment] = useVerifyRazorpayPaymentMutation();
   const { data: cart } = useGetCartQuery();
 
-  const subtotal =
-    itemsToCheckout?.reduce((total, course) => total + course.pricing, 0) || 0;
-  // const tax = subtotal * 0.18;
+  // Normalize item structure and calculate totals
+  const normalizedItems = itemsToCheckout.map((item) => ({
+    _id: item.course?._id || item._id,
+    title: item.course?.title || item.title,
+    image: item.course?.image || item.image,
+    pricing: item.course?.pricing || item.pricing,
+    instructorId: item.course?.instructorId || item.instructorId,
+    instructorName: item.course?.instructorName || item.instructorName,
+    appliedOffer: item.offer || item.appliedOffer,
+    discountedPrice: item.course
+      ? item.offer
+        ? item.course.pricing * (1 - item.offer.discountPercentage / 100)
+        : item.course.pricing
+      : item.discountedPrice || item.pricing,
+  }));
+
+  const originalSubtotal = normalizedItems.reduce(
+    (total, item) => total + item.pricing,
+    0
+  );
+
+  const subtotal = normalizedItems.reduce(
+    (total, item) => total + (item.discountedPrice || item.pricing),
+    0
+  );
+
+  const offerDiscount = originalSubtotal - subtotal;
   const total = Math.round(subtotal - discount);
 
   const handleApplyCoupon = () => {
@@ -45,7 +69,7 @@ const CheckoutPage = () => {
     setCouponError("");
     setTimeout(() => {
       if (couponCode === "LEARN10") {
-        setDiscount(subtotal * 0.1); // 10% discount
+        setDiscount(subtotal * 0.1);
       } else {
         setCouponError("Invalid coupon code");
       }
@@ -57,13 +81,13 @@ const CheckoutPage = () => {
     setIsPlacingOrder(true);
 
     try {
-      const courses = itemsToCheckout.map((course) => ({
-        courseId: course._id,
-        courseTitle: course.title,
-        courseImage: course.image,
-        coursePrice: course.pricing,
-        instructorId: course.instructorId,
-        instructorName: course.instructorName,
+      const courses = normalizedItems.map((item) => ({
+        courseId: item._id,
+        courseTitle: item.title,
+        courseImage: item.image,
+        coursePrice: item.discountedPrice || item.pricing,
+        instructorId: item.instructorId,
+        instructorName: item.instructorName,
       }));
 
       const order = await createRazorpayOrder({
@@ -76,7 +100,7 @@ const CheckoutPage = () => {
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: total,
+        amount: total * 100,
         currency: "INR",
         name: "NewLearn-LMS",
         description: "Course Purchase",
@@ -116,7 +140,7 @@ const CheckoutPage = () => {
     <div className="container mx-auto p-4">
       <div className="flex items-center justify-between mt-4 mb-8 gap-4">
         <div className="flex items-center gap-4">
-          <ShoppingCart className="h-8 w-8 text-blue-600" />
+          <ShoppingCart className="h-8 w-8 text-teal-600" />
           <h1 className="text-3xl font-bold text-gray-800">Checkout</h1>
         </div>
         <Button
@@ -129,7 +153,6 @@ const CheckoutPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Order Details */}
         <div className="col-span-2">
           <Card className="shadow-lg">
             <CardHeader>
@@ -139,28 +162,47 @@ const CheckoutPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {itemsToCheckout?.map((course) => (
+                {normalizedItems?.map((item) => (
                   <div
-                    key={course._id}
-                    className="flex gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow"
+                    key={item._id}
+                    className="flex gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow relative"
                   >
-                    <div className="w-32 h-20 flex-shrink-0">
+                    <div className="w-32 h-20 flex-shrink-0 relative">
                       <img
-                        src={course.image}
-                        alt={course.title}
+                        src={item.image}
+                        alt={item.title}
                         className="w-full h-full object-cover rounded-lg"
                       />
+                      {item.appliedOffer && (
+                        <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white">
+                          {item.appliedOffer.discountPercentage}% OFF
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-800">
-                        {course.title}
+                        {item.title}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        By {course.instructorName}
+                        By {item.instructorName}
                       </p>
-                      <p className="text-lg font-bold mt-2 text-blue-600">
-                        ₹ {course.pricing}
-                      </p>
+                      <div className="flex flex-col gap-1 mt-2">
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg font-bold text-teal-600">
+                            ₹{item.discountedPrice.toFixed(2)}
+                          </p>
+                          {item.appliedOffer && (
+                            <p className="text-sm text-gray-500 line-through">
+                              ₹{item.pricing}
+                            </p>
+                          )}
+                        </div>
+                        {item.appliedOffer && (
+                          <p className="text-xs text-green-600">
+                            {item.appliedOffer.title} Applied
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -169,9 +211,7 @@ const CheckoutPage = () => {
           </Card>
         </div>
 
-        {/* Right Column - Payment, Coupon, and Order Summary */}
         <div className="col-span-1 space-y-8">
-          {/* Order Summary */}
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-gray-800">
@@ -181,16 +221,26 @@ const CheckoutPage = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between">
+                  <span className="text-gray-600">Original Price</span>
+                  <span className="font-bold text-gray-500 line-through">
+                    ₹ {originalSubtotal.toFixed(2)}
+                  </span>
+                </div>
+                {offerDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Offer Discount</span>
+                    <span className="font-bold text-green-600">
+                      -₹ {offerDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-bold">₹ {subtotal.toFixed(2)}</span>
                 </div>
-                {/* <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%)</span>
-                  <span className="font-bold">₹ {tax.toFixed(2)}</span>
-                </div> */}
                 {discount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Discount</span>
+                    <span className="text-gray-600">Coupon Discount</span>
                     <span className="font-bold text-green-600">
                       -₹ {discount.toFixed(2)}
                     </span>
@@ -198,7 +248,7 @@ const CheckoutPage = () => {
                 )}
                 <div className="flex justify-between border-t pt-4">
                   <span className="text-gray-600 font-semibold">Total</span>
-                  <span className="font-bold text-lg text-blue-600">
+                  <span className="font-bold text-lg text-teal-600">
                     ₹ {total.toFixed(2)}
                   </span>
                 </div>
@@ -206,7 +256,6 @@ const CheckoutPage = () => {
             </CardContent>
           </Card>
 
-          {/* Coupon Section */}
           {/* <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-gray-800">
@@ -224,7 +273,7 @@ const CheckoutPage = () => {
                 <Button
                   onClick={handleApplyCoupon}
                   disabled={isApplyingCoupon}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 transition-colors"
                 >
                   {isApplyingCoupon ? (
                     <Loader className="h-4 w-4 animate-spin" />
@@ -245,7 +294,6 @@ const CheckoutPage = () => {
             </CardContent>
           </Card> */}
 
-          {/* Payment Method */}
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-gray-800">
@@ -258,39 +306,21 @@ const CheckoutPage = () => {
                 onValueChange={setPaymentMethod}
                 className="space-y-4"
               >
-                {/* <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <RadioGroupItem value="credit-card" id="credit-card" />
-                  <Label
-                    htmlFor="credit-card"
-                    className="flex items-center gap-2"
-                  >
-                    <CreditCard className="h-5 w-5 text-blue-600" />
-                    Credit/Debit Card
-                  </Label>
-                </div> */}
                 <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
                   <RadioGroupItem value="paypal" id="paypal" />
                   <Label htmlFor="paypal" className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-blue-600" />
+                    <Wallet className="h-5 w-5 text-teal-600" />
                     Razorpay
                   </Label>
                 </div>
-                {/* <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <RadioGroupItem value="upi" id="upi" />
-                  <Label htmlFor="upi" className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-blue-600" />
-                    Stripe
-                  </Label>
-                </div> */}
               </RadioGroup>
             </CardContent>
           </Card>
 
-          {/* Place Order Button */}
           <Button
             onClick={handleRazorpayPayment}
-            className="w-full mt-4 cursor-pointer bg-blue-100 text-black hover:bg-black hover:text-white transition-colors"
-            disabled={itemsToCheckout.length === 0 || isPlacingOrder}
+            className="w-full mt-4 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 transition-colors"
+            disabled={normalizedItems.length === 0 || isPlacingOrder}
           >
             {isPlacingOrder ? (
               <Loader className="h-4 w-4 animate-spin" />

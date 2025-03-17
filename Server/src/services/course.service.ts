@@ -57,7 +57,6 @@ export class CourseService implements ICourseService {
     );
 
     const globalOffers = activeOffers.filter((offer) => !offer.category);
-    console.log("global offers",globalOffers);
     const categoryOffers = course.category
       ? activeOffers.filter(
           (offer) =>

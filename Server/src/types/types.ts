@@ -1,37 +1,35 @@
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
+// src/types/course.types.ts
 export interface Course {
-  _id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  pricing: number;
-  instructorName: string;
-  primaryLanguage: string;
-  students: string[];
-  curriculum: CurriculumItem[];
+  courseId: string;
 }
 
-export interface CurriculumItem {
+export interface Offer {
+  _id: string;
   title: string;
-  freePreview: boolean;
-  videoUrl: string;
+  description: string;
+  discountPercentage: number;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  category: {
+    _id: string;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
 }
 
 export interface CartItem {
-  _id: string;
-  userId: string;
-  courseId: Course;
-  addedAt: Date;
+  course: Course;
+  offer: Offer;
 }
 
-export interface WishlistItem {
+export interface Cart {
   _id: string;
   userId: string;
-  courseId: Course;
-  addedAt: Date;
+  items: CartItem[];
+  createdAt: Date;
+  updatedAt: Date;
 }

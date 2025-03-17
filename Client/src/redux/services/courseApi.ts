@@ -60,18 +60,17 @@ export const courseApi = api.injectEndpoints({
       }),
     }),
     addToCart: builder.mutation({
-      query: (courseId) => ({
-        url: `/cart/add`,
+      query: ({ courseId, offer }) => ({
+        url: `/cart`,
         method: "POST",
-        body: { courseId },
+        body: { courseId, offer },
       }),
       invalidatesTags: ["Cart"],
     }),
     removeFromCart: builder.mutation({
       query: (courseId) => ({
-        url: `/cart/remove`,
+        url: `/cart/${courseId}`,
         method: "DELETE",
-        body: { courseId },
       }),
       invalidatesTags: ["Cart"],
     }),

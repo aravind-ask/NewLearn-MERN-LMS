@@ -1,9 +1,17 @@
-// src/repositories/interfaces/ICartRepository.ts
-import { ICart } from "../../models/Cart";
+// src/repositories/cart.repository.interface.ts
+import { ICourse } from "../../models/Course";
+import { ICart, ICartItem, IPopulatedCart } from "../../models/Cart";
+import { IOffer } from "../../models/Offers";
 
 export interface ICartRepository {
-  addToCart(userId: string, courseId: string): Promise<ICart>;
-  findCartItem(userId: string, courseId: string): Promise<ICart | null>;
-  removeFromCart(userId: string, courseId: string): Promise<void>;
-  getCart(userId: string): Promise<ICart[]>;
+  findByUserId(userId: string): Promise<IPopulatedCart | null>;
+  addItem(userId: string, item: ICartItem): Promise<ICart>;
+  removeItem(userId: string, courseId: string): Promise<ICart>;
+  create(userId: string): Promise<ICart>;
 }
+
+export interface IPopulatedCartItem {
+  course: ICourse;
+  offer: IOffer | null;
+}
+
