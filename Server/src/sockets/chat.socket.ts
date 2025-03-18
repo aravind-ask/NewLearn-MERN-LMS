@@ -19,6 +19,15 @@ export const setupChatSocket = (io: Server) => {
     );
 
     socket.on(
+      "joinInstructorRoom",
+      ({ instructorId }: { instructorId: string }) => {
+        const room = `instructor_${instructorId}`;
+        socket.join(room);
+        console.log(`User ${socket.id} joined instructor room: ${room}`);
+      }
+    );
+
+    socket.on(
       "sendMessage",
       (messageData: {
         _id: string;
@@ -38,12 +47,21 @@ export const setupChatSocket = (io: Server) => {
             ? messageData.senderId
             : messageData.recipientId;
         const room = `chat_${messageData.courseId}_${studentId}`;
+
+        // Broadcast to the chat room
         io.to(room).emit("newMessage", messageData);
         console.log(`Message broadcasted to room: ${room}`);
         console.log(
           `Clients in room ${room}:`,
           io.sockets.adapter.rooms.get(room)?.size || 0
         );
+
+        // If this is a student message (new or existing chat), notify the instructor globally
+        if (messageData.role === "student") {
+          const instructorRoom = `instructor_${messageData.recipientId}`;
+          io.to(instructorRoom).emit("newChatMessage", messageData);
+          console.log(`Notified instructor room: ${instructorRoom}`);
+        }
       }
     );
 

@@ -58,6 +58,8 @@ export default function InstructorChat() {
   useEffect(() => {
     const onConnect = () => {
       console.log("Instructor connected to socket:", socket.id);
+      socket.emit("joinInstructorRoom", { instructorId: user?.id });
+      console.log(`Instructor joined room: instructor_${user?.id}`);
       chatPreviews.forEach((preview) => {
         const room = `chat_${preview.courseId}_${preview.studentId}`;
         socket.emit("joinChatRoom", {
@@ -70,25 +72,45 @@ export default function InstructorChat() {
 
     const onNewMessage = (message: Message) => {
       console.log("Instructor received newMessage:", message);
-      if (message.recipientId === user?.id || message.senderId === user?.id) {
-        if (message.senderId !== user?.id) {
-          const room = `chat_${message.courseId}_${message.senderId}`;
-          socket.emit("joinChatRoom", {
-            courseId: message.courseId,
-            userId: message.senderId,
-          });
-          console.log(`Instructor dynamically joined room: ${room}`);
-        }
+      if (
+        selectedChat &&
+        message.courseId === selectedChat.courseId &&
+        ((message.senderId === selectedChat.studentId &&
+          message.recipientId === user?.id) ||
+          (message.senderId === user?.id &&
+            message.recipientId === selectedChat.studentId))
+      ) {
+        setDisplayedMessages((prev) => {
+          // Replace temp message if it exists, otherwise add
+          const tempIndex = prev.findIndex(
+            (msg) =>
+              msg._id.startsWith("temp-") && msg.message === message.message
+          );
+          if (tempIndex >= 0) {
+            const newMessages = [...prev];
+            newMessages[tempIndex] = message;
+            return newMessages;
+          }
+          return prev.some((msg) => msg._id === message._id)
+            ? prev
+            : [...prev, message];
+        });
         dispatch(addMessage(message));
         updateChatPreviews(message);
-        if (
-          selectedChat &&
-          message.courseId === selectedChat.courseId &&
-          (message.senderId === selectedChat.studentId ||
-            message.recipientId === selectedChat.studentId)
-        ) {
-          setDisplayedMessages((prev) => [...prev, message]);
-        }
+      }
+    };
+
+    const onNewChatMessage = (message: Message) => {
+      console.log("Instructor received newChatMessage:", message);
+      if (message.recipientId === user?.id && message.senderId !== user?.id) {
+        const room = `chat_${message.courseId}_${message.senderId}`;
+        socket.emit("joinChatRoom", {
+          courseId: message.courseId,
+          userId: message.senderId,
+        });
+        console.log(`Instructor dynamically joined room: ${room}`);
+        dispatch(addMessage(message));
+        updateChatPreviews(message);
       }
     };
 
@@ -98,19 +120,20 @@ export default function InstructorChat() {
 
     socket.on("connect", onConnect);
     socket.on("newMessage", onNewMessage);
+    socket.on("newChatMessage", onNewChatMessage);
     socket.on("disconnect", onDisconnect);
 
-    // Ensure connection and join rooms on mount
     if (!socket.connected) {
       console.log("Socket not connected, attempting to connect...");
       socket.connect();
     } else {
-      onConnect(); // Join rooms immediately if already connected
+      onConnect();
     }
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("newMessage", onNewMessage);
+      socket.off("newChatMessage", onNewChatMessage);
       socket.off("disconnect", onDisconnect);
     };
   }, [user?.id, chatPreviews, selectedChat, dispatch]);
@@ -156,6 +179,7 @@ export default function InstructorChat() {
   }, [conversationData, user, dispatch]);
 
   const updateChatPreviews = (message: Message) => {
+    console.log("Updating chat previews with message:", message);
     setChatPreviews((prev) => {
       const studentId =
         message.senderId !== user?.id ? message.senderId : message.recipientId;
@@ -163,7 +187,9 @@ export default function InstructorChat() {
       const existing = prev.find(
         (chat) => `${chat.studentId}-${chat.courseId}` === key
       );
+
       if (existing) {
+        console.log(`Updating existing preview for ${key}`);
         return prev.map((chat) =>
           chat.studentId === studentId && chat.courseId === message.courseId
             ? {
@@ -177,6 +203,7 @@ export default function InstructorChat() {
             : chat
         );
       } else {
+        console.log(`Adding new preview for ${key}`);
         const newPreview = {
           courseId: message.courseId,
           courseTitle: message.courseTitle || "Unknown Course",
@@ -222,6 +249,19 @@ export default function InstructorChat() {
       message: newMessage,
     };
 
+    // Optimistic update
+    const tempMessage: Message = {
+      ...messageData,
+      _id: `temp-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      courseTitle: selectedChat.courseTitle,
+      senderName: user.name,
+      role: "instructor",
+    };
+    setDisplayedMessages((prev) => [...prev, tempMessage]);
+    updateChatPreviews(tempMessage);
+
     try {
       const savedMessage = await sendMessage(messageData).unwrap();
       const enrichedMessage = {
@@ -235,10 +275,18 @@ export default function InstructorChat() {
         enrichedMessage
       );
       socket.emit("sendMessage", enrichedMessage);
+      // Replace temp message with server version
+      setDisplayedMessages((prev) =>
+        prev.map((msg) => (msg._id === tempMessage._id ? enrichedMessage : msg))
+      );
       setNewMessage("");
       refetch();
     } catch (error) {
       console.error("Failed to send message:", error);
+      setDisplayedMessages((prev) =>
+        prev.filter((msg) => msg._id !== tempMessage._id)
+      );
+      updateChatPreviews(tempMessage); // Revert preview
     }
   };
 
