@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import { connectDB } from "./config/db";
 import authRoutes from "./Routes/auth.routes";
 import userRoutes from "./Routes/user.routes";
@@ -14,32 +16,43 @@ import paymentRoutes from "./Routes/payment.routes";
 import progressRoutes from "./Routes/course.progress.routes";
 import ratingsRoutes from "./Routes/ratings.routes";
 import offerRoutes from "./Routes/offer.routes";
+import chatRoutes from "./Routes/chat.routes";
 import multer from "multer";
+import { setupChatSocket } from "./sockets/chat.socket";
 
 dotenv.config();
+
+// Initialize Express app
 const app = express();
+// Create HTTP server
+const httpServer = createServer(app);
+// Initialize Socket.IO
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  },
+});
 
 const upload = multer();
 
-cors({
-  origin: process.env.CLIENT_URL,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-});
-
+// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   })
 );
 app.use(morgan("dev"));
 
+// Database connection
 connectDB();
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/instructor", instructorRoutes);
@@ -51,7 +64,12 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/reviews", ratingsRoutes);
 app.use("/api/offers", offerRoutes);
+app.use("/api/chat", chatRoutes);
 
+// Setup WebSocket for chat
+setupChatSocket(io);
+
+// Error handling middleware
 app.use(
   (
     err: Error,
@@ -67,4 +85,5 @@ app.use(
   }
 );
 
-export default app;
+// Export the HTTP server instead of the Express app
+export default httpServer;

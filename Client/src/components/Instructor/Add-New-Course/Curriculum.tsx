@@ -423,14 +423,14 @@ const Curriculum = () => {
                           >
                             Change Video
                           </Button>
-                          <Button
+                          {/* <Button
                             onClick={() =>
                               handleDeleteLecture(sectionIndex, lectureIndex)
                             }
                             className="bg-red-900"
                           >
                             Delete Lecture
-                          </Button>
+                          </Button> */}
                         </div>
                       ) : (
                         <Input

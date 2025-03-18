@@ -14,19 +14,16 @@ const cartController = new CartController(cartService);
 router.post(
   "/",
   authMiddleware.verifyAccessToken,
-  authorizeRoles(["student"]),
   cartController.addToCart.bind(cartController)
 );
 router.delete(
   "/:courseId",
   authMiddleware.verifyAccessToken,
-  authorizeRoles(["student"]),
   cartController.removeFromCart.bind(cartController)
 );
 router.get(
   "/",
   authMiddleware.verifyAccessToken,
-  authorizeRoles(["student"]),
   cartController.getCart.bind(cartController)
 );
 

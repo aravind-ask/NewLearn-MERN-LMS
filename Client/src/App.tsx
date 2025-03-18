@@ -98,7 +98,7 @@ function App() {
         </Routes>
         <Toaster />
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </Router>
   );
 }

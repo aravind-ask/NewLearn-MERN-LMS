@@ -18,7 +18,7 @@ export default function ProtectedRoute() {
   const { data: userStatus, refetch } = useGetUserStatusQuery(
     {},
     {
-      pollingInterval: 5000,
+      pollingInterval: 500000,
       skip: !user,
     }
   );

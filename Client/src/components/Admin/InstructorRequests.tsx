@@ -48,7 +48,6 @@ const AdminInstructorRequests = () => {
   } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Handle navigation to details
   const handleViewDetails = (applicationId: string) => {
     navigate(`/dashboard/instructor/${applicationId}`);
   };
@@ -131,6 +130,16 @@ const AdminInstructorRequests = () => {
       header: "Actions",
       accessor: (app: Application) => (
         <div className="flex space-x-2 justify-end">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetails(app._id);
+            }}
+            variant="outline"
+            size="sm"
+          >
+            View Details
+          </Button>
           <Button
             onClick={(e) => {
               e.stopPropagation();

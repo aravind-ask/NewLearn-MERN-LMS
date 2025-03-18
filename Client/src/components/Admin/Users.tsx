@@ -65,7 +65,7 @@ export default function AdminUsers() {
       header: "Profile",
       accessor: (user: User) => (
         <img
-          src={user.profilePic || "/default-avatar.png"}
+          src={user.photoUrl || "/default-avatar.png"}
           alt={user.name}
           className="w-10 h-10 rounded-full object-cover"
         />

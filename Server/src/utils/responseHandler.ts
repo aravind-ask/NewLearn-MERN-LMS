@@ -7,7 +7,6 @@ export const successResponse = (
   message = "Success",
   status = HttpStatus.OK
 ) => {
-  console.log("Response Data",data)
   return res.status(status).json({ success: true, message, data });
 };
 

@@ -117,6 +117,7 @@ const apiInstance = createApi({
     "CourseProgress",
     "Offers",
     "Reviews",
+    "Chat"
   ],
   endpoints: () => ({}),
 });

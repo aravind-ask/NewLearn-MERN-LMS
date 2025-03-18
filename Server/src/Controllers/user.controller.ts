@@ -89,7 +89,11 @@ export class UserController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode || 500);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -191,6 +195,11 @@ export class UserController {
         "User status fetched",
         HttpStatus.OK
       );
+      // const data = {
+      //   isBlocked: user.isBlocked,
+      // };
+      //  res.status(HttpStatus.OK).json(data);
+      //  return
     } catch (error: any) {
       errorResponse(res, "Error fetching user status", error.statusCode);
     }

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import RatingService from "../services/rating.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import { HttpStatus } from "../utils/statusCodes";
 
 export default class RatingController {
   private ratingService: RatingService;
@@ -9,7 +10,6 @@ export default class RatingController {
     this.ratingService = new RatingService();
   }
 
-  // Get all reviews for a course
   async getReviewsByCourseId(req: Request, res: Response) {
     try {
       const { courseId } = req.params;
@@ -25,18 +25,17 @@ export default class RatingController {
         res,
         { reviews, total },
         "Reviews fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
       errorResponse(
         res,
         error.message || "Failed to fetch reviews",
-        error.status || 500
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
 
-  // Create a new review
   async createReview(req: Request, res: Response) {
     try {
       const { userId, courseId, userName, rating, comment } = req.body;
@@ -47,13 +46,12 @@ export default class RatingController {
         rating,
         comment,
       });
-      res.status(201).json(review);
+      res.status(HttpStatus.CREATED).json(review);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
     }
   }
 
-  // Update a review
   async updateReview(req: Request, res: Response) {
     try {
       const { reviewId } = req.params;
@@ -62,20 +60,21 @@ export default class RatingController {
         rating,
         comment,
       });
-      res.status(200).json(updatedReview);
+      res.status(HttpStatus.OK).json(updatedReview);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
     }
   }
 
-  // Delete a review
   async deleteReview(req: Request, res: Response) {
     try {
       const { reviewId } = req.params;
       await this.ratingService.deleteReview(reviewId);
-      res.status(204).send();
+      res.status(HttpStatus.OK).send();
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: error.message });
     }
   }
 }

@@ -209,7 +209,13 @@ function EnrolledCourseDetailsPage() {
               <Discussions />
             </TabsContent>
             <TabsContent value="chat" className="p-4">
-              <ChatWithTrainer />
+              <ChatWithTrainer
+                courseId={courseId}
+                trainerId={
+                  courseProgressData?.data?.courseDetails?.instructorId
+                }
+                courseTitle={courseProgressData?.data?.courseDetails?.title}
+              />
             </TabsContent>
           </Tabs>
         </main>

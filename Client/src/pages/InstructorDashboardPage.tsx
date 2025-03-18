@@ -1,15 +1,17 @@
+// src/pages/InstructorDashboardPage.tsx
 import InstructorCourses from "@/components/Instructor/InstructorCourses";
 import InstructorDashboard from "@/components/Instructor/InstructorDashboard";
+import InstructorProfile from "@/components/Instructor/InstructorProfile";
+import InstructorChat from "@/components/Instructor/InstructorChat"; 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { BarChart, BookOpen, LogOut, User } from "lucide-react";
+import { BarChart, BookOpen, LogOut, User, MessageCircle } from "lucide-react";
 import React from "react";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import { logout } from "@/redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "@/redux/store";
-import InstructorProfile from "@/components/Instructor/InstructorProfile";
 import { useGetInstructorCoursesQuery } from "@/redux/services/instructorApi";
 
 const InstructorDashboardPage = () => {
@@ -38,6 +40,12 @@ const InstructorDashboardPage = () => {
       label: "Courses",
       value: "courses",
       component: <InstructorCourses />,
+    },
+    {
+      icon: MessageCircle,
+      label: "Chat",
+      value: "chat",
+      component: <InstructorChat />,
     },
     {
       icon: LogOut,
@@ -86,7 +94,7 @@ const InstructorDashboardPage = () => {
       </aside>
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">DashBoard</h1>
+          <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {menuItems.map((menuItem) => (
               <TabsContent value={menuItem.value} key={menuItem.value}>
