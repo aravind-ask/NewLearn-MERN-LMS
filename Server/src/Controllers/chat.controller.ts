@@ -72,4 +72,24 @@ export class ChatController {
       errorResponse(res, error);
     }
   }
+
+  async markMessageAsRead(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { messageId } = req.params;
+      if (!messageId) throw new BadRequestError("Message ID required");
+
+      const updatedMessage = await this.chatService.markMessageAsRead(
+        messageId
+      );
+      successResponse(res, updatedMessage, "Message marked as read");
+
+      // Notify via Socket.IO
+      const io = req.app.get("io"); // Assuming io is attached to app in server setup
+      const room = `chat_${updatedMessage.courseId}_${updatedMessage.senderId}`;
+      io.to(room).emit("messageRead", updatedMessage);
+      console.log(`Emitted messageRead to room ${room}:`, updatedMessage);
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
 }

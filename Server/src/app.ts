@@ -36,6 +36,8 @@ const io = new Server(httpServer, {
   },
 });
 
+app.set("io", io); 
+
 const upload = multer();
 
 // Middleware setup

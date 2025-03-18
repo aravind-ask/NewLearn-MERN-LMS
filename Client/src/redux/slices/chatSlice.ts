@@ -1,3 +1,4 @@
+// chatSlice.ts
 import { createSlice } from "@reduxjs/toolkit";
 
 interface ChatState {
@@ -9,6 +10,9 @@ interface ChatState {
     message: string;
     timestamp: string;
     isRead: boolean;
+    courseTitle?: string;
+    senderName?: string;
+    role?: "student" | "instructor";
   }>;
   isConnected: boolean;
 }
@@ -23,7 +27,17 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action) => {
-      state.messages.push(action.payload);
+      const existingIndex = state.messages.findIndex(
+        (msg) =>
+          msg._id === action.payload._id ||
+          (msg._id.startsWith("temp-") &&
+            msg.message === action.payload.message)
+      );
+      if (existingIndex >= 0) {
+        state.messages[existingIndex] = action.payload; 
+      } else {
+        state.messages.push(action.payload);
+      }
     },
     setMessages: (state, action) => {
       state.messages = action.payload;
@@ -31,8 +45,14 @@ const chatSlice = createSlice({
     setConnected: (state, action) => {
       state.isConnected = action.payload;
     },
+    removeMessage: (state, action) => {
+      state.messages = state.messages.filter(
+        (msg) => msg._id !== action.payload
+      );
+    },
   },
 });
 
-export const { addMessage, setMessages, setConnected } = chatSlice.actions;
+export const { addMessage, setMessages, setConnected, removeMessage } =
+  chatSlice.actions;
 export default chatSlice.reducer;

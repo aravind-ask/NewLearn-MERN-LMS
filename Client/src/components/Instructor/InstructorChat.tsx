@@ -1,5 +1,5 @@
 // src/components/Instructor/InstructorChat.tsx
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { socket } from "@/lib/socket";
@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import {
   useGetAllInstructorConversationsQuery,
   useSendMessageMutation,
+  useMarkMessageAsReadMutation,
 } from "@/redux/services/chatApi";
 import { addMessage } from "@/redux/slices/chatSlice";
+import { Eye } from "lucide-react";
 
 interface ChatPreview {
   courseId: string;
@@ -54,6 +56,17 @@ export default function InstructorChat() {
       { skip: !user }
     );
   const [sendMessage] = useSendMessageMutation();
+  const [markMessageAsRead] = useMarkMessageAsReadMutation();
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (scrollContainer)
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+  }, []);
 
   useEffect(() => {
     const onConnect = () => {
@@ -81,7 +94,6 @@ export default function InstructorChat() {
             message.recipientId === selectedChat.studentId))
       ) {
         setDisplayedMessages((prev) => {
-          // Replace temp message if it exists, otherwise add
           const tempIndex = prev.findIndex(
             (msg) =>
               msg._id.startsWith("temp-") && msg.message === message.message
@@ -96,7 +108,7 @@ export default function InstructorChat() {
             : [...prev, message];
         });
         dispatch(addMessage(message));
-        updateChatPreviews(message);
+        scrollToBottom();
       }
     };
 
@@ -114,6 +126,25 @@ export default function InstructorChat() {
       }
     };
 
+    const onMessageRead = (updatedMessage: Message) => {
+      console.log("Instructor received messageRead:", updatedMessage);
+      dispatch(addMessage(updatedMessage));
+      if (
+        selectedChat &&
+        updatedMessage.courseId === selectedChat.courseId &&
+        (updatedMessage.senderId === user?.id ||
+          updatedMessage.senderId === selectedChat.studentId)
+      ) {
+        setDisplayedMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === updatedMessage._id ? updatedMessage : msg
+          )
+        );
+        updateChatPreviews(updatedMessage);
+        scrollToBottom();
+      }
+    };
+
     const onDisconnect = () => {
       console.log("Instructor disconnected from socket");
     };
@@ -121,22 +152,20 @@ export default function InstructorChat() {
     socket.on("connect", onConnect);
     socket.on("newMessage", onNewMessage);
     socket.on("newChatMessage", onNewChatMessage);
+    socket.on("messageRead", onMessageRead);
     socket.on("disconnect", onDisconnect);
 
-    if (!socket.connected) {
-      console.log("Socket not connected, attempting to connect...");
-      socket.connect();
-    } else {
-      onConnect();
-    }
+    if (!socket.connected) socket.connect();
+    else onConnect();
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("newMessage", onNewMessage);
       socket.off("newChatMessage", onNewChatMessage);
+      socket.off("messageRead", onMessageRead);
       socket.off("disconnect", onDisconnect);
     };
-  }, [user?.id, chatPreviews, selectedChat, dispatch]);
+  }, [user?.id, chatPreviews, selectedChat, dispatch, scrollToBottom]);
 
   useEffect(() => {
     if (conversationData?.data) {
@@ -178,6 +207,29 @@ export default function InstructorChat() {
     }
   }, [conversationData, user, dispatch]);
 
+  useEffect(() => {
+    if (selectedChat) {
+      displayedMessages.forEach((msg) => {
+        if (
+          msg.recipientId === user?.id &&
+          !msg.isRead &&
+          msg.senderId === selectedChat.studentId
+        ) {
+          markMessageAsRead(msg._id).catch((error) =>
+            console.error("Failed to mark message as read:", error)
+          );
+        }
+      });
+      scrollToBottom();
+    }
+  }, [
+    displayedMessages,
+    selectedChat,
+    user?.id,
+    markMessageAsRead,
+    scrollToBottom,
+  ]);
+
   const updateChatPreviews = (message: Message) => {
     console.log("Updating chat previews with message:", message);
     setChatPreviews((prev) => {
@@ -195,10 +247,7 @@ export default function InstructorChat() {
             ? {
                 ...chat,
                 lastMessage: message.message,
-                unreadCount:
-                  message.isRead || message.senderId === user?.id
-                    ? chat.unreadCount
-                    : chat.unreadCount + 1,
+                unreadCount: message.isRead ? 0 : chat.unreadCount + 1,
               }
             : chat
         );
@@ -210,7 +259,7 @@ export default function InstructorChat() {
           studentId: studentId,
           studentName: message.senderName || "Unknown Student",
           lastMessage: message.message,
-          unreadCount: message.isRead || message.senderId === user?.id ? 0 : 1,
+          unreadCount: message.isRead ? 0 : 1,
         };
         return [...prev, newPreview];
       }
@@ -228,17 +277,6 @@ export default function InstructorChat() {
     setDisplayedMessages(filteredMessages);
   };
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
-    }
-  }, [displayedMessages]);
-
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
 
@@ -249,7 +287,6 @@ export default function InstructorChat() {
       message: newMessage,
     };
 
-    // Optimistic update
     const tempMessage: Message = {
       ...messageData,
       _id: `temp-${Date.now()}`,
@@ -261,6 +298,7 @@ export default function InstructorChat() {
     };
     setDisplayedMessages((prev) => [...prev, tempMessage]);
     updateChatPreviews(tempMessage);
+    scrollToBottom();
 
     try {
       const savedMessage = await sendMessage(messageData).unwrap();
@@ -275,7 +313,6 @@ export default function InstructorChat() {
         enrichedMessage
       );
       socket.emit("sendMessage", enrichedMessage);
-      // Replace temp message with server version
       setDisplayedMessages((prev) =>
         prev.map((msg) => (msg._id === tempMessage._id ? enrichedMessage : msg))
       );
@@ -286,26 +323,28 @@ export default function InstructorChat() {
       setDisplayedMessages((prev) =>
         prev.filter((msg) => msg._id !== tempMessage._id)
       );
-      updateChatPreviews(tempMessage); // Revert preview
+      updateChatPreviews(tempMessage);
     }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
-      <Card className="lg:col-span-1">
-        <CardHeader>
-          <CardTitle>Messages</CardTitle>
+      <Card className="lg:col-span-1 shadow-lg rounded-xl border border-gray-200">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardTitle className="text-xl font-semibold text-gray-800">
+            Messages
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-16rem)]">
+        <CardContent className="p-0">
+          <ScrollArea className="h-[calc(100vh-16rem)] bg-gray-50">
             {chatPreviews.map((chat) => (
               <div
                 key={`${chat.studentId}-${chat.courseId}`}
                 onClick={() => handleSelectChat(chat)}
-                className={`flex items-center p-4 border-b cursor-pointer hover:bg-gray-50 ${
+                className={`flex items-center p-4 border-b cursor-pointer hover:bg-gray-100 transition-colors ${
                   selectedChat?.studentId === chat.studentId &&
                   selectedChat?.courseId === chat.courseId
-                    ? "bg-gray-100"
+                    ? "bg-gray-200"
                     : ""
                 }`}
               >
@@ -314,18 +353,22 @@ export default function InstructorChat() {
                     src={`/placeholder-avatar.jpg`}
                     alt={chat.studentName}
                   />
-                  <AvatarFallback>{chat.studentName[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-gray-300 text-gray-700">
+                    {chat.studentName[0]}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="flex justify-between">
-                    <span className="font-semibold">{`${chat.studentName} - ${chat.courseTitle}`}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-800 truncate">
+                      {chat.studentName} - {chat.courseTitle}
+                    </span>
                     {chat.unreadCount > 0 && (
                       <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {chat.unreadCount}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 truncate">
+                  <p className="text-sm text-gray-600 truncate">
                     {chat.lastMessage}
                   </p>
                 </div>
@@ -335,18 +378,21 @@ export default function InstructorChat() {
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>
+      <Card className="lg:col-span-2 shadow-lg rounded-xl border border-gray-200">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardTitle className="text-xl font-semibold text-gray-800">
             {selectedChat
               ? `Chat with ${selectedChat.studentName} - ${selectedChat.courseTitle}`
-              : "Select a chat"}
+              : "Select a Chat"}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col h-[calc(100vh-16rem)] p-0">
           {selectedChat ? (
             <>
-              <ScrollArea ref={scrollAreaRef} className="flex-1 h-0 p-4">
+              <ScrollArea
+                ref={scrollAreaRef}
+                className="flex-1 h-0 p-4 bg-gray-50"
+              >
                 <div className="space-y-4">
                   {displayedMessages.map((msg) => (
                     <div
@@ -358,33 +404,47 @@ export default function InstructorChat() {
                       }`}
                     >
                       <div
-                        className={`max-w-[70%] p-3 rounded-lg ${
+                        className={`max-w-[70%] p-3 Instytrounded-lg shadow-sm ${
                           msg.senderId === user?.id
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-gray-800"
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                            : "bg-white text-gray-800 border border-gray-200"
                         }`}
                       >
-                        {msg.message}
-                        <div className="text-xs mt-1 opacity-75">
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        <p className="text-sm">{msg.message}</p>
+                        <div className="flex items-center justify-end mt-1 text-xs text-gray-400">
+                          <span>
+                            {new Date(msg.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          {msg.senderId === user?.id && msg.isRead && (
+                            <Eye className="w-3 h-3 ml-1 text-gray-300" />
+                          )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
-              <div className="flex-shrink-0 p-4 flex gap-2">
+              <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200 flex gap-2">
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your reply..."
+                  className="rounded-full border-gray-300 focus:ring-2 focus:ring-blue-500"
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 />
-                <Button onClick={handleSendMessage}>Send</Button>
+                <Button
+                  onClick={handleSendMessage}
+                  className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                >
+                  Send
+                </Button>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
               Select a student and course to start chatting
             </div>
           )}

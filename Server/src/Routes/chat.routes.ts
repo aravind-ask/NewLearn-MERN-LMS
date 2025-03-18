@@ -25,4 +25,10 @@ router.get(
   chatController.getAllInstructorConversations.bind(chatController)
 );
 
+router.put(
+  "/read/:messageId",
+  authMiddleware.verifyAccessToken,
+  chatController.markMessageAsRead.bind(chatController)
+);
+
 export default router;
