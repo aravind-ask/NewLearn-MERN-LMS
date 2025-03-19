@@ -206,7 +206,7 @@ function EnrolledCourseDetailsPage() {
               />
             </TabsContent>
             <TabsContent value="discussions" className="p-4">
-              <Discussions />
+              <Discussions lectureId={currentLecture?._id} />{" "}
             </TabsContent>
             <TabsContent value="chat" className="p-4">
               <ChatWithTrainer

@@ -17,8 +17,10 @@ import progressRoutes from "./Routes/course.progress.routes";
 import ratingsRoutes from "./Routes/ratings.routes";
 import offerRoutes from "./Routes/offer.routes";
 import chatRoutes from "./Routes/chat.routes";
+import discussionRoutes from "./Routes/discussion.routes";
 import multer from "multer";
 import { setupChatSocket } from "./sockets/chat.socket";
+import { setupDiscussionSocket } from "./sockets/discussion.socket";
 
 dotenv.config();
 
@@ -67,9 +69,11 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/reviews", ratingsRoutes);
 app.use("/api/offers", offerRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/discussion", discussionRoutes);
 
 // Setup WebSocket for chat
 setupChatSocket(io);
+setupDiscussionSocket(io);
 
 // Error handling middleware
 app.use(
