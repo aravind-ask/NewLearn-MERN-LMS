@@ -10,14 +10,14 @@ export class DiscussionRepository implements IDiscussionRepository {
       lectureId: new mongoose.Types.ObjectId(lectureId),
     })
       .populate("userId", "name")
-      .lean(); // Convert to plain objects
+      .lean();
   }
 
   async createDiscussion(
     discussion: Partial<IDiscussion>
   ): Promise<IDiscussion> {
     const createdDiscussion = await Discussion.create(discussion);
-    return createdDiscussion.toObject(); // Convert to plain object
+    return createdDiscussion.toObject();
   }
 
   async getDiscussionById(discussionId: string): Promise<IDiscussion> {
@@ -25,7 +25,7 @@ export class DiscussionRepository implements IDiscussionRepository {
       new mongoose.Types.ObjectId(discussionId)
     )
       .populate("userId", "name")
-      .lean(); // Convert to plain object
+      .lean();
     if (!discussion) throw new NotFoundError("Discussion not found");
     return discussion;
   }
@@ -35,13 +35,59 @@ export class DiscussionRepository implements IDiscussionRepository {
       discussionId: new mongoose.Types.ObjectId(discussionId),
     })
       .populate("userId", "name")
-      .lean(); // Convert to plain objects
+      .lean();
 
-    return comments as IComment[]; // Explicitly cast to IComment[]
+    return comments as IComment[];
   }
 
   async createComment(comment: Partial<IComment>): Promise<IComment> {
     const createdComment = await Comment.create(comment);
-    return createdComment.toObject(); // Convert to plain object
+    return createdComment.toObject();
+  }
+
+  async editDiscussion(
+    discussionId: string,
+    topic: string
+  ): Promise<IDiscussion> {
+    const discussion = await Discussion.findByIdAndUpdate(
+      new mongoose.Types.ObjectId(discussionId),
+      { topic, updatedAt: new Date() },
+      { new: true }
+    )
+      .populate("userId", "name")
+      .lean();
+    if (!discussion) throw new NotFoundError("Discussion not found");
+    return discussion;
+  }
+
+  async deleteDiscussion(discussionId: string): Promise<void> {
+    const result = await Discussion.findByIdAndDelete(
+      new mongoose.Types.ObjectId(discussionId)
+    );
+    if (!result) throw new NotFoundError("Discussion not found");
+    await Comment.deleteMany({
+      discussionId: new mongoose.Types.ObjectId(discussionId),
+    });
+  }
+
+  async editComment(commentId: string, content: string): Promise<IComment> {
+    const comment = await Comment.findByIdAndUpdate(
+      new mongoose.Types.ObjectId(commentId),
+      { content, updatedAt: new Date() },
+      { new: true }
+    )
+      .populate("userId", "name")
+      .lean();
+    if (!comment) throw new NotFoundError("Comment not found");
+    return comment as IComment;
+  }
+
+  async deleteComment(commentId: string): Promise<{ discussionId: string }> {
+    const comment = await Comment.findById(
+      new mongoose.Types.ObjectId(commentId)
+    ).lean();
+    if (!comment) throw new NotFoundError("Comment not found");
+    await Comment.findByIdAndDelete(new mongoose.Types.ObjectId(commentId));
+    return { discussionId: comment.discussionId.toString() };
   }
 }

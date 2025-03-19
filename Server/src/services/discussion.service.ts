@@ -3,6 +3,7 @@ import { IComment, Comment } from "../models/Comment";
 import mongoose from "mongoose";
 import { IDiscussionRepository } from "../repositories/interfaces/IDiscussionRepository";
 import { IDiscussionService } from "./interfaces/IDiscussionService";
+import { ForbiddenError } from "../utils/customError";
 
 export class DiscussionService implements IDiscussionService {
   constructor(private discussionRepository: IDiscussionRepository) {}
@@ -65,5 +66,58 @@ export class DiscussionService implements IDiscussionService {
       userId: new mongoose.Types.ObjectId(comment.userId),
       content: comment.content,
     });
+  }
+
+  async editDiscussion(
+    discussionId: string,
+    userId: string,
+    topic: string
+  ): Promise<IDiscussion> {
+    const discussion = await this.discussionRepository.getDiscussionById(
+      discussionId
+    );
+    if (discussion.userId._id.toString() !== userId) {
+      throw new ForbiddenError("You can only edit your own discussions");
+    }
+    return await this.discussionRepository.editDiscussion(discussionId, topic);
+  }
+
+  async deleteDiscussion(discussionId: string, userId: string): Promise<void> {
+    const discussion = await this.discussionRepository.getDiscussionById(
+      discussionId
+    );
+    if (discussion.userId._id.toString() !== userId) {
+      throw new ForbiddenError("You can only delete your own discussions");
+    }
+    await this.discussionRepository.deleteDiscussion(discussionId);
+  }
+
+  async editComment(
+    commentId: string,
+    userId: string,
+    content: string
+  ): Promise<IComment> {
+    const comment = await Comment.findById(
+      new mongoose.Types.ObjectId(commentId)
+    ).lean();
+    if (!comment) throw new Error("Comment not found");
+    if (comment.userId.toString() !== userId) {
+      throw new ForbiddenError("You can only edit your own comments");
+    }
+    return await this.discussionRepository.editComment(commentId, content);
+  }
+
+  async deleteComment(
+    commentId: string,
+    userId: string
+  ): Promise<{ discussionId: string }> {
+    const comment = await Comment.findById(
+      new mongoose.Types.ObjectId(commentId)
+    ).lean();
+    if (!comment) throw new Error("Comment not found");
+    if (comment.userId.toString() !== userId) {
+      throw new ForbiddenError("You can only delete your own comments");
+    }
+    return await this.discussionRepository.deleteComment(commentId);
   }
 }

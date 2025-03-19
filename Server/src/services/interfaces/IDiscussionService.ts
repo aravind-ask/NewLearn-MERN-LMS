@@ -19,4 +19,19 @@ export interface IDiscussionService {
     userId: string;
     content: string;
   }): Promise<IComment>;
+  editDiscussion(
+    discussionId: string,
+    userId: string,
+    topic: string
+  ): Promise<IDiscussion>;
+  deleteDiscussion(discussionId: string, userId: string): Promise<void>;
+  editComment(
+    commentId: string,
+    userId: string,
+    content: string
+  ): Promise<IComment>;
+  deleteComment(
+    commentId: string,
+    userId: string
+  ): Promise<{ discussionId: string }>;
 }

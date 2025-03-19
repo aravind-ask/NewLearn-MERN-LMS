@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 interface DiscussionState {
   discussions: Array<{
     _id: string;
-    lectureId: string; // Changed from courseId
+    lectureId: string;
     userId: { _id: string; name: string };
     topic: string;
     createdAt: string;
@@ -46,6 +46,38 @@ const discussionSlice = createSlice({
         state.currentDiscussion.comments.push(action.payload);
       }
     },
+    editDiscussion: (state, action) => {
+      const { _id, topic } = action.payload;
+      const index = state.discussions.findIndex((d) => d._id === _id);
+      if (index !== -1) state.discussions[index].topic = topic;
+      if (state.currentDiscussion?._id === _id)
+        state.currentDiscussion!.topic = topic;
+    },
+    deleteDiscussion: (state, action) => {
+      const discussionId = action.payload;
+      state.discussions = state.discussions.filter(
+        (d) => d._id !== discussionId
+      );
+      if (state.currentDiscussion?._id === discussionId)
+        state.currentDiscussion = null;
+    },
+    editComment: (state, action) => {
+      const { _id, content } = action.payload;
+      if (state.currentDiscussion) {
+        const commentIndex = state.currentDiscussion.comments.findIndex(
+          (c) => c._id === _id
+        );
+        if (commentIndex !== -1)
+          state.currentDiscussion.comments[commentIndex].content = content;
+      }
+    },
+    deleteComment: (state, action) => {
+      const commentId = action.payload;
+      if (state.currentDiscussion) {
+        state.currentDiscussion.comments =
+          state.currentDiscussion.comments.filter((c) => c._id !== commentId);
+      }
+    },
   },
 });
 
@@ -54,5 +86,9 @@ export const {
   addDiscussion,
   setCurrentDiscussion,
   addComment,
+  editDiscussion,
+  deleteDiscussion,
+  editComment,
+  deleteComment,
 } = discussionSlice.actions;
 export default discussionSlice.reducer;

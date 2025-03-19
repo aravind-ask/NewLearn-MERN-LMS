@@ -8,4 +8,8 @@ export interface IDiscussionRepository {
   getDiscussionById(discussionId: string): Promise<IDiscussion>;
   getCommentsByDiscussion(discussionId: string): Promise<IComment[]>;
   createComment(comment: Partial<IComment>): Promise<IComment>;
+  editDiscussion(discussionId: string, topic: string): Promise<IDiscussion>;
+  deleteDiscussion(discussionId: string): Promise<void>;
+  editComment(commentId: string, content: string): Promise<IComment>;
+  deleteComment(commentId: string): Promise<{ discussionId: string }>;
 }

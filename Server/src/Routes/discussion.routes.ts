@@ -30,5 +30,25 @@ router.post(
   authMiddleware.verifyAccessToken,
   discussionController.createComment.bind(discussionController)
 );
+router.put(
+  "/edit",
+  authMiddleware.verifyAccessToken,
+  discussionController.editDiscussion.bind(discussionController)
+);
+router.delete(
+  "/:discussionId",
+  authMiddleware.verifyAccessToken,
+  discussionController.deleteDiscussion.bind(discussionController)
+);
+router.put(
+  "/comment/edit",
+  authMiddleware.verifyAccessToken,
+  discussionController.editComment.bind(discussionController)
+);
+router.delete(
+  "/comment/:commentId",
+  authMiddleware.verifyAccessToken,
+  discussionController.deleteComment.bind(discussionController)
+);
 
 export default router;

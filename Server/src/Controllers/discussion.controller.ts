@@ -74,4 +74,87 @@ export class DiscussionController {
       errorResponse(res, error);
     }
   }
+
+  async editDiscussion(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { discussionId, topic } = req.body;
+      const userId = req.user?.id;
+      if (!discussionId || !topic || !userId)
+        throw new BadRequestError("Missing required fields");
+      const updatedDiscussion = await this.discussionService.editDiscussion(
+        discussionId,
+        userId,
+        topic
+      );
+      successResponse(
+        res,
+        updatedDiscussion,
+        "Discussion updated successfully"
+      );
+      const io = req.app.get("io");
+      io.to(`lecture_${updatedDiscussion.lectureId}`).emit(
+        "editDiscussion",
+        updatedDiscussion
+      );
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async deleteDiscussion(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { discussionId } = req.params;
+      const userId = req.user?.id;
+      if (!discussionId || !userId)
+        throw new BadRequestError("Missing required fields");
+      await this.discussionService.deleteDiscussion(discussionId, userId);
+      successResponse(res, null, "Discussion deleted successfully");
+      const io = req.app.get("io");
+      io.to(`discussion_${discussionId}`).emit("deleteDiscussion", {
+        discussionId,
+      });
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async editComment(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { commentId, content } = req.body;
+      const userId = req.user?.id;
+      if (!commentId || !content || !userId)
+        throw new BadRequestError("Missing required fields");
+      const updatedComment = await this.discussionService.editComment(
+        commentId,
+        userId,
+        content
+      );
+      successResponse(res, updatedComment, "Comment updated successfully");
+      const io = req.app.get("io");
+      io.to(`discussion_${updatedComment.discussionId}`).emit(
+        "editComment",
+        updatedComment
+      );
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async deleteComment(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { commentId } = req.params;
+      const userId = req.user?.id;
+      if (!commentId || !userId)
+        throw new BadRequestError("Missing required fields");
+      const { discussionId } = await this.discussionService.deleteComment(
+        commentId,
+        userId
+      );
+      successResponse(res, null, "Comment deleted successfully");
+      const io = req.app.get("io");
+      io.to(`discussion_${discussionId}`).emit("deleteComment", { commentId });
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
 }
