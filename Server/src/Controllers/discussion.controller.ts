@@ -107,10 +107,13 @@ export class DiscussionController {
       const userId = req.user?.id;
       if (!discussionId || !userId)
         throw new BadRequestError("Missing required fields");
+      const discussion = await this.discussionService.getDiscussionById(
+        discussionId
+      );
       await this.discussionService.deleteDiscussion(discussionId, userId);
       successResponse(res, null, "Discussion deleted successfully");
       const io = req.app.get("io");
-      io.to(`discussion_${discussionId}`).emit("deleteDiscussion", {
+      io.to(`lecture_${discussion.lectureId}`).emit("deleteDiscussion", {
         discussionId,
       });
     } catch (error) {

@@ -1,4 +1,3 @@
-// src/components/Discussions.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -51,7 +50,9 @@ import {
 
 export default function Discussions({ lectureId }) {
   const { user } = useSelector((state: RootState) => state.auth);
-  const { discussions } = useSelector((state: RootState) => state.discussion);
+  const { discussions, currentDiscussion } = useSelector(
+    (state: RootState) => state.discussion
+  );
   const dispatch = useDispatch();
   const [topic, setTopic] = useState("");
   const [expandedDiscussionId, setExpandedDiscussionId] = useState<
@@ -86,19 +87,27 @@ export default function Discussions({ lectureId }) {
 
   // Socket.IO listeners
   useEffect(() => {
+    if (!socket.connected) {
+      console.error("Socket not connected!");
+      socket.connect();
+    }
+    console.log("Joining lecture room:", `lecture_${lectureId}`);
     socket.emit("joinLectureRoom", { lectureId });
     socket.on("newDiscussion", (newDiscussion) => {
+      console.log("Received newDiscussion:", newDiscussion);
       if (newDiscussion.lectureId === lectureId) {
         dispatch(addDiscussion(newDiscussion));
         scrollDiscussionsToTop();
       }
     });
     socket.on("editDiscussion", (updatedDiscussion) => {
+      console.log("Received editDiscussion:", updatedDiscussion);
       if (updatedDiscussion.lectureId === lectureId) {
         dispatch(editDiscussion(updatedDiscussion));
       }
     });
     socket.on("deleteDiscussion", ({ discussionId }) => {
+      console.log("Received deleteDiscussion:", discussionId);
       dispatch(deleteDiscussion(discussionId));
     });
 
@@ -111,19 +120,24 @@ export default function Discussions({ lectureId }) {
 
   useEffect(() => {
     if (expandedDiscussionId) {
+      console.log(
+        "Joining discussion room:",
+        `discussion_${expandedDiscussionId}`
+      );
       socket.emit("joinDiscussionRoom", { discussionId: expandedDiscussionId });
       socket.on("newComment", (newComment) => {
+        console.log("Received newComment:", newComment);
+        dispatch(addComment(newComment));
         if (newComment.discussionId === expandedDiscussionId) {
-          dispatch(addComment(newComment));
           scrollToBottom(expandedDiscussionId);
         }
       });
       socket.on("editComment", (updatedComment) => {
-        if (updatedComment.discussionId === expandedDiscussionId) {
-          dispatch(editComment(updatedComment));
-        }
+        console.log("Received editComment:", updatedComment);
+        dispatch(editComment(updatedComment));
       });
       socket.on("deleteComment", ({ commentId }) => {
+        console.log("Received deleteComment:", commentId);
         dispatch(deleteComment(commentId));
       });
 
@@ -250,6 +264,18 @@ export default function Discussions({ lectureId }) {
     );
   };
 
+  // Get comments for rendering
+  const getCommentsForDiscussion = (discussionId: string) => {
+    if (
+      expandedDiscussionId === discussionId &&
+      currentDiscussion?._id === discussionId
+    ) {
+      return currentDiscussion.comments; // Use Redux state for real-time updates
+    }
+    const discussion = discussions.find((d) => d._id === discussionId);
+    return discussion ? discussion.comments : [];
+  };
+
   return (
     <Card className="shadow-xl rounded-xl border border-gray-200 bg-white h-[600px] flex flex-col">
       <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-6 flex-shrink-0">
@@ -282,6 +308,12 @@ export default function Discussions({ lectureId }) {
           className="flex-1 bg-gray-50 rounded-lg border border-gray-200"
         >
           <Accordion type="single" collapsible className="space-y-4 p-4">
+            {console.log(
+              "Rendering discussions:",
+              discussions,
+              "Current:",
+              currentDiscussion
+            )}
             {discussions.length === 0 ? (
               <p className="text-gray-500 text-center italic">
                 No discussions yet. Start one above!
@@ -291,7 +323,7 @@ export default function Discussions({ lectureId }) {
                 <AccordionItem
                   key={discussion._id}
                   value={discussion._id}
-                  className="border border-gray-200 rounded-lg shadow-sm мониторингshadow-sm hover:shadow-md transition-shadow duration-200"
+                  className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
                   <AccordionTrigger
                     onClick={() => handleToggleThread(discussion._id)}
@@ -345,105 +377,102 @@ export default function Discussions({ lectureId }) {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-white">
-                    {expandedDiscussionId === discussion._id &&
-                      currentDiscussionData?.data && (
-                        <div className="flex flex-col gap-4">
-                          <ScrollArea
-                            ref={(el) =>
-                              (scrollAreaRefs.current[discussion._id] = el)
-                            }
-                            className="h-[200px] p-4 bg-gray-50 rounded-lg border border-gray-200"
-                          >
-                            <div className="space-y-4">
-                              {currentDiscussionData.data.comments.length ===
-                              0 ? (
-                                <p className="text-gray-500 text-center italic">
-                                  No comments yet.
-                                </p>
-                              ) : (
-                                currentDiscussionData.data.comments.map(
-                                  (comment) => (
-                                    <div
-                                      key={comment._id}
-                                      className="p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors duration-200 flex justify-between items-start"
-                                    >
-                                      <div>
-                                        <p className="text-sm text-gray-800">
-                                          {comment.content}
-                                        </p>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                          {comment.userId.name} •{" "}
-                                          {new Date(
-                                            comment.createdAt
-                                          ).toLocaleString([], {
-                                            dateStyle: "short",
-                                            timeStyle: "short",
-                                          })}
-                                        </div>
+                    {expandedDiscussionId === discussion._id && (
+                      <div className="flex flex-col gap-4">
+                        <ScrollArea
+                          ref={(el) =>
+                            (scrollAreaRefs.current[discussion._id] = el)
+                          }
+                          className="h-[200px] p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <div className="space-y-4">
+                            {getCommentsForDiscussion(discussion._id).length ===
+                            0 ? (
+                              <p className="text-gray-500 text-center italic">
+                                No comments yet.
+                              </p>
+                            ) : (
+                              getCommentsForDiscussion(discussion._id).map(
+                                (comment) => (
+                                  <div
+                                    key={comment._id}
+                                    className="p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors duration-200 flex justify-between items-start"
+                                  >
+                                    <div>
+                                      <p className="text-sm text-gray-800">
+                                        {comment.content}
+                                      </p>
+                                      <div className="text-xs text-gray-500 mt-1">
+                                        {comment.userId.name} •{" "}
+                                        {new Date(
+                                          comment.createdAt
+                                        ).toLocaleString([], {
+                                          dateStyle: "short",
+                                          timeStyle: "short",
+                                        })}
                                       </div>
-                                      {comment.userId._id === user?.id && (
-                                        <div className="flex gap-2">
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => {
-                                              setEditCommentId(comment._id);
-                                              setEditCommentContent(
-                                                comment.content
-                                              );
-                                            }}
-                                            className="text-gray-600 hover:text-teal-500"
-                                          >
-                                            <Edit className="h-4 w-4" />
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                              setDeleteDialog({
-                                                type: "comment",
-                                                id: comment._id,
-                                              })
-                                            }
-                                            className="text-gray-600 hover:text-red-500"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </div>
-                                      )}
                                     </div>
-                                  )
+                                    {comment.userId._id === user?.id && (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            setEditCommentId(comment._id);
+                                            setEditCommentContent(
+                                              comment.content
+                                            );
+                                          }}
+                                          className="text-gray-600 hover:text-teal-500"
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            setDeleteDialog({
+                                              type: "comment",
+                                              id: comment._id,
+                                            })
+                                          }
+                                          className="text-gray-600 hover:text-red-500"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
                                 )
-                              )}
-                            </div>
-                          </ScrollArea>
-                          <div className="flex gap-3">
-                            <Input
-                              value={commentInputs[discussion._id] || ""}
-                              onChange={(e) =>
-                                setCommentInputs((prev) => ({
-                                  ...prev,
-                                  [discussion._id]: e.target.value,
-                                }))
-                              }
-                              placeholder="Add a comment..."
-                              className="rounded-full border-gray-300 shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-800 placeholder-gray-500"
-                              onKeyPress={(e) =>
-                                e.key === "Enter" &&
-                                handleCreateComment(discussion._id)
-                              }
-                            />
-                            <Button
-                              onClick={() =>
-                                handleCreateComment(discussion._id)
-                              }
-                              className="rounded-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white shadow-md transition-all duration-300"
-                            >
-                              Comment
-                            </Button>
+                              )
+                            )}
                           </div>
+                        </ScrollArea>
+                        <div className="flex gap-3">
+                          <Input
+                            value={commentInputs[discussion._id] || ""}
+                            onChange={(e) =>
+                              setCommentInputs((prev) => ({
+                                ...prev,
+                                [discussion._id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Add a comment..."
+                            className="rounded-full border-gray-300 shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-800 placeholder-gray-500"
+                            onKeyPress={(e) =>
+                              e.key === "Enter" &&
+                              handleCreateComment(discussion._id)
+                            }
+                          />
+                          <Button
+                            onClick={() => handleCreateComment(discussion._id)}
+                            className="rounded-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white shadow-md transition-all duration-300"
+                          >
+                            Comment
+                          </Button>
                         </div>
-                      )}
+                      </div>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               ))
