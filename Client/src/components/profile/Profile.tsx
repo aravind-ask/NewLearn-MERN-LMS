@@ -110,7 +110,7 @@ const Profile = () => {
           {/* Profile Picture */}
           <div className="flex flex-col items-center">
             <img
-              src={formData.photoUrl || "/default-avatar.png"}
+              src={formData.key || "/default-avatar.png"}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />

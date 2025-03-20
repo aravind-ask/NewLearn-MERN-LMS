@@ -14,7 +14,7 @@ const Footer = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-gray-900 text-gray-200 py-12 px-4 lg:px-8">
+    <footer className="bg-gray-900 text-gray-200 py-12 px-4 lg:px-8 mt-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Company Info */}
         <div className="space-y-4">

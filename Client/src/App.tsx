@@ -27,6 +27,8 @@ import MyLearnings from "./components/profile/MyLearnings";
 import Certificates from "./components/profile/MyCertificates";
 import Footer from "./components/Footer";
 import VerifyCertificate from "./pages/VerifyCertificate";
+import AboutPage from "./pages/AboutUSPage";
+import ContactUsPage from "./pages/ContactUsPAge";
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact-us" element={<ContactUsPage />} />
           <Route path="/all-courses" element={<AllCourses />} />
           <Route path="/course/:courseId" element={<CourseDetails />} />
           <Route
@@ -103,7 +107,7 @@ function App() {
         </Routes>
         <Toaster />
       </div>
-      {/* <Footer /> */}
+      <Footer />
     </Router>
   );
 }

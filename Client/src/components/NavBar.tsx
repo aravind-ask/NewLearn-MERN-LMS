@@ -101,7 +101,7 @@ export default function Navbar() {
           About
         </Link>
         <Link
-          to="/contact"
+          to="/contact-us"
           className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
         >
           Contact
@@ -231,7 +231,7 @@ export default function Navbar() {
                 About
               </Link>
               <Link
-                to="/contact"
+                to="/contact-us"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
               >
                 <Mail />
