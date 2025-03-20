@@ -1,18 +1,12 @@
-// src/utils/certificateGenerator.ts
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-export const generatePDFCertificate = async ({
+export const generatePDFCertificate = ({
   userName,
   courseTitle,
   completionDate,
   certificateId,
-}: {
-  userName: string;
-  courseTitle: string;
-  completionDate: string | Date;
-  certificateId: string;
-}): Promise<Buffer> => {
+}) => {
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -20,7 +14,7 @@ export const generatePDFCertificate = async ({
   });
 
   // Certificate border
-  doc.setDrawColor(0, 128, 128);
+  doc.setDrawColor(0, 128, 128); // Teal color
   doc.setLineWidth(1);
   doc.rect(10, 10, 277, 190);
 
@@ -64,8 +58,5 @@ export const generatePDFCertificate = async ({
     align: "center",
   });
 
-  // Return as Buffer
-  const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
-  console.log("PDF Buffer length:", pdfBuffer.length); // Debug log
-  return pdfBuffer;
+  return doc.output("blob");
 };

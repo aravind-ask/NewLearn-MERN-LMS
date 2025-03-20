@@ -77,10 +77,9 @@ function EnrolledCourseDetailsPage() {
   const allLecturesViewed =
     totalLectures > 0 && viewedLectures === totalLectures;
 
-  const existingCertificate = certificatesData?.data?.find(
+  const existingCertificate = certificatesData?.find(
     (cert) => cert.courseId === courseId
   );
-  console.log("Exist", existingCertificate);
 
   useEffect(() => {
     if (courseProgressData) {
@@ -136,7 +135,6 @@ function EnrolledCourseDetailsPage() {
       } else {
         const certificateData = {
           userId: user?.id,
-          userName: user?.name,
           courseId: courseId,
           courseTitle: courseProgressData?.data?.courseDetails?.title,
           completionDate: new Date().toISOString(),
@@ -148,10 +146,8 @@ function EnrolledCourseDetailsPage() {
       const pdfBlob = await generatePDFCertificate({
         userName: user?.name,
         courseTitle: courseProgressData?.data?.courseDetails?.title,
-        completionDate:
-          certificate?.data?.completionDate || certificate?.completionDate,
-        certificateId:
-          certificate?.data?.certificateId || certificate?.certificateId,
+        completionDate: certificate.completionDate,
+        certificateId: certificate.certificateId,
       });
 
       const url = window.URL.createObjectURL(pdfBlob);

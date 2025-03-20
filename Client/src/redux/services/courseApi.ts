@@ -102,6 +102,21 @@ export const courseApi = api.injectEndpoints({
       }),
       providesTags: ["Wishlist"],
     }),
+    getCertificates: builder.query({
+      query: (userId) => ({
+        url: `/certificates/${userId}`,
+      }),
+      providesTags: ["Certificates"],
+    }),
+
+    generateCertificate: builder.mutation({
+      query: (certificateData) => ({
+        url: "/certificates",
+        method: "POST",
+        body: certificateData,
+      }),
+      invalidatesTags: ["Certificates"],
+    }),
   }),
 });
 
@@ -118,4 +133,6 @@ export const {
   useRemoveFromWishlistMutation,
   useGetCartQuery,
   useGetWishlistQuery,
+  useGetCertificatesQuery,
+  useGenerateCertificateMutation,
 } = courseApi;
