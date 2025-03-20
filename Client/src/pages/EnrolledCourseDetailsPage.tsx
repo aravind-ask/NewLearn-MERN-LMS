@@ -152,6 +152,8 @@ function EnrolledCourseDetailsPage() {
           certificate?.data?.completionDate || certificate?.completionDate,
         certificateId:
           certificate?.data?.certificateId || certificate?.certificateId,
+        verificationUrl:
+          certificate?.data?.verificationUrl || certificate?.verificationUrl,
       });
 
       const url = window.URL.createObjectURL(pdfBlob);
@@ -420,39 +422,41 @@ function EnrolledCourseDetailsPage() {
         </DialogContent>
       </Dialog>
       <Dialog open={showCourseCompleteDialog}>
-        <DialogContent className="sm:max-w-md bg-white rounded-lg">
+        <DialogContent className="min-w-lg sm:max-w-md bg-white rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-teal-500">
               Congratulations!
             </DialogTitle>
-            <DialogDescription className="space-y-4">
+            <DialogDescription>
               <p>You’ve successfully completed the course!</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={() => navigate("/profile/my-courses")}
-                  className="bg-teal-500 hover:bg-teal-600 text-white"
-                >
-                  My Courses
-                </Button>
-                <Button
-                  onClick={handleRewatchCourse}
-                  variant="outline"
-                  className="border-teal-500 text-teal-500 hover:bg-teal-50"
-                >
-                  Rewatch Course
-                </Button>
-                <Button
-                  onClick={handleCertificateDownload}
-                  variant="outline"
-                  className="border-teal-500 text-teal-500 hover:bg-teal-50"
-                >
-                  {existingCertificate
-                    ? "Download Certificate"
-                    : "Generate Certificate"}
-                </Button>
-              </div>
             </DialogDescription>
           </DialogHeader>
+          <DialogFooter>
+            <div className="flex flex-col sm:flex-row gap-7">
+              <Button
+                onClick={() => navigate("/profile/my-courses")}
+                className="bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                My Courses
+              </Button>
+              <Button
+                onClick={handleRewatchCourse}
+                variant="outline"
+                className="border-teal-500 text-teal-500 hover:bg-teal-50"
+              >
+                Rewatch Course
+              </Button>
+              <Button
+                onClick={handleCertificateDownload}
+                variant="outline"
+                className="border-teal-500 text-teal-500 hover:bg-teal-50"
+              >
+                {existingCertificate
+                  ? "Download Certificate"
+                  : "Generate Certificate"}
+              </Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

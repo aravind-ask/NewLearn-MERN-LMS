@@ -68,4 +68,34 @@ export class CertificateController {
       errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
     }
   }
+
+  async verifyCertificate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { certificateId } = req.params;
+      const certificate = await this.certificateService.verifyCertificate(
+        certificateId
+      );
+
+      if (!certificate) {
+        errorResponse(res, "Certificate not found", HttpStatus.NOT_FOUND);
+        return;
+      }
+
+      successResponse(
+        res,
+        {
+          userId: certificate.userId,
+          userName: certificate.userName,
+          courseTitle: certificate.courseTitle,
+          completionDate: certificate.completionDate,
+          certificateId: certificate.certificateId,
+          verified: true,
+        },
+        "Certificate verified successfully",
+        HttpStatus.OK
+      );
+    } catch (error: any) {
+      errorResponse(res, error, error.status || HttpStatus.BAD_REQUEST);
+    }
+  }
 }

@@ -18,7 +18,6 @@ import { Download, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -34,8 +33,7 @@ const Certificates = () => {
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [showCertificateDialog, setShowCertificateDialog] = useState(false);
 
-
-  const certificates = certificatesData?.data
+  const certificates = certificatesData?.data;
 
   const handleDownloadCertificate = async (certificate) => {
     try {
@@ -44,6 +42,7 @@ const Certificates = () => {
         courseTitle: certificate.courseTitle,
         completionDate: certificate.completionDate,
         certificateId: certificate.certificateId,
+        verificationUrl: certificate.verificationUrl,
       });
 
       const url = window.URL.createObjectURL(pdfBlob);
@@ -151,6 +150,7 @@ const Certificates = () => {
                   courseTitle={selectedCertificate.courseTitle}
                   completionDate={selectedCertificate.completionDate}
                   certificateId={selectedCertificate.certificateId}
+                  verificationUrl={selectedCertificate.verificationUrl}
                 />
               )}
             </div>

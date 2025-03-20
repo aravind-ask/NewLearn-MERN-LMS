@@ -26,6 +26,7 @@ import Profile from "./components/profile/Profile";
 import MyLearnings from "./components/profile/MyLearnings";
 import Certificates from "./components/profile/MyCertificates";
 import Footer from "./components/Footer";
+import VerifyCertificate from "./pages/VerifyCertificate";
 
 function App() {
   return (
@@ -37,6 +38,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/all-courses" element={<AllCourses />} />
           <Route path="/course/:courseId" element={<CourseDetails />} />
+          <Route
+            path="/verify-certificate/:certificateId"
+            element={<VerifyCertificate />}
+          />
 
           {/* Auth Routes (Login/Signup) */}
           <Route element={<AuthGuard />}>

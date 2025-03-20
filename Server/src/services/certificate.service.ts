@@ -36,4 +36,8 @@ export class CertificateService implements ICertificateService {
       courseId
     );
   }
+
+  async verifyCertificate(certificateId: string): Promise<ICertificate | null> {
+    return await this.certificateRepository.findByCertificateId(certificateId);
+  }
 }

@@ -1,11 +1,13 @@
 // src/components/CertificatePreview.tsx
 import { FC } from "react";
+import QRCode from "react-qr-code";
 
 interface CertificatePreviewProps {
   userName: string;
   courseTitle: string;
   completionDate: string;
   certificateId: string;
+  verificationUrl: string;
 }
 
 const CertificatePreview: FC<CertificatePreviewProps> = ({
@@ -13,6 +15,7 @@ const CertificatePreview: FC<CertificatePreviewProps> = ({
   courseTitle,
   completionDate,
   certificateId,
+  verificationUrl,
 }) => {
   return (
     <div className="w-full max-w-[842px] h-[595px] bg-white border-4 border-teal-600 p-8 flex flex-col justify-between shadow-lg relative">
@@ -34,14 +37,22 @@ const CertificatePreview: FC<CertificatePreviewProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="text-center space-y-2">
-        <p className="text-sm text-gray-600">
-          Completed on: {new Date(completionDate).toLocaleDateString()}
-        </p>
-        <p className="text-sm text-gray-600">Certificate ID: {certificateId}</p>
-        <p className="text-xs text-gray-500">
-          Issued by: NewLearning Pvt ltd.
-        </p>
+      <div className="flex justify-between items-end">
+        <div className="text-left">
+          <QRCode value={verificationUrl} size={100} />
+          <p className="text-xs text-gray-600 mt-2">Scan to verify</p>
+        </div>
+        <div className="text-right space-y-2">
+          <p className="text-sm text-gray-600">
+            Completed on: {new Date(completionDate).toLocaleDateString()}
+          </p>
+          <p className="text-sm text-gray-600">
+            Certificate ID: {certificateId}
+          </p>
+          <p className="text-xs text-gray-500">
+            Issued by: NewLearn Pvt Ltd.
+          </p>
+        </div>
       </div>
     </div>
   );

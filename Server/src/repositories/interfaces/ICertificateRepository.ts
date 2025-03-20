@@ -9,4 +9,5 @@ export interface ICertificateRepository {
     userId: string,
     courseId: string
   ): Promise<ICertificate | null>;
+  findByCertificateId(certificateId: string): Promise<ICertificate | null>;
 }

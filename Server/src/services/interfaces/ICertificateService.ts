@@ -9,4 +9,5 @@ export interface ICertificateService {
     userId: string,
     courseId: string
   ): Promise<ICertificate | null>;
+  verifyCertificate(certificateId: string): Promise<ICertificate | null>;
 }

@@ -24,4 +24,9 @@ router.get(
   certificateController.getUserCertificates.bind(certificateController)
 );
 
+router.get(
+  "/verify/:certificateId",
+  certificateController.verifyCertificate.bind(certificateController)
+);
+
 export default router;

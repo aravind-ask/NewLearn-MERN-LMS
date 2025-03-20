@@ -8,6 +8,7 @@ export interface ICertificate extends Document {
   courseTitle: string;
   completionDate: Date;
   certificateId: string;
+  verificationUrl: string; 
   createdAt: Date;
 }
 
@@ -18,6 +19,7 @@ const CertificateSchema: Schema = new Schema({
   courseTitle: { type: String, required: true },
   completionDate: { type: Date, required: true },
   certificateId: { type: String, required: true, unique: true },
+  verificationUrl: { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now },
 });
 

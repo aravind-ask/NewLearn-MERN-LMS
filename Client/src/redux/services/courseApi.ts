@@ -108,7 +108,6 @@ export const courseApi = api.injectEndpoints({
       }),
       providesTags: ["Certificates"],
     }),
-
     generateCertificate: builder.mutation({
       query: (certificateData) => ({
         url: "/certificates",
@@ -116,6 +115,11 @@ export const courseApi = api.injectEndpoints({
         body: certificateData,
       }),
       invalidatesTags: ["Certificates"],
+    }),
+    verifyCertificate: builder.query({
+      query: (certificateId) => ({
+        url: `/certificates/verify/${certificateId}`,
+      }),
     }),
   }),
 });
@@ -135,4 +139,5 @@ export const {
   useGetWishlistQuery,
   useGetCertificatesQuery,
   useGenerateCertificateMutation,
+  useVerifyCertificateQuery,
 } = courseApi;
