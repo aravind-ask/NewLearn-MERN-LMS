@@ -47,7 +47,8 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null); // Ref for EmojiPicker
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
 
   const { data: conversation, refetch } = useGetConversationQuery({
     courseId,
@@ -182,7 +183,37 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   };
 
   const handleSendMessage = async () => {
-    if (!courseId || !trainerId || (!message.trim() && !file)) return;
+    if (
+      !courseId ||
+      !trainerId ||
+      (!message.trim() && !file && !editingMessageId)
+    )
+      return;
+
+    if (editingMessageId) {
+      try {
+        const updatedMessage = await editMessage({
+          messageId: editingMessageId,
+          message: message,
+          mediaUrl: messages.find((msg) => msg._id === editingMessageId)
+            ?.mediaUrl,
+        }).unwrap();
+        const enrichedMessage = {
+          ...updatedMessage.data,
+          courseTitle,
+          senderName: user?.name,
+          role: "student",
+        };
+        dispatch(addMessage(enrichedMessage));
+        socket.emit("editMessage", enrichedMessage);
+        setEditingMessageId(null);
+        setMessage("");
+        refetch();
+      } catch (error) {
+        console.error("Failed to edit message:", error);
+      }
+      return;
+    }
 
     let mediaUrl: string | undefined;
     if (file) {
@@ -230,9 +261,13 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
 
   const handleEditMessage = (msg: Message) => {
     setEditingMessageId(msg._id);
-    setEditedMessage(msg.message);
+    setMessage(msg.message);
   };
 
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setMessage("");
+  };
   const handleSaveEdit = async (
     messageId: string,
     currentMediaUrl?: string
@@ -262,13 +297,23 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
+    setShowDeleteModal(messageId);
+  };
+
+  // New confirmDelete Function
+  const confirmDelete = async () => {
+    if (!showDeleteModal) return;
     try {
-      const deletedMessage = await deleteMessage({ messageId }).unwrap();
+      const deletedMessage = await deleteMessage({
+        messageId: showDeleteModal,
+      }).unwrap();
       dispatch(addMessage(deletedMessage.data));
       socket.emit("deleteMessage", deletedMessage.data);
       refetch();
     } catch (error) {
       console.error("Failed to delete message:", error);
+    } finally {
+      setShowDeleteModal(null);
     }
   };
 
@@ -279,66 +324,27 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   const renderMessageContent = (msg: Message) => (
     <div className="relative group">
       {msg.senderId === user?.id && !msg.isDeleted && (
-        <div className="absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute -top-10 right-0 flex items-center gap-1 bg-gray-800 bg-opacity-75 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-6 w-6 text-white hover:bg-gray-700 rounded-full"
             onClick={() => handleEditMessage(msg)}
           >
-            <Edit className="w-4 h-4 text-gray-500" />
+            <Edit className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-6 w-6 text-white hover:bg-gray-700 rounded-full"
             onClick={() => handleDeleteMessage(msg._id)}
           >
-            <Trash className="w-4 h-4 text-gray-500" />
+            <Trash className="w-4 h-4" />
           </Button>
         </div>
       )}
       {msg.isDeleted ? (
         <p className="text-sm italic text-gray-500">This message was deleted</p>
-      ) : editingMessageId === msg._id ? (
-        <div className="flex flex-col gap-2">
-          {msg.mediaUrl &&
-            (msg.mediaUrl.match(/\.(mp4|webm|ogg)$/) ? (
-              <video controls className="max-w-xs rounded-lg">
-                <source
-                  src={msg.mediaUrl}
-                  type={`video/${msg.mediaUrl.split(".").pop()}`}
-                />
-              </video>
-            ) : (
-              <img
-                src={msg.mediaUrl}
-                alt="Chat media"
-                className="max-w-xs rounded-lg"
-              />
-            ))}
-          <Input
-            value={editedMessage}
-            onChange={(e) => setEditedMessage(e.target.value)}
-            className="w-full bg-white border-gray-300 rounded-lg"
-            onKeyPress={(e) =>
-              e.key === "Enter" && handleSaveEdit(msg._id, msg.mediaUrl)
-            }
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => handleSaveEdit(msg._id, msg.mediaUrl)}
-            >
-              Save
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditingMessageId(null)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
       ) : (
         <>
           {msg.mediaUrl &&
@@ -412,7 +418,7 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             ))}
           </div>
         </ScrollArea>
-        <div className="p-4 bg-white border-t border-gray-200 flex flex-col gap-3 shrink-0 relative">
+        <div className="p-4 bg-white border-t border-gray-200 flex flex-col gap-3 shrink-0">
           {previewUrl && (
             <div className="relative max-w-[200px]">
               {file?.type.startsWith("video") ? (
@@ -445,26 +451,29 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             >
               <Smile className="h-5 w-5 text-gray-500" />
             </Button>
-            {showEmojiPicker && (
-              <div
-                ref={emojiPickerRef}
-                className="absolute z-10 bottom-full mb-2"
-                style={{
-                  left: emojiButtonRef.current?.getBoundingClientRect().left
-                    ? `${emojiButtonRef.current.getBoundingClientRect().left}px`
-                    : "0px",
-                }}
-              >
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
-              </div>
-            )}
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500"
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            />
+            <div className="relative flex-1">
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder={
+                  editingMessageId
+                    ? "Edit your message..."
+                    : "Type a message..."
+                }
+                className="w-full border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 pr-10"
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              />
+              {editingMessageId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500 hover:text-gray-700"
+                  onClick={handleCancelEdit}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <Input
               type="file"
               accept="image/*,video/*"
@@ -481,14 +490,42 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             </Button>
             <Button
               onClick={handleSendMessage}
-              disabled={!message.trim() && !file}
+              disabled={!message.trim() && !file && !editingMessageId}
               className="rounded-full bg-blue-500 hover:bg-blue-600 text-white"
             >
-              Send
+              {editingMessageId ? "Save" : "Send"}
             </Button>
           </div>
         </div>
       </CardContent>
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Delete Message
+            </h3>
+            <p className="text-sm text-gray-600 mt-2">
+              Are you sure you want to delete this message?
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteModal(null)}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
