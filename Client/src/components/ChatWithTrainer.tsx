@@ -60,7 +60,6 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   const [deleteMessage] = useDeleteMessageMutation();
   const [getPresignedUrl] = useGetPresignedUrlMutation();
 
-  // Close emoji picker on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -268,39 +267,11 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
     setEditingMessageId(null);
     setMessage("");
   };
-  const handleSaveEdit = async (
-    messageId: string,
-    currentMediaUrl?: string
-  ) => {
-    if (!editedMessage.trim() && !currentMediaUrl) return;
-
-    try {
-      const updatedMessage = await editMessage({
-        messageId,
-        message: editedMessage,
-        mediaUrl: currentMediaUrl,
-      }).unwrap();
-      const enrichedMessage = {
-        ...updatedMessage.data,
-        courseTitle,
-        senderName: user?.name,
-        role: "student",
-      };
-      dispatch(addMessage(enrichedMessage));
-      socket.emit("editMessage", enrichedMessage);
-      setEditingMessageId(null);
-      setEditedMessage("");
-      refetch();
-    } catch (error) {
-      console.error("Failed to edit message:", error);
-    }
-  };
 
   const handleDeleteMessage = async (messageId: string) => {
     setShowDeleteModal(messageId);
   };
 
-  // New confirmDelete Function
   const confirmDelete = async () => {
     if (!showDeleteModal) return;
     try {
@@ -442,7 +413,9 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
               </Button>
             </div>
           )}
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center relative">
+            {" "}
+            {/* Added relative here */}
             <Button
               variant="ghost"
               size="icon"
@@ -451,6 +424,15 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             >
               <Smile className="h-5 w-5 text-gray-500" />
             </Button>
+            {showEmojiPicker && (
+              <div
+                ref={emojiPickerRef}
+                className="absolute z-60 bottom-full mb-2 left-0" // Increased z-index to 60, simplified left
+                style={{ width: "300px" }} // Optional: Set a fixed width for consistency
+              >
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
             <div className="relative flex-1">
               <Input
                 value={message}
@@ -499,7 +481,7 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
         </div>
       </CardContent>
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
             <h3 className="text-lg font-semibold text-gray-800">
               Delete Message
