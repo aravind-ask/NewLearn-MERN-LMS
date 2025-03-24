@@ -1,4 +1,3 @@
-// sockets/discussion.socket.ts
 import { Server } from "socket.io";
 
 export function setupDiscussionSocket(io: Server) {
@@ -6,7 +5,6 @@ export function setupDiscussionSocket(io: Server) {
     console.log("User connected to discussion socket:", socket.id);
 
     socket.on("joinLectureRoom", ({ lectureId }) => {
-      // Changed from joinCourseRoom
       socket.join(`lecture_${lectureId}`);
       console.log(`User joined lecture room: lecture_${lectureId}`);
     });

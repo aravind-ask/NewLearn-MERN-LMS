@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import { ChatService } from "../services/chat.service";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 import { BadRequestError } from "../utils/customError";
+import { IChatService } from "../services/interfaces/IChatService";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };
 }
 
 export class ChatController {
-  constructor(private chatService: ChatService) {}
+  constructor(private chatService: IChatService) {}
 
   async sendMessage(req: AuthenticatedRequest, res: Response) {
     try {
-      const { courseId, recipientId, message } = req.body;
+      const { courseId, recipientId, message, mediaUrl } = req.body;
       const senderId = req.user?.id;
 
-      if (!courseId || !recipientId || !message) {
+      if (!courseId || !recipientId) {
         throw new BadRequestError("Missing required fields");
       }
 
@@ -24,9 +24,68 @@ export class ChatController {
         senderId,
         recipientId,
         message,
+        mediaUrl,
       });
 
       successResponse(res, newMessage, "Message sent successfully");
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async editMessage(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { messageId } = req.params;
+      const { message, mediaUrl } = req.body;
+      const senderId = req.user?.id;
+
+      if (!messageId || (!message && !mediaUrl)) {
+        throw new BadRequestError(
+          "Message ID and at least one field (message or mediaUrl) are required"
+        );
+      }
+
+      const updatedMessage = await this.chatService.editMessage(
+        messageId,
+        senderId,
+        { message, mediaUrl }
+      );
+      const io = req.app.get("io");
+      io.to(`chat_${updatedMessage.courseId}_${updatedMessage.senderId}`).emit(
+        "messageEdited",
+        updatedMessage
+      );
+      io.to(
+        `chat_${updatedMessage.courseId}_${updatedMessage.recipientId}`
+      ).emit("messageEdited", updatedMessage);
+      successResponse(res, updatedMessage, "Message updated successfully");
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async deleteMessage(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { messageId } = req.params;
+      const senderId = req.user?.id;
+
+      if (!messageId) {
+        throw new BadRequestError("Message ID is required");
+      }
+
+      const deletedMessage = await this.chatService.deleteMessage(
+        messageId,
+        senderId
+      );
+      const io = req.app.get("io");
+      io.to(`chat_${deletedMessage.courseId}_${deletedMessage.senderId}`).emit(
+        "messageDeleted",
+        deletedMessage
+      );
+      io.to(
+        `chat_${deletedMessage.courseId}_${deletedMessage.recipientId}`
+      ).emit("messageDeleted", deletedMessage);
+      successResponse(res, deletedMessage, "Message marked as deleted");
     } catch (error) {
       errorResponse(res, error);
     }
@@ -83,8 +142,7 @@ export class ChatController {
       );
       successResponse(res, updatedMessage, "Message marked as read");
 
-      // Notify via Socket.IO
-      const io = req.app.get("io"); // Assuming io is attached to app in server setup
+      const io = req.app.get("io");
       const room = `chat_${updatedMessage.courseId}_${updatedMessage.senderId}`;
       io.to(room).emit("messageRead", updatedMessage);
       console.log(`Emitted messageRead to room ${room}:`, updatedMessage);

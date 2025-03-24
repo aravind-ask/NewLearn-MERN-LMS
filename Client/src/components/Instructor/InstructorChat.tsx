@@ -1,4 +1,3 @@
-// src/components/Instructor/InstructorChat.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -12,9 +11,13 @@ import {
   useGetAllInstructorConversationsQuery,
   useSendMessageMutation,
   useMarkMessageAsReadMutation,
+  useEditMessageMutation,
+  useDeleteMessageMutation,
 } from "@/redux/services/chatApi";
 import { addMessage } from "@/redux/slices/chatSlice";
-import { Eye } from "lucide-react";
+import { Eye, Paperclip, X, Edit, Trash, Smile } from "lucide-react";
+import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
+import EmojiPicker from "emoji-picker-react";
 
 interface ChatPreview {
   courseId: string;
@@ -22,6 +25,7 @@ interface ChatPreview {
   studentId: string;
   studentName: string;
   lastMessage: string;
+  lastMessageTimestamp: string;
   unreadCount: number;
 }
 
@@ -31,8 +35,11 @@ interface Message {
   senderId: string;
   recipientId: string;
   message: string;
+  mediaUrl?: string;
   timestamp: string;
   isRead: boolean;
+  isDeleted: boolean;
+  isEdited: boolean;
   courseTitle?: string;
   senderName?: string;
   role?: "student" | "instructor";
@@ -48,7 +55,15 @@ export default function InstructorChat() {
   const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [chatPreviews, setChatPreviews] = useState<ChatPreview[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editedMessage, setEditedMessage] = useState<string>("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const { data: conversationData, refetch } =
     useGetAllInstructorConversationsQuery(
@@ -57,34 +72,50 @@ export default function InstructorChat() {
     );
   const [sendMessage] = useSendMessageMutation();
   const [markMessageAsRead] = useMarkMessageAsReadMutation();
+  const [editMessage] = useEditMessageMutation();
+  const [deleteMessage] = useDeleteMessageMutation();
+  const [getPresignedUrl] = useGetPresignedUrlMutation();
 
   const scrollToBottom = useCallback(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (scrollContainer)
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-    }
+    const scrollContainer = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    );
+    if (scrollContainer)
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
   }, []);
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
 
   useEffect(() => {
     const onConnect = () => {
-      console.log("Instructor connected to socket:", socket.id);
       socket.emit("joinInstructorRoom", { instructorId: user?.id });
-      console.log(`Instructor joined room: instructor_${user?.id}`);
-      chatPreviews.forEach((preview) => {
-        const room = `chat_${preview.courseId}_${preview.studentId}`;
+      chatPreviews.forEach((preview) =>
         socket.emit("joinChatRoom", {
           courseId: preview.courseId,
           userId: preview.studentId,
-        });
-        console.log(`Instructor joined room: ${room}`);
-      });
+        })
+      );
     };
 
     const onNewMessage = (message: Message) => {
-      console.log("Instructor received newMessage:", message);
       if (
         selectedChat &&
         message.courseId === selectedChat.courseId &&
@@ -112,28 +143,12 @@ export default function InstructorChat() {
       }
     };
 
-    const onNewChatMessage = (message: Message) => {
-      console.log("Instructor received newChatMessage:", message);
-      if (message.recipientId === user?.id && message.senderId !== user?.id) {
-        const room = `chat_${message.courseId}_${message.senderId}`;
-        socket.emit("joinChatRoom", {
-          courseId: message.courseId,
-          userId: message.senderId,
-        });
-        console.log(`Instructor dynamically joined room: ${room}`);
-        dispatch(addMessage(message));
-        updateChatPreviews(message);
-      }
-    };
-
-    const onMessageRead = (updatedMessage: Message) => {
-      console.log("Instructor received messageRead:", updatedMessage);
-      dispatch(addMessage(updatedMessage));
+    const onMessageEdited = (updatedMessage: Message) => {
       if (
         selectedChat &&
         updatedMessage.courseId === selectedChat.courseId &&
         (updatedMessage.senderId === user?.id ||
-          updatedMessage.senderId === selectedChat.studentId)
+          updatedMessage.recipientId === user?.id)
       ) {
         setDisplayedMessages((prev) =>
           prev.map((msg) =>
@@ -145,15 +160,26 @@ export default function InstructorChat() {
       }
     };
 
-    const onDisconnect = () => {
-      console.log("Instructor disconnected from socket");
+    const onMessageDeleted = (deletedMessage: Message) => {
+      if (
+        selectedChat &&
+        deletedMessage.courseId === selectedChat.courseId &&
+        (deletedMessage.senderId === user?.id ||
+          deletedMessage.recipientId === user?.id)
+      ) {
+        setDisplayedMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === deletedMessage._id ? deletedMessage : msg
+          )
+        );
+        updateChatPreviews(deletedMessage);
+      }
     };
 
     socket.on("connect", onConnect);
     socket.on("newMessage", onNewMessage);
-    socket.on("newChatMessage", onNewChatMessage);
-    socket.on("messageRead", onMessageRead);
-    socket.on("disconnect", onDisconnect);
+    socket.on("messageEdited", onMessageEdited);
+    socket.on("messageDeleted", onMessageDeleted);
 
     if (!socket.connected) socket.connect();
     else onConnect();
@@ -161,67 +187,82 @@ export default function InstructorChat() {
     return () => {
       socket.off("connect", onConnect);
       socket.off("newMessage", onNewMessage);
-      socket.off("newChatMessage", onNewChatMessage);
-      socket.off("messageRead", onMessageRead);
-      socket.off("disconnect", onDisconnect);
+      socket.off("messageEdited", onMessageEdited);
+      socket.off("messageDeleted", onMessageDeleted);
     };
   }, [user?.id, chatPreviews, selectedChat, dispatch, scrollToBottom]);
 
   useEffect(() => {
-    if (conversationData?.data) {
-      const allMessages = conversationData.data.map((msg: any) => ({
-        ...msg,
-        courseId: msg.courseId._id,
-        senderId: msg.senderId._id,
-        recipientId: msg.recipientId._id,
-        courseTitle: msg.courseId.title,
-        senderName: msg.senderId.name,
-      }));
-      dispatch({ type: "chat/setMessages", payload: allMessages });
+    if (!conversationData?.data) return;
+    const enrichedMessages = conversationData.data.map((msg: any) => ({
+      _id: msg._id,
+      courseId: msg.courseId._id,
+      senderId: msg.senderId._id,
+      recipientId: msg.recipientId._id,
+      message: msg.message,
+      mediaUrl: msg.mediaUrl,
+      timestamp: msg.timestamp,
+      isRead: msg.isRead,
+      isDeleted: msg.isDeleted || false,
+      isEdited: msg.isEdited || false,
+      courseTitle: msg.courseId.title,
+      senderName: msg.senderId.name,
+    }));
+    dispatch({ type: "chat/setMessages", payload: enrichedMessages });
 
-      const previewMap = new Map<string, ChatPreview>();
-      allMessages.forEach((msg: Message) => {
-        const studentId =
-          msg.senderId !== user?.id ? msg.senderId : msg.recipientId;
-        const key = `${studentId}-${msg.courseId}`;
-        if (!previewMap.has(key)) {
-          previewMap.set(key, {
-            courseId: msg.courseId,
-            courseTitle: msg.courseTitle || "Unknown Course",
-            studentId: studentId,
-            studentName:
-              msg.senderId === user?.id
-                ? msg.recipientId.name
-                : msg.senderName || "Unknown Student",
-            lastMessage: msg.message,
-            unreadCount: msg.isRead ? 0 : 1,
-          });
-        } else {
-          const preview = previewMap.get(key)!;
-          preview.lastMessage = msg.message;
-          if (!msg.isRead && msg.senderId !== user?.id)
-            preview.unreadCount += 1;
+    const previewMap = new Map<string, ChatPreview>();
+    enrichedMessages.forEach((msg: Message) => {
+      const studentId =
+        msg.senderId !== user?.id ? msg.senderId : msg.recipientId;
+      const key = `${studentId}-${msg.courseId}`;
+      const studentName =
+        msg.senderId === user?.id
+          ? msg.recipientId.name
+          : msg.senderName || "Unknown Student";
+      if (!previewMap.has(key)) {
+        previewMap.set(key, {
+          courseId: msg.courseId,
+          courseTitle: msg.courseTitle || "Unknown Course",
+          studentId,
+          studentName,
+          lastMessage: msg.isDeleted ? "This message was deleted" : msg.message,
+          lastMessageTimestamp: msg.timestamp,
+          unreadCount: msg.isRead || msg.senderId === user?.id ? 0 : 1,
+        });
+      } else {
+        const preview = previewMap.get(key)!;
+        if (new Date(msg.timestamp) > new Date(preview.lastMessageTimestamp)) {
+          preview.lastMessage = msg.isDeleted
+            ? "This message was deleted"
+            : msg.message;
+          preview.lastMessageTimestamp = msg.timestamp;
         }
-      });
-      setChatPreviews(Array.from(previewMap.values()));
-    }
-  }, [conversationData, user, dispatch]);
+        if (!msg.isRead && msg.senderId !== user?.id) preview.unreadCount += 1;
+      }
+    });
+
+    const sortedPreviews = Array.from(previewMap.values()).sort(
+      (a, b) =>
+        new Date(b.lastMessageTimestamp).getTime() -
+        new Date(a.lastMessageTimestamp).getTime()
+    );
+    setChatPreviews(sortedPreviews);
+  }, [conversationData, user?.id, dispatch]);
 
   useEffect(() => {
-    if (selectedChat) {
-      displayedMessages.forEach((msg) => {
-        if (
-          msg.recipientId === user?.id &&
-          !msg.isRead &&
-          msg.senderId === selectedChat.studentId
-        ) {
-          markMessageAsRead(msg._id).catch((error) =>
-            console.error("Failed to mark message as read:", error)
-          );
-        }
-      });
-      scrollToBottom();
-    }
+    if (!selectedChat) return;
+    displayedMessages.forEach((msg) => {
+      if (
+        msg.recipientId === user?.id &&
+        !msg.isRead &&
+        msg.senderId === selectedChat.studentId
+      ) {
+        markMessageAsRead(msg._id).catch((error) =>
+          console.error("Failed to mark message as read:", error)
+        );
+      }
+    });
+    scrollToBottom();
   }, [
     displayedMessages,
     selectedChat,
@@ -231,7 +272,6 @@ export default function InstructorChat() {
   ]);
 
   const updateChatPreviews = (message: Message) => {
-    console.log("Updating chat previews with message:", message);
     setChatPreviews((prev) => {
       const studentId =
         message.senderId !== user?.id ? message.senderId : message.recipientId;
@@ -241,28 +281,34 @@ export default function InstructorChat() {
       );
 
       if (existing) {
-        console.log(`Updating existing preview for ${key}`);
-        return prev.map((chat) =>
-          chat.studentId === studentId && chat.courseId === message.courseId
-            ? {
-                ...chat,
-                lastMessage: message.message,
-                unreadCount: message.isRead ? 0 : chat.unreadCount + 1,
-              }
-            : chat
-        );
-      } else {
-        console.log(`Adding new preview for ${key}`);
-        const newPreview = {
-          courseId: message.courseId,
-          courseTitle: message.courseTitle || "Unknown Course",
-          studentId: studentId,
-          studentName: message.senderName || "Unknown Student",
-          lastMessage: message.message,
-          unreadCount: message.isRead ? 0 : 1,
+        const updatedPreview = {
+          ...existing,
+          lastMessage: message.isDeleted
+            ? "This message was deleted"
+            : message.message,
+          lastMessageTimestamp: message.timestamp,
+          unreadCount:
+            message.isRead || message.senderId === user?.id
+              ? existing.unreadCount
+              : existing.unreadCount + 1,
         };
-        return [...prev, newPreview];
+        const updatedPreviews = prev.filter((chat) => chat !== existing);
+        updatedPreviews.unshift(updatedPreview);
+        return updatedPreviews;
       }
+
+      const newPreview = {
+        courseId: message.courseId,
+        courseTitle: message.courseTitle || "Unknown Course",
+        studentId,
+        studentName: message.senderName || "Unknown Student",
+        lastMessage: message.isDeleted
+          ? "This message was deleted"
+          : message.message,
+        lastMessageTimestamp: message.timestamp,
+        unreadCount: message.isRead || message.senderId === user?.id ? 0 : 1,
+      };
+      return [newPreview, ...prev];
     });
   };
 
@@ -277,25 +323,57 @@ export default function InstructorChat() {
     setDisplayedMessages(filteredMessages);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  const clearFile = () => {
+    setFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadMedia = async (file: File): Promise<string> => {
+    const { url } = await getPresignedUrl({ fileName: file.name }).unwrap();
+    await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+    return url.split("?")[0];
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat) return;
+    if (!selectedChat || (!newMessage.trim() && !file)) return;
+
+    let mediaUrl: string | undefined;
+    if (file) {
+      mediaUrl = await uploadMedia(file);
+    }
 
     const messageData = {
       courseId: selectedChat.courseId,
       senderId: user?.id || "",
       recipientId: selectedChat.studentId,
-      message: newMessage,
+      message: newMessage || (file ? "" : ""),
+      mediaUrl,
     };
-
     const tempMessage: Message = {
       ...messageData,
       _id: `temp-${Date.now()}`,
       timestamp: new Date().toISOString(),
       isRead: false,
+      isDeleted: false,
+      isEdited: false,
       courseTitle: selectedChat.courseTitle,
-      senderName: user.name,
+      senderName: user?.name,
       role: "instructor",
     };
+
     setDisplayedMessages((prev) => [...prev, tempMessage]);
     updateChatPreviews(tempMessage);
     scrollToBottom();
@@ -305,18 +383,15 @@ export default function InstructorChat() {
       const enrichedMessage = {
         ...savedMessage.data,
         courseTitle: selectedChat.courseTitle,
-        senderName: user.name,
+        senderName: user?.name,
         role: "instructor",
       };
-      console.log(
-        "Instructor sending savedMessage via socket:",
-        enrichedMessage
-      );
       socket.emit("sendMessage", enrichedMessage);
       setDisplayedMessages((prev) =>
         prev.map((msg) => (msg._id === tempMessage._id ? enrichedMessage : msg))
       );
       setNewMessage("");
+      clearFile();
       refetch();
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -327,24 +402,170 @@ export default function InstructorChat() {
     }
   };
 
+  const handleEditMessage = (msg: Message) => {
+    setEditingMessageId(msg._id);
+    setEditedMessage(msg.message);
+  };
+
+  const handleSaveEdit = async (
+    messageId: string,
+    currentMediaUrl?: string
+  ) => {
+    if (!editedMessage.trim() && !currentMediaUrl) return;
+
+    try {
+      const updatedMessage = await editMessage({
+        messageId,
+        message: editedMessage,
+        mediaUrl: currentMediaUrl,
+      }).unwrap();
+      const enrichedMessage = {
+        ...updatedMessage.data,
+        courseTitle: selectedChat?.courseTitle,
+        senderName: user?.name,
+        role: "instructor",
+      };
+      setDisplayedMessages((prev) =>
+        prev.map((msg) => (msg._id === messageId ? enrichedMessage : msg))
+      );
+      socket.emit("editMessage", enrichedMessage);
+      setEditingMessageId(null);
+      setEditedMessage("");
+      refetch();
+    } catch (error) {
+      console.error("Failed to edit message:", error);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const deletedMessage = await deleteMessage({ messageId }).unwrap();
+      setDisplayedMessages((prev) =>
+        prev.map((msg) => (msg._id === messageId ? deletedMessage.data : msg))
+      );
+      socket.emit("deleteMessage", deletedMessage.data);
+      refetch();
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+  };
+
+  const handleEmojiClick = (emojiObject: any) => {
+    setNewMessage((prev) => prev + emojiObject.emoji);
+  };
+
+  const renderMessageContent = (msg: Message) => (
+    <div className="relative group">
+      {msg.senderId === user?.id && !msg.isDeleted && (
+        <div className="absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEditMessage(msg)}
+          >
+            <Edit className="w-4 h-4 text-gray-500" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteMessage(msg._id)}
+          >
+            <Trash className="w-4 h-4 text-gray-500" />
+          </Button>
+        </div>
+      )}
+      {msg.isDeleted ? (
+        <p className="text-sm italic text-gray-500">This message was deleted</p>
+      ) : editingMessageId === msg._id ? (
+        <div className="flex flex-col gap-2">
+          {msg.mediaUrl &&
+            (msg.mediaUrl.match(/\.(mp4|webm|ogg)$/) ? (
+              <video controls className="max-w-xs rounded-lg">
+                <source
+                  src={msg.mediaUrl}
+                  type={`video/${msg.mediaUrl.split(".").pop()}`}
+                />
+              </video>
+            ) : (
+              <img
+                src={msg.mediaUrl}
+                alt="Chat media"
+                className="max-w-xs rounded-lg"
+              />
+            ))}
+          <Input
+            value={editedMessage}
+            onChange={(e) => setEditedMessage(e.target.value)}
+            className="w-full bg-white border-gray-300 rounded-lg"
+            onKeyPress={(e) =>
+              e.key === "Enter" && handleSaveEdit(msg._id, msg.mediaUrl)
+            }
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => handleSaveEdit(msg._id, msg.mediaUrl)}
+            >
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingMessageId(null)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {msg.mediaUrl &&
+            (msg.mediaUrl.match(/\.(mp4|webm|ogg)$/) ? (
+              <video controls className="max-w-xs rounded-lg">
+                <source
+                  src={msg.mediaUrl}
+                  type={`video/${msg.mediaUrl.split(".").pop()}`}
+                />
+              </video>
+            ) : (
+              <img
+                src={msg.mediaUrl}
+                alt="Chat media"
+                className="max-w-xs rounded-lg"
+              />
+            ))}
+          {msg.message && (
+            <p className="text-sm whitespace-pre-wrap">
+              {msg.message}
+              {msg.isEdited && (
+                <span className="text-xs text-gray-400 ml-2">(Edited)</span>
+              )}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
-      <Card className="lg:col-span-1 shadow-lg rounded-xl border border-gray-200">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
-          <CardTitle className="text-xl font-semibold text-gray-800">
+    <div className="flex h-[calc(100vh-4rem)] gap-4 p-4 bg-gray-100">
+      {/* Chat List */}
+      <Card className="w-1/3 shadow-md rounded-xl border border-gray-200 overflow-hidden">
+        <CardHeader className="bg-white border-b py-3">
+          <CardTitle className="text-lg font-semibold text-gray-800">
             Messages
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="h-[calc(100vh-16rem)] bg-gray-50">
+        <CardContent className="p-0 h-[calc(100vh-8rem)]">
+          <ScrollArea className="h-full">
             {chatPreviews.map((chat) => (
               <div
                 key={`${chat.studentId}-${chat.courseId}`}
                 onClick={() => handleSelectChat(chat)}
-                className={`flex items-center p-4 border-b cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`flex items-center p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
                   selectedChat?.studentId === chat.studentId &&
                   selectedChat?.courseId === chat.courseId
-                    ? "bg-gray-200"
+                    ? "bg-gray-100"
                     : ""
                 }`}
               >
@@ -354,21 +575,24 @@ export default function InstructorChat() {
                     alt={chat.studentName}
                   />
                   <AvatarFallback className="bg-gray-300 text-gray-700">
-                    {chat.studentName[0]}
+                    {chat.studentName?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-800 truncate">
-                      {chat.studentName} - {chat.courseTitle}
+                      {chat.studentName}
                     </span>
                     {chat.unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {chat.unreadCount}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 truncate">
+                  <p className="text-sm text-gray-500 truncate">
+                    {chat.courseTitle}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
                     {chat.lastMessage}
                   </p>
                 </div>
@@ -378,22 +602,20 @@ export default function InstructorChat() {
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 shadow-lg rounded-xl border border-gray-200">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
-          <CardTitle className="text-xl font-semibold text-gray-800">
+      {/* Chat Area */}
+      <Card className="flex-1 shadow-md rounded-xl border border-gray-200 flex flex-col overflow-hidden">
+        <CardHeader className="bg-white border-b py-3 flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold text-gray-800">
             {selectedChat
-              ? `Chat with ${selectedChat.studentName} - ${selectedChat.courseTitle}`
+              ? `${selectedChat.studentName} - ${selectedChat.courseTitle}`
               : "Select a Chat"}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col h-[calc(100vh-16rem)] p-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {selectedChat ? (
             <>
-              <ScrollArea
-                ref={scrollAreaRef}
-                className="flex-1 h-0 p-4 bg-gray-50"
-              >
-                <div className="space-y-4">
+              <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 bg-white">
+                <div className="space-y-3">
                   {displayedMessages.map((msg) => (
                     <div
                       key={msg._id}
@@ -404,13 +626,13 @@ export default function InstructorChat() {
                       }`}
                     >
                       <div
-                        className={`max-w-[70%] p-3 Instytrounded-lg shadow-sm ${
+                        className={`max-w-[70%] p-3 rounded-lg shadow-sm ${
                           msg.senderId === user?.id
-                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
-                            : "bg-white text-gray-800 border border-gray-200"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        <p className="text-sm">{msg.message}</p>
+                        {renderMessageContent(msg)}
                         <div className="flex items-center justify-end mt-1 text-xs text-gray-400">
                           <span>
                             {new Date(msg.timestamp).toLocaleTimeString([], {
@@ -418,37 +640,103 @@ export default function InstructorChat() {
                               minute: "2-digit",
                             })}
                           </span>
-                          {msg.senderId === user?.id && msg.isRead && (
-                            <Eye className="w-3 h-3 ml-1 text-gray-300" />
-                          )}
+                          {msg.senderId === user?.id &&
+                            msg.isRead &&
+                            !msg.isDeleted && (
+                              <Eye className="w-3 h-3 ml-1 text-gray-300" />
+                            )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
-              <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200 flex gap-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your reply..."
-                  className="rounded-full border-gray-300 focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
-                >
-                  Send
-                </Button>
+              <div className="p-4 bg-white border-t border-gray-200 flex flex-col gap-3 shrink-0">
+                {previewUrl && (
+                  <div className="relative max-w-[200px]">
+                    {file?.type.startsWith("video") ? (
+                      <video controls className="max-w-full h-auto rounded-lg">
+                        <source src={previewUrl} type={file.type} />
+                      </video>
+                    ) : (
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="max-w-full h-auto rounded-lg"
+                      />
+                    )}
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1"
+                      onClick={clearFile}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex gap-2 items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    ref={emojiButtonRef}
+                    onClick={() => setShowEmojiPicker((prev) => !prev)}
+                  >
+                    <Smile className="h-5 w-5 text-gray-500" />
+                  </Button>
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500"
+                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  />
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="ghost"
+                    size="icon"
+                  >
+                    <Paperclip className="h-5 w-5 text-gray-500" />
+                  </Button>
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim() && !file}
+                    className="rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Send
+                  </Button>
+                </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
-              Select a student and course to start chatting
+            <div className="flex-1 flex items-center justify-center text-gray-500 bg-white">
+              Select a chat to start messaging
             </div>
           )}
-        </CardContent>
+          {/* Emoji Picker Overlay */}
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg"
+              style={{
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                maxHeight: "80vh",
+                overflowY: "auto",
+              }}
+            >
+              <EmojiPicker onEmojiClick={handleEmojiClick} />
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );

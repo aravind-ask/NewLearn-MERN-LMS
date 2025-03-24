@@ -9,6 +9,34 @@ export class ChatRepository implements IChatRepository {
     return await newMessage.save();
   }
 
+  async getMessageById(messageId: string): Promise<IChatMessage | null> {
+    return await ChatMessage.findById(messageId).exec();
+  }
+
+  async updateMessage(
+    messageId: string,
+    updates: {
+      message?: string;
+      mediaUrl?: string;
+      isDeleted: boolean;
+      isEdited?: boolean;
+    }
+  ): Promise<IChatMessage> {
+    const message = await ChatMessage.findByIdAndUpdate(
+      messageId,
+      { $set: updates },
+      { new: true }
+    ).exec();
+    if (!message) throw new NotFoundError("Message not found");
+    return message;
+  }
+
+  async deleteMessage(messageId: string): Promise<IChatMessage> {
+    const message = await ChatMessage.findByIdAndDelete(messageId).exec();
+    if (!message) throw new NotFoundError("Message not found");
+    return message;
+  }
+
   async getMessages(
     courseId: string,
     userId: string | undefined,

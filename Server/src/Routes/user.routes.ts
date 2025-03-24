@@ -19,7 +19,7 @@ const router: Router = express.Router();
 
 router.post("/upload-url", userController.getUploadUrl.bind(userController));
 router.put(
-  "/profile",
+  "/update-profile",
   authMiddleware.verifyAccessToken,
   userController.updateProfile.bind(userController)
 );

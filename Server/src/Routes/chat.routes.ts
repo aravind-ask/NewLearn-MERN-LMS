@@ -2,7 +2,7 @@ import express from "express";
 import { ChatController } from "../Controllers/chat.controller";
 import { ChatService } from "../services/chat.service";
 import { ChatRepository } from "../repositories/chat.repository";
-import { authMiddleware } from "../middlewares/auth.middleware"; // Assuming you have this
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 const chatRepository = new ChatRepository();
@@ -13,6 +13,16 @@ router.post(
   "/send",
   authMiddleware.verifyAccessToken,
   chatController.sendMessage.bind(chatController)
+);
+router.put(
+  "/:messageId",
+  authMiddleware.verifyAccessToken,
+  chatController.editMessage.bind(chatController)
+);
+router.delete(
+  "/:messageId",
+  authMiddleware.verifyAccessToken,
+  chatController.deleteMessage.bind(chatController)
 );
 router.get(
   "/:courseId/:trainerId",

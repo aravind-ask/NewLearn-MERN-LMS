@@ -79,7 +79,12 @@ export class CourseProgressRepository {
   async resetCourseProgress(userId: string, courseId: string) {
     return CourseProgress.findOneAndUpdate(
       { userId, courseId },
-      { lecturesProgress: [], completed: false, completionDate: null },
+      {
+        lecturesProgress: [],
+        completed: false,
+        completionDate: null,
+        viewedLectures: 0,
+      },
       { new: true }
     );
   }

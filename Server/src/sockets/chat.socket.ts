@@ -1,4 +1,3 @@
-// src/sockets/chat.socket.ts
 import { Server, Socket } from "socket.io";
 
 export const setupChatSocket = (io: Server) => {
@@ -48,7 +47,6 @@ export const setupChatSocket = (io: Server) => {
             : messageData.recipientId;
         const room = `chat_${messageData.courseId}_${studentId}`;
 
-        // Broadcast to the chat room
         io.to(room).emit("newMessage", messageData);
         console.log(`Message broadcasted to room: ${room}`);
         console.log(
@@ -56,7 +54,6 @@ export const setupChatSocket = (io: Server) => {
           io.sockets.adapter.rooms.get(room)?.size || 0
         );
 
-        // If this is a student message (new or existing chat), notify the instructor globally
         if (messageData.role === "student") {
           const instructorRoom = `instructor_${messageData.recipientId}`;
           io.to(instructorRoom).emit("newChatMessage", messageData);

@@ -9,4 +9,15 @@ export interface IChatRepository {
   ): Promise<IChatMessage[]>;
   markAsRead(messageId: string): Promise<IChatMessage>;
   getAllMessagesForTrainer(trainerId: string): Promise<IChatMessage[]>;
+  getMessageById(messageId: string): Promise<IChatMessage | null>;
+  updateMessage(
+    messageId: string,
+    updates: {
+      message?: string;
+      mediaUrl?: string;
+      isDeleted?: boolean;
+      isEdited?: boolean;
+    }
+  ): Promise<IChatMessage>;
+  deleteMessage(messageId: string): Promise<IChatMessage>;
 }

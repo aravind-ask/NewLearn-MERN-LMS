@@ -47,7 +47,6 @@ const Profile = () => {
 
     try {
       setIsUploading(true);
-
       const { url, key } = await getPresignedUrl({ fileName }).unwrap();
 
       await fetch(url, {
@@ -56,7 +55,8 @@ const Profile = () => {
         headers: { "Content-Type": file.type },
       });
 
-      setFormData({ ...formData, photoUrl: url });
+      const cleanUrl = url.split("?")[0];
+      setFormData({ ...formData, photoUrl: cleanUrl });
       setIsUploading(false);
     } catch (error) {
       console.error("Error uploading file", error);
@@ -68,12 +68,8 @@ const Profile = () => {
   const handleSubmit = async () => {
     try {
       const newErrors: { [key: string]: string } = {};
-      if (!formData.name) {
-        newErrors.name = "Name is required";
-      }
-      if (!formData.email) {
-        newErrors.email = "Email is required";
-      }
+      if (!formData.name) newErrors.name = "Name is required";
+      if (!formData.email) newErrors.email = "Email is required";
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -110,7 +106,7 @@ const Profile = () => {
           {/* Profile Picture */}
           <div className="flex flex-col items-center">
             <img
-              src={formData.key || "/default-avatar.png"}
+              src={formData.photoUrl || "/default-avatar.png"}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />
@@ -136,7 +132,7 @@ const Profile = () => {
               <Label className="text-gray-600">Date of Birth</Label>
               <p className="text-gray-800 font-medium">
                 {formData.dateOfBirth &&
-                  format(new Date(formData?.dateOfBirth), "dd/ mm/ yyyy")}
+                  format(new Date(formData.dateOfBirth), "dd/MM/yyyy")}
               </p>
             </div>
             <div className="col-span-2">
@@ -154,7 +150,7 @@ const Profile = () => {
           </div>
 
           {/* Edit Button */}
-          <div className="flex justify-between mt-6 ">
+          <div className="flex justify-between mt-6">
             <PasswordChange eMail={user?.email} />
             <Button
               onClick={() => setIsEditing(true)}
@@ -171,37 +167,43 @@ const Profile = () => {
       {isEditing && (
         <div className="space-y-6">
           {/* Profile Picture Upload */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <img
                 src={formData.photoUrl || "/default-avatar.png"}
                 alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => document.getElementById("fileInput")?.click()}
+                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <UploadCloud className="w-8 h-8 text-white" />
-              </div>
               {isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
                   <Loader2 className="w-8 h-8 text-white animate-spin" />
                 </div>
               )}
             </div>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-              id="fileInput"
-            />
-            {errors.photoUrl && (
-              <p className="text-red-500 text-sm mt-2">{errors.photoUrl}</p>
-            )}
+            <div className="flex flex-col items-center gap-2">
+              <label
+                htmlFor="fileInput"
+                className="cursor-pointer flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-md transition-colors"
+              >
+                <UploadCloud className="w-5 h-5" />
+                Change Profile Picture
+              </label>
+              <Input
+                id="fileInput"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              {errors.photoUrl && (
+                <p className="text-red-500 text-sm">{errors.photoUrl}</p>
+              )}
+            </div>
           </div>
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Rest of the form fields remain the same */}
             <div>
               <Label className="text-gray-600">Name</Label>
               <Input

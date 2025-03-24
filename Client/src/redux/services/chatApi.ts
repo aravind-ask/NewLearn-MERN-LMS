@@ -24,6 +24,21 @@ export const chatApi = api.injectEndpoints({
       }),
       providesTags: ["Chat"],
     }),
+    editMessage: builder.mutation({
+      query: ({ messageId, message, mediaUrl }) => ({
+        url: `/chat/${messageId}`,
+        method: "PUT",
+        body: { message, mediaUrl },
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+    deleteMessage: builder.mutation({
+      query: ({ messageId }) => ({
+        url: `/chat/${messageId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Chat"],
+    }),
     markMessageAsRead: builder.mutation({
       query: (messageId) => ({
         url: `/chat/read/${messageId}`,
@@ -38,5 +53,7 @@ export const {
   useGetConversationQuery,
   useSendMessageMutation,
   useGetAllInstructorConversationsQuery,
+  useEditMessageMutation,
+  useDeleteMessageMutation,
   useMarkMessageAsReadMutation,
 } = chatApi;

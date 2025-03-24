@@ -6,6 +6,7 @@ export interface IChatService {
     senderId: string | undefined;
     recipientId: string;
     message: string;
+    mediaUrl?: string;
   }): Promise<IChatMessage>;
   getConversation(
     courseId: string,
@@ -13,4 +14,14 @@ export interface IChatService {
     trainerId: string
   ): Promise<IChatMessage[]>;
   markMessageAsRead(messageId: string): Promise<IChatMessage>;
+  editMessage(
+    messageId: string,
+    senderId: string | undefined,
+    updates: { message?: string; mediaUrl?: string }
+  ): Promise<IChatMessage>;
+  deleteMessage(
+    messageId: string,
+    senderId: string | undefined
+  ): Promise<IChatMessage>;
+  getAllConversationsForTrainer(trainerId: string): Promise<IChatMessage[]>;
 }

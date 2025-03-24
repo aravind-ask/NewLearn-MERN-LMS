@@ -36,19 +36,6 @@ export class InstructorApplicationService {
     data: any
   ): Promise<IInstructorApplication> {
 
-    // const existingApplication = await this.instructorAppRepo.getApplication(
-    //   userId
-    // );
-    // if (!existingApplication) {
-    //   throw new Error("No application found to update");
-    // }
-
-    // const applicationId = existingApplication?._id.toString();
-    // return await this.instructorAppRepo.updateApplication(applicationId, {
-    //   ...data,
-    //   status: "pending",
-    //   rejectionReason: null,
-    // });
 
     const application = await this.instructorAppRepo.getApplicationById(
       applicationId
