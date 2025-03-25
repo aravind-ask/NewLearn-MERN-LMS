@@ -26,7 +26,7 @@ export class DiscussionController {
 
   async createDiscussion(req: AuthenticatedRequest, res: Response) {
     try {
-      const { lectureId, topic } = req.body;
+      const { lectureId, topic, mediaUrl } = req.body;
       const userId = req.user?.id;
       if (!lectureId || !topic || !userId)
         throw new BadRequestError("Missing required fields");
@@ -34,6 +34,7 @@ export class DiscussionController {
         lectureId,
         userId,
         topic,
+        mediaUrl,
       });
       successResponse(res, discussion, "Discussion created successfully");
       const io = req.app.get("io");
@@ -58,7 +59,7 @@ export class DiscussionController {
 
   async createComment(req: AuthenticatedRequest, res: Response) {
     try {
-      const { discussionId, content } = req.body;
+      const { discussionId, content, mediaUrl } = req.body;
       const userId = req.user?.id;
       if (!discussionId || !content || !userId)
         throw new BadRequestError("Missing required fields");
@@ -66,6 +67,7 @@ export class DiscussionController {
         discussionId,
         userId,
         content,
+        mediaUrl,
       });
       successResponse(res, comment, "Comment added successfully");
       const io = req.app.get("io");
@@ -77,14 +79,15 @@ export class DiscussionController {
 
   async editDiscussion(req: AuthenticatedRequest, res: Response) {
     try {
-      const { discussionId, topic } = req.body;
+      const { discussionId, topic, mediaUrl } = req.body;
       const userId = req.user?.id;
       if (!discussionId || !topic || !userId)
         throw new BadRequestError("Missing required fields");
       const updatedDiscussion = await this.discussionService.editDiscussion(
         discussionId,
         userId,
-        topic
+        topic,
+        mediaUrl
       );
       successResponse(
         res,
@@ -123,14 +126,15 @@ export class DiscussionController {
 
   async editComment(req: AuthenticatedRequest, res: Response) {
     try {
-      const { commentId, content } = req.body;
+      const { commentId, content, mediaUrl } = req.body;
       const userId = req.user?.id;
       if (!commentId || !content || !userId)
         throw new BadRequestError("Missing required fields");
       const updatedComment = await this.discussionService.editComment(
         commentId,
         userId,
-        content
+        content,
+        mediaUrl
       );
       successResponse(res, updatedComment, "Comment updated successfully");
       const io = req.app.get("io");

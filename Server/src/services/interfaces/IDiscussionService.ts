@@ -10,6 +10,7 @@ export interface IDiscussionService {
     lectureId: string;
     userId: string;
     topic: string;
+    mediaUrl?: string;
   }): Promise<IDiscussion>;
   getDiscussionById(
     discussionId: string
@@ -18,17 +19,20 @@ export interface IDiscussionService {
     discussionId: string;
     userId: string;
     content: string;
+    mediaUrl?: string;
   }): Promise<IComment>;
   editDiscussion(
     discussionId: string,
     userId: string,
-    topic: string
+    topic: string,
+    mediaUrl?: string
   ): Promise<IDiscussion>;
   deleteDiscussion(discussionId: string, userId: string): Promise<void>;
   editComment(
     commentId: string,
     userId: string,
-    content: string
+    content: string,
+    mediaUrl?: string
   ): Promise<IComment>;
   deleteComment(
     commentId: string,

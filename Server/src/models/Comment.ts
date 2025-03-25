@@ -1,10 +1,11 @@
+// models/comment.model.ts
 import mongoose, { Schema } from "mongoose";
 
-// models/comment.model.ts (unchanged)
 export interface IComment extends Document {
   discussionId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   content: string;
+  mediaUrl?: string;
   createdAt: Date;
 }
 
@@ -16,6 +17,7 @@ const CommentSchema: Schema = new Schema({
   },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   content: { type: String, required: true },
+  mediaUrl: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },
 });
 

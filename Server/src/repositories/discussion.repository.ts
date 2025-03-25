@@ -47,11 +47,12 @@ export class DiscussionRepository implements IDiscussionRepository {
 
   async editDiscussion(
     discussionId: string,
-    topic: string
+    topic: string,
+    mediaUrl?: string
   ): Promise<IDiscussion> {
     const discussion = await Discussion.findByIdAndUpdate(
       new mongoose.Types.ObjectId(discussionId),
-      { topic, updatedAt: new Date() },
+      { topic, mediaUrl, updatedAt: new Date() },
       { new: true }
     )
       .populate("userId", "name")
@@ -70,10 +71,14 @@ export class DiscussionRepository implements IDiscussionRepository {
     });
   }
 
-  async editComment(commentId: string, content: string): Promise<IComment> {
+  async editComment(
+    commentId: string,
+    content: string,
+    mediaUrl?: string
+  ): Promise<IComment> {
     const comment = await Comment.findByIdAndUpdate(
       new mongoose.Types.ObjectId(commentId),
-      { content, updatedAt: new Date() },
+      { content, mediaUrl, updatedAt: new Date() },
       { new: true }
     )
       .populate("userId", "name")

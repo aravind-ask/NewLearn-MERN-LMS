@@ -39,13 +39,18 @@ const discussionSlice = createSlice({
   initialState,
   reducers: {
     setDiscussions: (state, action) => {
-      state.discussions = action.payload.map((d) => ({
-        ...d,
-        comments: d.comments || [],
-      }));
+      state.discussions = action.payload
+        .map((d) => ({
+          ...d,
+          comments: d.comments || [],
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ); // Newest first
     },
     addDiscussion: (state, action) => {
-      state.discussions.unshift({ ...action.payload, comments: [] });
+      state.discussions.unshift({ ...action.payload, comments: [] }); // Add to top
     },
     setCurrentDiscussion: (state, action) => {
       state.currentDiscussion = action.payload;
