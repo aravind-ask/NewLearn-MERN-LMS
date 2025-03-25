@@ -58,8 +58,8 @@ export default function InstructorChat() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editedMessage, setEditedMessage] = useState<string>("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -97,22 +97,26 @@ export default function InstructorChat() {
         setShowEmojiPicker(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showEmojiPicker]);
 
   useEffect(() => {
     const onConnect = () => {
+      console.log("Socket connected, joining rooms...");
       socket.emit("joinInstructorRoom", { instructorId: user?.id });
+      socket.emit("joinUser", { userId: user?.id });
       chatPreviews.forEach((preview) =>
         socket.emit("joinChatRoom", {
           courseId: preview.courseId,
           userId: preview.studentId,
         })
       );
+    };
+
+    const onOnlineUsers = (users: string[]) => {
+      console.log("Online users received:", users);
+      setOnlineUsers(users);
     };
 
     const onNewMessage = (message: Message) => {
@@ -177,15 +181,21 @@ export default function InstructorChat() {
     };
 
     socket.on("connect", onConnect);
+    socket.on("onlineUsers", onOnlineUsers);
     socket.on("newMessage", onNewMessage);
     socket.on("messageEdited", onMessageEdited);
     socket.on("messageDeleted", onMessageDeleted);
 
-    if (!socket.connected) socket.connect();
-    else onConnect();
+    if (!socket.connected) {
+      console.log("Socket not connected, connecting...");
+      socket.connect();
+    } else {
+      onConnect();
+    }
 
     return () => {
       socket.off("connect", onConnect);
+      socket.off("onlineUsers", onOnlineUsers);
       socket.off("newMessage", onNewMessage);
       socket.off("messageEdited", onMessageEdited);
       socket.off("messageDeleted", onMessageDeleted);
@@ -382,9 +392,7 @@ export default function InstructorChat() {
     }
 
     let mediaUrl: string | undefined;
-    if (file) {
-      mediaUrl = await uploadMedia(file);
-    }
+    if (file) mediaUrl = await uploadMedia(file);
 
     const messageData = {
       courseId: selectedChat.courseId,
@@ -558,9 +566,23 @@ export default function InstructorChat() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800 truncate">
-                      {chat.studentName}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-800 truncate">
+                        {chat.studentName}
+                      </span>
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          onlineUsers.includes(chat.studentId)
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                        title={
+                          onlineUsers.includes(chat.studentId)
+                            ? "Online"
+                            : "Offline"
+                        }
+                      />
+                    </div>
                     {chat.unreadCount > 0 && (
                       <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {chat.unreadCount}
@@ -716,7 +738,6 @@ export default function InstructorChat() {
               Select a chat to start messaging
             </div>
           )}
-          {/* Emoji Picker Overlay */}
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}

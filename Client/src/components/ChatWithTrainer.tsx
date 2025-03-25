@@ -34,7 +34,15 @@ interface Message {
   role?: "student" | "instructor";
 }
 
-export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
+export default function ChatWithTrainer({
+  courseId,
+  trainerId,
+  courseTitle,
+}: {
+  courseId: string;
+  trainerId: string;
+  courseTitle: string;
+}) {
   const { user } = useSelector((state: RootState) => state.auth);
   const { messages } = useSelector((state: RootState) => state.chat);
   const dispatch = useDispatch();
@@ -42,8 +50,8 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editedMessage, setEditedMessage] = useState<string>("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isTrainerOnline, setIsTrainerOnline] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,16 +80,20 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
         setShowEmojiPicker(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showEmojiPicker]);
 
   useEffect(() => {
     const onConnect = () => {
+      console.log("Socket connected, joining rooms...");
       socket.emit("joinChatRoom", { courseId, userId: user?.id });
+      socket.emit("joinUser", { userId: user?.id });
+    };
+
+    const onOnlineUsers = (users: string[]) => {
+      console.log("Online users received:", users);
+      setIsTrainerOnline(users.includes(trainerId));
     };
 
     const onNewMessage = (newMessage: Message) => {
@@ -117,15 +129,21 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
     };
 
     socket.on("connect", onConnect);
+    socket.on("onlineUsers", onOnlineUsers);
     socket.on("newMessage", onNewMessage);
     socket.on("messageEdited", onMessageEdited);
     socket.on("messageDeleted", onMessageDeleted);
 
-    if (!socket.connected) socket.connect();
-    else onConnect();
+    if (!socket.connected) {
+      console.log("Socket not connected, connecting...");
+      socket.connect();
+    } else {
+      onConnect();
+    }
 
     return () => {
       socket.off("connect", onConnect);
+      socket.off("onlineUsers", onOnlineUsers);
       socket.off("newMessage", onNewMessage);
       socket.off("messageEdited", onMessageEdited);
       socket.off("messageDeleted", onMessageDeleted);
@@ -215,9 +233,7 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
     }
 
     let mediaUrl: string | undefined;
-    if (file) {
-      mediaUrl = await uploadMedia(file);
-    }
+    if (file) mediaUrl = await uploadMedia(file);
 
     const messageData = {
       courseId,
@@ -349,8 +365,14 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
   return (
     <Card className="flex flex-col h-[600px] shadow-md rounded-xl border border-gray-200 overflow-hidden">
       <CardHeader className="bg-white border-b py-3">
-        <CardTitle className="text-lg font-semibold text-gray-800">
+        <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
           Chat with Trainer - {courseTitle}
+          <span
+            className={`h-3 w-3 rounded-full ${
+              isTrainerOnline ? "bg-green-500" : "bg-gray-300"
+            }`}
+            title={isTrainerOnline ? "Online" : "Offline"}
+          />
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col flex-1 p-0 overflow-hidden">
@@ -414,8 +436,6 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             </div>
           )}
           <div className="flex gap-2 items-center relative">
-            {" "}
-            {/* Added relative here */}
             <Button
               variant="ghost"
               size="icon"
@@ -427,8 +447,8 @@ export default function ChatWithTrainer({ courseId, trainerId, courseTitle }) {
             {showEmojiPicker && (
               <div
                 ref={emojiPickerRef}
-                className="absolute z-60 bottom-full mb-2 left-0" // Increased z-index to 60, simplified left
-                style={{ width: "300px" }} // Optional: Set a fixed width for consistency
+                className="absolute z-60 bottom-full mb-2 left-0"
+                style={{ width: "300px" }}
               >
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
