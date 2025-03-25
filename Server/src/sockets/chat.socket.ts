@@ -1,14 +1,23 @@
 import { Server, Socket } from "socket.io";
 
-const onlineUsers = new Map<string, string>(); 
+// Store online users with their socket IDs
+const onlineUsers = new Map<string, string>(); // Map<userId, socketId>
 
 export const setupChatSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("User connected:", socket.id);
 
+    // Register user as online
     socket.on("joinUser", ({ userId }: { userId: string }) => {
       onlineUsers.set(userId, socket.id);
       console.log(`User ${userId} joined with socket ${socket.id}`);
+      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+    });
+
+    // Handle explicit user leaving
+    socket.on("leaveUser", ({ userId }: { userId: string }) => {
+      onlineUsers.delete(userId);
+      console.log(`User ${userId} left`);
       io.emit("onlineUsers", Array.from(onlineUsers.keys()));
     });
 
@@ -38,7 +47,6 @@ export const setupChatSocket = (io: Server) => {
         senderId: string;
         recipientId: string;
         message: string;
-        mediaUrl?: string;
         timestamp: string;
         isRead: boolean;
         courseTitle?: string;

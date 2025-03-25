@@ -194,6 +194,8 @@ export default function InstructorChat() {
     }
 
     return () => {
+      console.log("Unmounting InstructorChat, leaving user...");
+      socket.emit("leaveUser", { userId: user?.id });
       socket.off("connect", onConnect);
       socket.off("onlineUsers", onOnlineUsers);
       socket.off("newMessage", onNewMessage);
