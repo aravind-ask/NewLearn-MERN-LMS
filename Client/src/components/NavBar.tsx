@@ -21,6 +21,7 @@ import { AvatarDropdown } from "./AvatarDropDown"; // Assuming this exists
 import SearchBar from "./SearchBar";
 import { logout } from "@/redux/slices/authSlice";
 import { useLogoutMutation } from "@/redux/services/authApi";
+import NotificationDropdown from "./common/NotificationDropdown";
 
 export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -153,6 +154,7 @@ export default function Navbar() {
                 </Badge>
               )} */}
             </Link>
+            <NotificationDropdown/>
             <AvatarDropdown />
           </>
         ) : (
@@ -262,6 +264,7 @@ export default function Navbar() {
                     Wishlist
                     {/* {wishlist?.length > 0 && <Badge>{wishlist.length}</Badge>} */}
                   </Link>
+                  <NotificationDropdown />
                 </>
               )}
             </nav>

@@ -143,9 +143,22 @@ export class ChatController {
       successResponse(res, updatedMessage, "Message marked as read");
 
       const io = req.app.get("io");
-      const room = `chat_${updatedMessage.courseId}_${updatedMessage.senderId}`;
-      io.to(room).emit("messageRead", updatedMessage);
-      console.log(`Emitted messageRead to room ${room}:`, updatedMessage);
+      const studentRoom = `chat_${updatedMessage.courseId}_${updatedMessage.senderId}`;
+      const instructorRoom = `instructor_${updatedMessage.recipientId}`;
+
+      io.to(studentRoom).emit("messageRead", updatedMessage);
+      console.log(
+        `Emitted messageRead to room ${studentRoom}:`,
+        updatedMessage
+      );
+
+      if (updatedMessage.senderId !== updatedMessage.recipientId) {
+        io.to(instructorRoom).emit("messageRead", updatedMessage);
+        console.log(
+          `Emitted messageRead to room ${instructorRoom}:`,
+          updatedMessage
+        );
+      }
     } catch (error) {
       errorResponse(res, error);
     }

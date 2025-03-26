@@ -17,6 +17,7 @@ import { addMessage, setMessages } from "@/redux/slices/chatSlice";
 import { Eye, Paperclip, X, Edit, Trash, Smile } from "lucide-react";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import EmojiPicker from "emoji-picker-react";
+import { addNotification } from "@/redux/slices/notificationSlice";
 
 interface Message {
   _id: string;
@@ -128,11 +129,24 @@ export default function ChatWithTrainer({
       }
     };
 
+    const onMessageRead = (readMessage: Message) => {
+      if (
+        readMessage.courseId === courseId &&
+        ((readMessage.senderId === user?.id &&
+          readMessage.recipientId === trainerId) ||
+          (readMessage.senderId === trainerId &&
+            readMessage.recipientId === user?.id))
+      ) {
+        dispatch(addMessage(readMessage));
+      }
+    };
+
     socket.on("connect", onConnect);
     socket.on("onlineUsers", onOnlineUsers);
     socket.on("newMessage", onNewMessage);
     socket.on("messageEdited", onMessageEdited);
     socket.on("messageDeleted", onMessageDeleted);
+    socket.on("messageRead", onMessageRead);
 
     if (!socket.connected) {
       console.log("Socket not connected, connecting...");
@@ -149,6 +163,7 @@ export default function ChatWithTrainer({
       socket.off("newMessage", onNewMessage);
       socket.off("messageEdited", onMessageEdited);
       socket.off("messageDeleted", onMessageDeleted);
+      socket.off("messageRead", onMessageRead);
     };
   }, [courseId, trainerId, user?.id, dispatch]);
 

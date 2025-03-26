@@ -19,6 +19,7 @@ import offerRoutes from "./Routes/offer.routes";
 import chatRoutes from "./Routes/chat.routes";
 import discussionRoutes from "./Routes/discussion.routes";
 import certificateRoutes from "./Routes/certificates.routes";
+import notificationRoutes from "./Routes/notification.routes";
 import multer from "multer";
 import { setupChatSocket } from "./sockets/chat.socket";
 import { setupDiscussionSocket } from "./sockets/discussion.socket";
@@ -72,6 +73,7 @@ app.use("/api/reviews", ratingsRoutes);
 app.use("/api/offers", offerRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/discussion", discussionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Setup WebSocket for chat
 setupChatSocket(io);

@@ -1,4 +1,5 @@
 import { Server, Socket } from "socket.io";
+import NotificationService from "../services/notification.service";
 
 const onlineUsers = new Map<string, string>();
 
@@ -38,7 +39,7 @@ export const setupChatSocket = (io: Server) => {
 
     socket.on(
       "sendMessage",
-      (messageData: {
+      async (messageData: {
         _id: string;
         courseId: string;
         senderId: string;
@@ -58,9 +59,39 @@ export const setupChatSocket = (io: Server) => {
         const room = `chat_${messageData.courseId}_${studentId}`;
         io.to(room).emit("newMessage", messageData);
 
+        const recipientSocketId = onlineUsers.get(messageData.recipientId);
+
         if (messageData.role === "student") {
           const instructorRoom = `instructor_${messageData.recipientId}`;
           io.to(instructorRoom).emit("newChatMessage", messageData);
+
+          const notification = await NotificationService.createNotification(
+            messageData.recipientId,
+            "message",
+            "New Message",
+            `${messageData.senderName} sent you a message in ${messageData.courseTitle}`,
+            messageData._id
+          );
+          if (recipientSocketId) {
+            io.to(recipientSocketId).emit("newNotification", notification);
+            console.log(
+              `Sent notification to instructor ${messageData.recipientId} at socket ${recipientSocketId}`
+            );
+          }
+        } else {
+          const notification = await NotificationService.createNotification(
+            messageData.recipientId,
+            "message",
+            "Instructor Replied",
+            `${messageData.senderName} replied to your message in ${messageData.courseTitle}`,
+            messageData._id
+          );
+          if (recipientSocketId) {
+            io.to(recipientSocketId).emit("newNotification", notification);
+            console.log(
+              `Sent notification to student ${messageData.recipientId} at socket ${recipientSocketId}`
+            );
+          }
         }
       }
     );

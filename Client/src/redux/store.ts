@@ -4,6 +4,7 @@ import authReducer from "./slices/authSlice";
 import instructorReducer from "./slices/instructorSlice";
 import chatReducer from "./slices/chatSlice";
 import discussionReducer from "./slices/discussionSlice";
+import notificationReducer from "./slices/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     instructor: instructorReducer,
     chat: chatReducer,
     discussion: discussionReducer,
+    notifications: notificationReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>

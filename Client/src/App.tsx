@@ -27,10 +27,51 @@ import MyLearnings from "./components/profile/MyLearnings";
 import Certificates from "./components/profile/MyCertificates";
 import Footer from "./components/Footer";
 import VerifyCertificate from "./pages/VerifyCertificate";
-import AboutPage from "./pages/AboutUSPage";
+import AboutPage from "./pages/AboutUsPage";
 import ContactUsPage from "./pages/ContactUsPAge";
+import { socket } from "@/lib/socket";
+import { addNotification } from "@/redux/slices/notificationSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { RootState } from "./redux/store";
 
 function App() {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Join user room on connect
+    const onConnect = () => {
+      console.log("Socket connected, joining user room...");
+      socket.emit("joinUser", { userId: user.id });
+    };
+
+    // Handle incoming notifications
+    const onNewNotification = (notification: any) => {
+      if (notification.userId === user.id) {
+        console.log("Received notification:", notification);
+        dispatch(addNotification(notification));
+      }
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("newNotification", onNewNotification);
+
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      onConnect();
+    }
+
+    return () => {
+      socket.emit("leaveUser", { userId: user.id });
+      socket.off("connect", onConnect);
+      socket.off("newNotification", onNewNotification);
+    };
+  }, [user?.id, dispatch]);
+
   return (
     <Router>
       <Navbar />

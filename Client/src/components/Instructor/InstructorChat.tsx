@@ -18,6 +18,7 @@ import { addMessage } from "@/redux/slices/chatSlice";
 import { Eye, Paperclip, X, Edit, Trash, Smile } from "lucide-react";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import EmojiPicker from "emoji-picker-react";
+import { addNotification } from "@/redux/slices/notificationSlice";
 
 interface ChatPreview {
   courseId: string;
@@ -123,7 +124,6 @@ export default function InstructorChat() {
       console.log("New message received:", message);
       dispatch(addMessage(message));
 
-      // Update chat previews for all messages, not just the selected chat
       setChatPreviews((prev) => {
         const studentId =
           message.senderId !== user?.id
@@ -164,7 +164,6 @@ export default function InstructorChat() {
         return [newChat, ...prev];
       });
 
-      // Update displayed messages if the message belongs to the selected chat
       if (
         selectedChat &&
         message.courseId === selectedChat.courseId &&
@@ -224,11 +223,29 @@ export default function InstructorChat() {
       }
     };
 
+    const onMessageRead = (readMessage: Message) => {
+      if (
+        selectedChat &&
+        readMessage.courseId === selectedChat.courseId &&
+        ((readMessage.senderId === selectedChat.studentId &&
+          readMessage.recipientId === user?.id) ||
+          (readMessage.senderId === user?.id &&
+            readMessage.recipientId === selectedChat.studentId))
+      ) {
+        setDisplayedMessages((prev) =>
+          prev.map((msg) => (msg._id === readMessage._id ? readMessage : msg))
+        );
+        dispatch(addMessage(readMessage));
+      }
+    };
+
+
     socket.on("connect", onConnect);
     socket.on("onlineUsers", onOnlineUsers);
     socket.on("newMessage", onNewMessage);
     socket.on("messageEdited", onMessageEdited);
     socket.on("messageDeleted", onMessageDeleted);
+    socket.on("messageRead", onMessageRead);
 
     if (!socket.connected) {
       console.log("Socket not connected, connecting...");
@@ -245,8 +262,15 @@ export default function InstructorChat() {
       socket.off("newMessage", onNewMessage);
       socket.off("messageEdited", onMessageEdited);
       socket.off("messageDeleted", onMessageDeleted);
+      socket.off("messageRead", onMessageRead);
     };
-  }, [user?.id, chatPreviews, selectedChat, dispatch, scrollToBottom]);
+  }, [
+    user?.id,
+    chatPreviews,
+    selectedChat,
+    scrollToBottom,
+    dispatch,
+  ]);
 
   useEffect(() => {
     if (!conversationData?.data) return;
@@ -377,7 +401,6 @@ export default function InstructorChat() {
           (msg.recipientId === chat.studentId && msg.senderId === user?.id))
     );
     setDisplayedMessages(filteredMessages);
-    // Reset unread count when chat is opened
     setChatPreviews((prev) =>
       prev.map((preview) =>
         preview.studentId === chat.studentId &&
@@ -590,7 +613,6 @@ export default function InstructorChat() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-4 p-4 bg-gray-100">
-      {/* Chat List */}
       <Card className="w-1/3 shadow-md rounded-xl border border-gray-200 overflow-hidden">
         <CardHeader className="bg-white border-b py-3">
           <CardTitle className="text-lg font-semibold text-gray-800">
@@ -657,7 +679,6 @@ export default function InstructorChat() {
         </CardContent>
       </Card>
 
-      {/* Chat Area */}
       <Card className="flex-1 shadow-md rounded-xl border border-gray-200 flex flex-col overflow-hidden">
         <CardHeader className="bg-white border-b py-3 flex justify-between items-center">
           <CardTitle className="text-lg font-semibold text-gray-800">
