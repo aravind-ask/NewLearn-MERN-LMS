@@ -7,7 +7,7 @@ import {
   useUpdateOfferMutation,
   useDeleteOfferMutation,
 } from "@/redux/services/offersApi";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/common/DataTable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import {

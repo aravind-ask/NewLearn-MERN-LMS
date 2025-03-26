@@ -1,4 +1,4 @@
-import FormControls from "@/components/common-form/Form-Controls";
+import FormControls from "@/components/common/Form-Controls";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { courseLandingPageFormControls } from "@/config/CourseConfigs";
 import { RootState } from "@/redux/store";
@@ -38,10 +38,12 @@ const CourseLandingPage = () => {
 
   useEffect(() => {
     if (categoriesData) {
-      const transformedCategories = categoriesData.data.data.map((category) => ({
-        id: category._id,
-        label: category.name,
-      }));
+      const transformedCategories = categoriesData.data.data.map(
+        (category) => ({
+          id: category._id,
+          label: category.name,
+        })
+      );
 
       const updatedFormControls = courseLandingPageFormControls.map(
         (control) => {

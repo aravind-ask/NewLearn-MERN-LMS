@@ -6,7 +6,7 @@
 //   componentType: "input" | "select" | "textarea";
 //   options?: { id: string; label: string }[];
 // }
-import { FormControl } from "../components/common-form/Form-Controls";
+import { FormControl } from "../components/common/Form-Controls";
 
 export interface InitialFormData {
   [key: string]: string | boolean;

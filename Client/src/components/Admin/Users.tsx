@@ -6,7 +6,7 @@ import {
 } from "@/redux/services/userApi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/common/DataTable";
 import {
   AlertDialog,
   AlertDialogAction,

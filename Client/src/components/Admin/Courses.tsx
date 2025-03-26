@@ -6,7 +6,7 @@ import {
 } from "@/redux/services/courseApi";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { DataTable } from "../../components/DataTable";
+import { DataTable } from "../common/DataTable";
 import {
   AlertDialog,
   AlertDialogAction,

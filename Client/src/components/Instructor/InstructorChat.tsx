@@ -120,6 +120,51 @@ export default function InstructorChat() {
     };
 
     const onNewMessage = (message: Message) => {
+      console.log("New message received:", message);
+      dispatch(addMessage(message));
+
+      // Update chat previews for all messages, not just the selected chat
+      setChatPreviews((prev) => {
+        const studentId =
+          message.senderId !== user?.id
+            ? message.senderId
+            : message.recipientId;
+        const key = `${studentId}-${message.courseId}`;
+        const existingChat = prev.find(
+          (chat) => `${chat.studentId}-${chat.courseId}` === key
+        );
+
+        if (existingChat) {
+          const updatedChat = {
+            ...existingChat,
+            lastMessage: message.isDeleted
+              ? "This message was deleted"
+              : message.message,
+            lastMessageTimestamp: message.timestamp,
+            unreadCount:
+              message.isRead || message.senderId === user?.id
+                ? existingChat.unreadCount
+                : existingChat.unreadCount + 1,
+          };
+          const filteredPreviews = prev.filter((chat) => chat !== existingChat);
+          return [updatedChat, ...filteredPreviews];
+        }
+
+        const newChat: ChatPreview = {
+          courseId: message.courseId,
+          courseTitle: message.courseTitle || "Unknown Course",
+          studentId,
+          studentName: message.senderName || "Unknown Student",
+          lastMessage: message.isDeleted
+            ? "This message was deleted"
+            : message.message,
+          lastMessageTimestamp: message.timestamp,
+          unreadCount: message.isRead || message.senderId === user?.id ? 0 : 1,
+        };
+        return [newChat, ...prev];
+      });
+
+      // Update displayed messages if the message belongs to the selected chat
       if (
         selectedChat &&
         message.courseId === selectedChat.courseId &&
@@ -142,7 +187,6 @@ export default function InstructorChat() {
             ? prev
             : [...prev, message];
         });
-        dispatch(addMessage(message));
         scrollToBottom();
       }
     };
@@ -333,6 +377,15 @@ export default function InstructorChat() {
           (msg.recipientId === chat.studentId && msg.senderId === user?.id))
     );
     setDisplayedMessages(filteredMessages);
+    // Reset unread count when chat is opened
+    setChatPreviews((prev) =>
+      prev.map((preview) =>
+        preview.studentId === chat.studentId &&
+        preview.courseId === chat.courseId
+          ? { ...preview, unreadCount: 0 }
+          : preview
+      )
+    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

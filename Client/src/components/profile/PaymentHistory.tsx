@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGetPaymentHistoryQuery } from "@/redux/services/paymentApi";
 import { Button } from "@/components/ui/button";
 import { Download, AlertCircle, CheckCircle2 } from "lucide-react";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/common/DataTable";
 import { format } from "date-fns";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -214,7 +214,9 @@ const PaymentHistory = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Purchase History</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        Purchase History
+      </h1>
       {payments.length > 0 ? (
         <div className="bg-white rounded-lg shadow-md border border-gray-200">
           <DataTable

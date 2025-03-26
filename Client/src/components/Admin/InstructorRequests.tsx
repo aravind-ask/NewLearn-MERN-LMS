@@ -5,7 +5,7 @@ import {
   useReviewInstructorApplicationMutation,
 } from "@/redux/services/instructorApi";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/common/DataTable";
 import {
   AlertDialog,
   AlertDialogAction,

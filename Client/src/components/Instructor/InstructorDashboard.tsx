@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IndianRupee, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { DataTable } from "../../components/DataTable";
+import { DataTable } from "../common/DataTable";
 
 interface Student {
   studentName: string;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/common/DataTable";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +59,7 @@ const Category = () => {
   } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [editErrorMessage, setEditErrorMessage] = useState(""); // Added for edit dialog
 
   const handleCreateCategory = async () => {
     if (!categoryName.trim()) {
@@ -86,9 +87,20 @@ const Category = () => {
 
   const handleUpdateCategory = async () => {
     if (!editCategory?.name.trim()) {
-      toast.error("Category name is required");
+      setEditErrorMessage("Category name is required");
       return;
     }
+    // Check for duplicate, excluding the current category being edited
+    const isDuplicate = categories?.data?.data?.some(
+      (cat) =>
+        cat.name.toLowerCase() === editCategory.name.toLowerCase() &&
+        cat._id !== editCategory.id
+    );
+    if (isDuplicate) {
+      setEditErrorMessage("Category already exists.");
+      return;
+    }
+
     try {
       await updateCategory({
         id: editCategory.id,
@@ -96,6 +108,7 @@ const Category = () => {
       }).unwrap();
       toast.success("Category updated successfully");
       setEditCategory(null);
+      setEditErrorMessage("");
       refetch();
     } catch (error) {
       toast.error("Failed to update category");
@@ -235,12 +248,16 @@ const Category = () => {
               <Input
                 id="edit-category-name"
                 value={editCategory?.name || ""}
-                onChange={(e) =>
-                  setEditCategory({ ...editCategory!, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setEditCategory({ ...editCategory!, name: e.target.value });
+                  setEditErrorMessage("");
+                }}
                 placeholder="Enter new category name"
                 className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
+              {editErrorMessage && (
+                <p className="text-red-500 text-sm mt-1">{editErrorMessage}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
