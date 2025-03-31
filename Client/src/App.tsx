@@ -34,6 +34,7 @@ import { addNotification } from "@/redux/slices/notificationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { RootState } from "./redux/store";
+import MockInterviewPage from "./pages/MockInterviewPage";
 
 function App() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -134,6 +135,7 @@ function App() {
               path="/instructor/profile/:instructorId"
               element={<InstructorProfile />}
             />
+            <Route path="/mock-interview" element={<MockInterviewPage />} />
           </Route>
 
           {/* Admin Routes */}

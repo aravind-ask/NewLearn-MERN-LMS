@@ -113,6 +113,14 @@ export default function Navbar() {
         >
           Teach on NewLearn
         </Link>
+        {user && (
+          <Link
+            to="/mock-interview"
+            className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+          >
+            AI Mock Interview
+          </Link>
+        )}
       </nav>
 
       {/* Desktop Search Bar */}
@@ -154,7 +162,7 @@ export default function Navbar() {
                 </Badge>
               )} */}
             </Link>
-            <NotificationDropdown/>
+            <NotificationDropdown />
             <AvatarDropdown />
           </>
         ) : (
@@ -246,6 +254,14 @@ export default function Navbar() {
                 <Mountain />
                 Teach on NewLearn
               </Link>
+              {user && (
+                <Link
+                  to="/mock-interview"
+                  className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                >
+                  AI Mock Interview
+                </Link>
+              )}
               {user && (
                 <>
                   <Link

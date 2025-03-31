@@ -1,12 +1,12 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface INotification extends Document {
-  userId: string; // Recipient of the notification
-  type: "new_course" | "message" | "assignment" | "other"; // Notification type
-  title: string; // Short title (e.g., "New Course Available")
-  message: string; // Detailed message
-  relatedId?: string; // Optional ID of related entity (e.g., courseId, messageId)
-  isRead: boolean; // Whether the user has read it
+  userId: string;
+  type: "new_course" | "message" | "assignment" | "other";
+  title: string;
+  message: string;
+  relatedId?: string;
+  isRead: boolean;
   createdAt: Date;
 }
 

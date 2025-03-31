@@ -172,7 +172,6 @@ const DiscussionItem = memo(
 
     const onEmojiClick = (emojiObject: { emoji: string }) => {
       onCommentChange(discussion._id, commentInput + emojiObject.emoji);
-      // Do not close the picker here to allow multiple selections
     };
 
     useEffect(() => {

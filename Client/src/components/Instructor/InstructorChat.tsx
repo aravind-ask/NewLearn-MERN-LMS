@@ -18,7 +18,6 @@ import { addMessage } from "@/redux/slices/chatSlice";
 import { Eye, Paperclip, X, Edit, Trash, Smile } from "lucide-react";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import EmojiPicker from "emoji-picker-react";
-import { addNotification } from "@/redux/slices/notificationSlice";
 
 interface ChatPreview {
   courseId: string;

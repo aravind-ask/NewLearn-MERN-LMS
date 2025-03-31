@@ -47,6 +47,7 @@ import Reviews from "@/components/Reviews";
 import Discussions from "@/components/Discussions";
 import ChatWithTrainer from "@/components/ChatWithTrainer";
 import { generatePDFCertificate } from "@/utils/certificateGenerator";
+import Loading from "@/components/Loading";
 
 function EnrolledCourseDetailsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -56,11 +57,14 @@ function EnrolledCourseDetailsPage() {
   const [showCourseCompleteDialog, setShowCourseCompleteDialog] =
     useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isSideBarOpen, setIsSideBarOpen] = useState(false); // Closed by default on mobile
+  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   const { courseId } = useParams();
 
-  const { data: courseProgressData, refetch: refetchCourseProgress } =
-    useGetCourseProgressQuery({ courseId });
+  const {
+    data: courseProgressData,
+    isLoading,
+    refetch: refetchCourseProgress,
+  } = useGetCourseProgressQuery({ courseId });
   const [markLectureAsViewed] = useMarkLectureAsViewedMutation();
   const [resetCourseProgress] = useResetCourseProgressMutation();
   const { data: certificatesData, refetch: refetchCertificates } =
@@ -174,6 +178,10 @@ function EnrolledCourseDetailsPage() {
   useEffect(() => {
     if (showConfetti) setTimeout(() => setShowConfetti(false), 15000);
   }, [showConfetti]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
