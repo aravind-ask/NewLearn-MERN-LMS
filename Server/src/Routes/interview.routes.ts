@@ -15,6 +15,12 @@ router.post("/", authMiddleware.verifyAccessToken, (req, res) =>
 router.get("/", authMiddleware.verifyAccessToken, (req, res) =>
   interviewController.getUserInterviews(req, res)
 );
+router.post("/user-answers", (req, res) =>
+  interviewController.createUserAnswer(req, res)
+);
+router.get("/user-answers", (req, res) =>
+  interviewController.getUserAnswer(req, res)
+);
 router.get("/:id", authMiddleware.verifyAccessToken, (req, res) =>
   interviewController.getInterview(req, res)
 );

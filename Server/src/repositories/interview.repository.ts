@@ -1,3 +1,4 @@
+import { IUserAnswer, UserAnswerModel } from "../models/UserAnswer";
 import { InterviewModel, IInterview } from "../models/Interview";
 import { IInterviewRepository } from "./interfaces/IInterviewRepository";
 
@@ -27,5 +28,36 @@ export class InterviewRepository implements IInterviewRepository {
       { new: true, runValidators: true }
     ).lean();
     return updatedInterview as IInterview | null;
+  }
+
+  async createUserAnswer(
+    userAnswer: Partial<IUserAnswer>
+  ): Promise<IUserAnswer> {
+    const newUserAnswer = await UserAnswerModel.create(userAnswer);
+    return newUserAnswer.toObject() as IUserAnswer;
+  }
+
+  async findByUserAndQuestion(
+    userId: string,
+    question: string,
+    mockIdRef: string
+  ): Promise<IUserAnswer | null> {
+    const userAnswer = await UserAnswerModel.findOne({
+      userId,
+      question,
+      mockIdRef,
+    }).lean();
+    return userAnswer as IUserAnswer | null;
+  }
+
+  async findByUserAndInterview(
+    userId: string,
+    mockIdRef: string
+  ): Promise<IUserAnswer[]> {
+    const userAnswers = await UserAnswerModel.find({
+      userId,
+      mockIdRef,
+    }).lean();
+    return userAnswers as IUserAnswer[];
   }
 }

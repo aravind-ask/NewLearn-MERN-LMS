@@ -121,6 +121,7 @@ const apiInstance = createApi({
     "Discussion",
     "Certificates",
     "Interview",
+    "UserAnswer",
   ],
   endpoints: () => ({}),
 });

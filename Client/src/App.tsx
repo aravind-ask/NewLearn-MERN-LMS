@@ -38,6 +38,9 @@ import MockInterviewPage from "./pages/MockInterviewPage";
 import { Generate } from "./components/generate";
 import AIDashboard from "./pages/AIDashboard";
 import CreateEditPage from "./pages/CreateEditPage";
+import MockLoadPage from "./pages/MockLoadPage";
+import InterviewPage from "./pages/InterviewPage";
+import FeedBack from "./pages/FeedBack";
 
 function App() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -142,6 +145,9 @@ function App() {
             <Route path="/generate" element={<Generate />}>
               <Route index element={<AIDashboard />} />
               <Route path=":interviewId" element={<CreateEditPage />} />
+              <Route path="interview/:interviewId" element={<MockLoadPage />} />
+              <Route path="interview/:interviewId/start" element={<InterviewPage />} />
+              <Route path="feedback/:interviewId" element={<FeedBack />} />
             </Route>
           </Route>
 

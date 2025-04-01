@@ -1,4 +1,4 @@
-import { Interview } from "@/types";
+import { Interview, UserAnswer } from "@/types";
 import { api } from "./apiSetup";
 
 export const interviewApi = api.injectEndpoints({
@@ -27,6 +27,32 @@ export const interviewApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Interview"],
     }),
+    getUserAnswer: builder.query<
+      UserAnswer | null,
+      { userId: string; question: string; mockIdRef: string }
+    >({
+      query: ({ userId, question, mockIdRef }) =>
+        `interviews/user-answers?userId=${userId}&question=${encodeURIComponent(
+          question
+        )}&mockIdRef=${mockIdRef}`,
+      providesTags: ["UserAnswer"],
+    }),
+    getUserAnswersByInterview: builder.query<
+      UserAnswer[],
+      { userId: string; mockIdRef: string }
+    >({
+      query: ({ userId, mockIdRef }) =>
+        `interviews/user-answers?userId=${userId}&mockIdRef=${mockIdRef}`,
+      providesTags: ["UserAnswer"],
+    }),
+    createUserAnswer: builder.mutation<UserAnswer, Partial<UserAnswer>>({
+      query: (userAnswer) => ({
+        url: "interviews/user-answers",
+        method: "POST",
+        body: userAnswer,
+      }),
+      invalidatesTags: ["UserAnswer"],
+    }),
   }),
 });
 
@@ -35,4 +61,7 @@ export const {
   useCreateInterviewMutation,
   useGetInterviewsByUserQuery,
   useUpdateInterviewMutation,
+  useGetUserAnswerQuery,
+  useGetUserAnswersByInterviewQuery,
+  useCreateUserAnswerMutation,
 } = interviewApi;

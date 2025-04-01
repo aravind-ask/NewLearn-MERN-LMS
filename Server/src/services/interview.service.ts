@@ -1,3 +1,4 @@
+import { IUserAnswer } from "../models/UserAnswer";
 import { IInterview } from "../models/Interview";
 import { IInterviewRepository } from "../repositories/interfaces/IInterviewRepository";
 
@@ -36,5 +37,33 @@ export class InterviewService {
       throw new Error("Interview not found");
     }
     return updatedInterview;
+  }
+
+  async createUserAnswer(
+    userAnswer: Partial<IUserAnswer>
+  ): Promise<IUserAnswer> {
+    if (!userAnswer.userId || !userAnswer.mockIdRef) {
+      throw new Error("User ID and Mock ID are required");
+    }
+    return this.interviewRepository.createUserAnswer(userAnswer);
+  }
+
+  async getUserAnswer(
+    userId: string,
+    question: string,
+    mockIdRef: string
+  ): Promise<IUserAnswer | null> {
+    return this.interviewRepository.findByUserAndQuestion(
+      userId,
+      question,
+      mockIdRef
+    );
+  }
+
+  async getUserAnswersByInterview(
+    userId: string,
+    mockIdRef: string
+  ): Promise<IUserAnswer[]> {
+    return this.interviewRepository.findByUserAndInterview(userId, mockIdRef);
   }
 }
