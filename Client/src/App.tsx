@@ -35,6 +35,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { RootState } from "./redux/store";
 import MockInterviewPage from "./pages/MockInterviewPage";
+import { Generate } from "./components/generate";
+import AIDashboard from "./pages/AIDashboard";
+import CreateEditPage from "./pages/CreateEditPage";
 
 function App() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -136,6 +139,10 @@ function App() {
               element={<InstructorProfile />}
             />
             <Route path="/mock-interview" element={<MockInterviewPage />} />
+            <Route path="/generate" element={<Generate />}>
+              <Route index element={<AIDashboard />} />
+              <Route path=":interviewId" element={<CreateEditPage />} />
+            </Route>
           </Route>
 
           {/* Admin Routes */}
