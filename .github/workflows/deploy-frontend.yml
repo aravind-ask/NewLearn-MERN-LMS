@@ -1,0 +1,27 @@
+name: Deploy Frontend to Google App Engine
+
+on:
+  push:
+    branches: [main]
+    paths: ["Client/**"]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"  # Fixed indentation and removed braces
+      - run: |
+          npm install
+          npm run build
+        working-directory: ./Client
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # Fixed indentation
+      - uses: google-github-actions/deploy-appengine@v1
+        with:
+          project_id: newlearn-lms
+          working_directory: ./Client
+          deliverables: app.yaml

@@ -50,7 +50,7 @@ const io = new socket_io_1.Server(httpServer, {
                 callback(new Error("Not allowed by CORS"));
             }
         },
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
     },
