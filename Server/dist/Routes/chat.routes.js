@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const chat_controller_1 = require("../Controllers/chat.controller");
+const chat_service_1 = require("../services/chat.service");
+const chat_repository_1 = require("../repositories/chat.repository");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = express_1.default.Router();
+const chatRepository = new chat_repository_1.ChatRepository();
+const chatService = new chat_service_1.ChatService(chatRepository);
+const chatController = new chat_controller_1.ChatController(chatService);
+router.post("/send", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.sendMessage.bind(chatController));
+router.put("/:messageId", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.editMessage.bind(chatController));
+router.delete("/:messageId", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.deleteMessage.bind(chatController));
+router.get("/:courseId/:trainerId", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.getConversation.bind(chatController));
+router.get("/all", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.getAllInstructorConversations.bind(chatController));
+router.put("/read/:messageId", auth_middleware_1.authMiddleware.verifyAccessToken, chatController.markMessageAsRead.bind(chatController));
+exports.default = router;

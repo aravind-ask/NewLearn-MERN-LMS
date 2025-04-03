@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const interview_controller_1 = require("../Controllers/interview.controller");
+const interview_repository_1 = require("../repositories/interview.repository");
+const interview_service_1 = require("../services/interview.service");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+const interviewRepository = new interview_repository_1.InterviewRepository();
+const interviewService = new interview_service_1.InterviewService(interviewRepository);
+const interviewController = new interview_controller_1.InterviewController(interviewService);
+router.post("/", auth_middleware_1.authMiddleware.verifyAccessToken, (req, res) => interviewController.createInterview(req, res));
+router.get("/", auth_middleware_1.authMiddleware.verifyAccessToken, (req, res) => interviewController.getUserInterviews(req, res));
+router.post("/user-answers", (req, res) => interviewController.createUserAnswer(req, res));
+router.get("/user-answers", (req, res) => interviewController.getUserAnswer(req, res));
+router.get("/:id", auth_middleware_1.authMiddleware.verifyAccessToken, (req, res) => interviewController.getInterview(req, res));
+router.patch("/:id", auth_middleware_1.authMiddleware.verifyAccessToken, (req, res) => interviewController.updateInterview(req, res));
+exports.default = router;

@@ -45,10 +45,16 @@ const UserSchema = new mongoose_1.Schema({
         default: "student",
     },
     isVerified: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
     enrolledCourses: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Course" }],
     photoUrl: { type: String, default: "" },
     refreshToken: { type: String, default: null },
+    bio: { type: String, default: "" },
+    phoneNumber: { type: String, default: "" },
+    address: { type: String, default: "" },
+    dateOfBirth: { type: Date, default: null },
+    education: { type: String, default: "" },
 }, { timestamps: true });
 exports.User = mongoose_1.default.model("User", UserSchema);

@@ -31,17 +31,31 @@ dotenv.config();
 const app = express();
 // Create HTTP server
 const httpServer = createServer(app);
-// Initialize Socket.IO
+
+
+const allowedOrigins = [
+  process.env.CLIENT_URL || "https://newlearn-lms.appspot.com", // Production
+  "http://localhost:5173", // Vite dev server
+  "http://localhost:3000", // Local testing with serve
+];
+
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   },
 });
 
-app.set("io", io); 
+app.set("io", io);
 
 const upload = multer();
 
@@ -50,7 +64,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );

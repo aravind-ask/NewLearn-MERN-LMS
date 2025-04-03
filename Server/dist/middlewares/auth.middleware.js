@@ -10,25 +10,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
-const tokenUtils_1 = require("@/utils/tokenUtils");
+const tokenUtils_1 = require("../utils/tokenUtils");
+const responseHandler_1 = require("../utils/responseHandler");
+const statusCodes_1 = require("../utils/statusCodes");
 exports.authMiddleware = {
     verifyAccessToken(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const authHeader = req.headers.authorization;
                 if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                    return res
-                        .status(401)
-                        .json({ message: "Access token missing or malformed" });
+                    (0, responseHandler_1.errorResponse)(res, "Access token missing or malformed", statusCodes_1.HttpStatus.UNAUTHORIZED);
+                    return;
                 }
                 const token = authHeader.split(" ")[1];
                 const decoded = tokenUtils_1.tokenUtils.verifyAccessToken(token);
                 console.log("decoded", decoded);
-                req.user = decoded;
+                req.user = { id: decoded.userId, role: decoded.role };
                 next();
             }
             catch (error) {
-                res.status(401).json({ message: "Invalid or expired access token" });
+                console.error("Error verifying access token:", error);
+                (0, responseHandler_1.errorResponse)(res, "Invalid or expired access token", statusCodes_1.HttpStatus.UNAUTHORIZED);
             }
         });
     },

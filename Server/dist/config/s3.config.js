@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPresignedUrl = exports.s3 = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const uuid_1 = require("uuid");
 dotenv_1.default.config();
 exports.s3 = new aws_sdk_1.default.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -24,7 +25,7 @@ exports.s3 = new aws_sdk_1.default.S3({
 const getPresignedUrl = (fileName) => __awaiter(void 0, void 0, void 0, function* () {
     const params = {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: `profile-pics/${fileName}`,
+        Key: `uploads/${(0, uuid_1.v4)()}-${Date.now()}-${fileName}`,
         Expires: 60,
         ContentType: "image/*",
     };

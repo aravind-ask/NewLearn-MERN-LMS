@@ -36,7 +36,7 @@ export class DiscussionRepository implements IDiscussionRepository {
     })
       .populate("userId", "name")
       .lean();
-
+    // @ts-ignore: Temporarily bypass type checking for this call
     return comments as IComment[];
   }
 
@@ -84,6 +84,7 @@ export class DiscussionRepository implements IDiscussionRepository {
       .populate("userId", "name")
       .lean();
     if (!comment) throw new NotFoundError("Comment not found");
+    // @ts-ignore: Temporarily bypass type checking for this call
     return comment as IComment;
   }
 

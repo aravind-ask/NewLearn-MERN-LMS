@@ -28,6 +28,7 @@ export class CourseService implements ICourseService {
       ...courseEditData,
       category: new mongoose.Types.ObjectId(courseEditData.category),
     };
+    // @ts-ignore: Temporarily bypass type checking for this call
     return await this.courseRepo.updateCourse(courseId, courseData);
   }
 
