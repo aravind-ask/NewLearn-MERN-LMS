@@ -166,7 +166,6 @@ export default function Homepage() {
         </section>
       )}
 
-      {/* Categories Section */}
       {isCategoriesLoading ? (
         <Loading />
       ) : (
