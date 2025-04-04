@@ -224,7 +224,7 @@ export default function Homepage() {
 
                     {/* Instructor and Category */}
                     <p className="text-sm text-gray-600 mt-1">
-                      by {course.instructorName}
+                      By {course.instructorName}
                     </p>
                     <p className="text-sm text-gray-500 mb-2">
                       {course.category.name}
