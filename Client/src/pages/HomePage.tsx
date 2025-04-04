@@ -4,8 +4,6 @@ import { useGetCategoriesQuery } from "@/redux/services/categoryApi";
 import { useGetCoursesQuery } from "@/redux/services/courseApi";
 import { useGetStudentCoursesQuery } from "@/redux/services/userApi";
 import { useNavigate } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import {
