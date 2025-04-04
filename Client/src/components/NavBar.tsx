@@ -15,22 +15,22 @@ import {
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { AvatarDropdown } from "./AvatarDropDown"; // Assuming this exists
+import { AvatarDropdown } from "./AvatarDropDown";
 import SearchBar from "./SearchBar";
 import { logout } from "@/redux/slices/authSlice";
 import { useLogoutMutation } from "@/redux/services/authApi";
 import NotificationDropdown from "./common/NotificationDropdown";
+import { useState } from "react";
 
 export default function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
-  // Uncomment if cart and wishlist are implemented
-  // const { cart, wishlist } = useSelector((state: RootState) => state.user);
   const role = user?.role;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logoutMutation] = useLogoutMutation();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   const handleLogout = async () => {
     try {
       if (!user) {
@@ -44,7 +44,11 @@ export default function Navbar() {
     }
   };
 
-  // Admin Navbar
+  const handleLinkClick = (path) => {
+    setIsSheetOpen(false);
+    navigate(path);
+  };
+
   if (role === "admin") {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center bg-gradient-to-r from-teal-800 to-purple-800 px-6 text-white shadow-lg">
@@ -69,7 +73,6 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* Search Bar - Visible on small screens */}
       <div className="flex-1 flex items-center mx-2 lg:hidden">
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -81,7 +84,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Desktop Navigation */}
       <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
         <Link
           to="/"
@@ -123,20 +125,8 @@ export default function Navbar() {
         )}
       </nav>
 
-      {/* Desktop Search Bar */}
       <SearchBar />
-      {/* <div className="hidden lg:flex items-center flex-1 max-w-xs mx-4">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search courses..."
-            className="pl-10 py-2 border-gray-300 focus:border-teal-500 focus:ring-teal-500 rounded-full"
-          />
-        </div>
-      </div> */}
 
-      {/* Desktop User Actions */}
       <div className="hidden lg:flex items-center gap-4">
         {user ? (
           <>
@@ -145,22 +135,12 @@ export default function Navbar() {
               className="relative text-gray-600 hover:text-teal-600 transition-colors"
             >
               <ShoppingCart className="h-6 w-6" />
-              {/* {cart?.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-teal-600 text-white">
-                  {cart.length}
-                </Badge>
-              )} */}
             </Link>
             <Link
               to="/profile/wishlist"
               className="relative text-gray-600 hover:text-teal-600 transition-colors"
             >
               <Heart className="h-6 w-6" />
-              {/* {wishlist?.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-teal-600 text-white">
-                  {wishlist.length}
-                </Badge>
-              )} */}
             </Link>
             <NotificationDropdown />
             <AvatarDropdown />
@@ -184,8 +164,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Mobile Menu Trigger - Moved to Right */}
-      <Sheet>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
           <Button
             variant="ghost"
@@ -198,7 +177,11 @@ export default function Navbar() {
         </SheetTrigger>
         <SheetContent side="right" className="w-72 bg-white p-6">
           <div className="flex flex-col gap-6">
-            <Link to="/" className="flex items-center gap-2 mb-4">
+            <Link
+              to="/"
+              className="flex items-center gap-2 mb-4"
+              onClick={() => setIsSheetOpen(false)}
+            >
               <Mountain className="h-6 w-6 text-teal-600" />
               <span className="text-xl font-bold text-gray-800">NewLearn</span>
             </Link>
@@ -222,6 +205,7 @@ export default function Navbar() {
               <Link
                 to="/"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                onClick={() => setIsSheetOpen(false)}
               >
                 <Home />
                 Home
@@ -229,6 +213,7 @@ export default function Navbar() {
               <Link
                 to="/all-courses"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                onClick={() => setIsSheetOpen(false)}
               >
                 <Book />
                 Courses
@@ -236,6 +221,7 @@ export default function Navbar() {
               <Link
                 to="/about"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                onClick={() => setIsSheetOpen(false)}
               >
                 <Info />
                 About
@@ -243,6 +229,7 @@ export default function Navbar() {
               <Link
                 to="/contact-us"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                onClick={() => setIsSheetOpen(false)}
               >
                 <Mail />
                 Contact
@@ -250,35 +237,35 @@ export default function Navbar() {
               <Link
                 to="/instructor/apply"
                 className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                onClick={() => setIsSheetOpen(false)}
               >
                 <Mountain />
                 Teach on NewLearn
               </Link>
               {user && (
-                <Link
-                  to="/mock-interview"
-                  className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
-                >
-                  AI Mock Interview
-                </Link>
-              )}
-              {user && (
                 <>
+                  <Link
+                    to="/mock-interview"
+                    className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                    onClick={() => setIsSheetOpen(false)}
+                  >
+                    AI Mock Interview
+                  </Link>
                   <Link
                     to="/profile/cart"
                     className="text-sm font-medium text-gray-600 hover:text-teal-600 flex items-center gap-4"
+                    onClick={() => setIsSheetOpen(false)}
                   >
                     <ShoppingCart />
                     Cart
-                    {/* {cart?.length > 0 && <Badge>{cart.length}</Badge>} */}
                   </Link>
                   <Link
                     to="/profile/wishlist"
                     className="text-sm font-medium text-gray-600 hover:text-teal-600 flex items-center gap-4"
+                    onClick={() => setIsSheetOpen(false)}
                   >
                     <Heart />
                     Wishlist
-                    {/* {wishlist?.length > 0 && <Badge>{wishlist.length}</Badge>} */}
                   </Link>
                   <NotificationDropdown />
                 </>
@@ -288,13 +275,13 @@ export default function Navbar() {
               <div className="flex flex-col gap-2 mt-4">
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/login")}
+                  onClick={() => handleLinkClick("/login")}
                   className="border-teal-600 text-teal-600 hover:bg-teal-50"
                 >
                   Login
                 </Button>
                 <Button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => handleLinkClick("/signup")}
                   className="bg-gradient-to-r from-teal-600 to-purple-600 text-white hover:from-teal-700 hover:to-purple-700"
                 >
                   Signup
