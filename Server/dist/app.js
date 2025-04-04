@@ -30,9 +30,7 @@ const multer_1 = __importDefault(require("multer"));
 const chat_socket_1 = require("./sockets/chat.socket");
 const discussion_socket_1 = require("./sockets/discussion.socket");
 dotenv_1.default.config();
-// Initialize Express app
 const app = (0, express_1.default)();
-// Create HTTP server
 const httpServer = (0, http_1.createServer)(app);
 const allowedOrigins = [
     process.env.CLIENT_URL || "https://newlearn-lms.el.r.appspot.com",
@@ -57,7 +55,6 @@ const io = new socket_io_1.Server(httpServer, {
 });
 app.set("io", io);
 const upload = (0, multer_1.default)();
-// Middleware setup
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cors_1.default)({
@@ -72,9 +69,7 @@ app.use((0, cors_1.default)({
     credentials: true,
 }));
 app.use((0, morgan_1.default)("dev"));
-// Database connection
 (0, db_1.connectDB)();
-// Routes
 app.use("/api/auth", auth_routes_1.default);
 app.use("/api/user", user_routes_1.default);
 app.use("/api/instructor", instructor_routes_1.default);
@@ -91,10 +86,8 @@ app.use("/api/chat", chat_routes_1.default);
 app.use("/api/discussion", discussion_routes_1.default);
 app.use("/api/notifications", notification_routes_1.default);
 app.use("/api/interviews", interview_routes_1.default);
-// Setup WebSocket for chat
 (0, chat_socket_1.setupChatSocket)(io);
 (0, discussion_socket_1.setupDiscussionSocket)(io);
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.log(err.stack);
     res.status(500).json({
@@ -102,5 +95,4 @@ app.use((err, req, res, next) => {
         message: err.message || "Internal Server Error",
     });
 });
-// Export the HTTP server instead of the Express app
 exports.default = httpServer;

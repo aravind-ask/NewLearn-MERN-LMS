@@ -27,9 +27,7 @@ import { setupDiscussionSocket } from "./sockets/discussion.socket";
 
 dotenv.config();
 
-// Initialize Express app
 const app = express();
-// Create HTTP server
 const httpServer = createServer(app);
 
 const allowedOrigins = [
@@ -58,7 +56,6 @@ app.set("io", io);
 
 const upload = multer();
 
-// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -75,10 +72,8 @@ app.use(
 );
 app.use(morgan("dev"));
 
-// Database connection
 connectDB();
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/instructor", instructorRoutes);
@@ -96,11 +91,9 @@ app.use("/api/discussion", discussionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/interviews", interviewRoutes);
 
-// Setup WebSocket for chat
 setupChatSocket(io);
 setupDiscussionSocket(io);
 
-// Error handling middleware
 app.use(
   (
     err: Error,
@@ -116,5 +109,4 @@ app.use(
   }
 );
 
-// Export the HTTP server instead of the Express app
 export default httpServer;
