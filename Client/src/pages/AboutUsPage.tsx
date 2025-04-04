@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, Users, Award } from "lucide-react";
-import banner from "@/assets/images/about-banner.png"; // Replace with your image path
+// import banner from "@/assets/images/about-banner.png"; // Replace with your image path
 import { useNavigate } from "react-router-dom";
 
 export default function AboutPage() {

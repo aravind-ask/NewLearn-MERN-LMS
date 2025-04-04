@@ -12,14 +12,15 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"  
+          node-version: "18"
       - run: |
+          echo -e "${{ secrets.CLIENT_ENV }}" > .env  # Inject CLIENT_ENV
           npm install
           npm run build
         working-directory: ./Client
       - uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
       - uses: google-github-actions/deploy-appengine@v1
         with:
           project_id: newlearn-lms
