@@ -179,7 +179,7 @@ export default function Homepage() {
               <Button
                 key={categoryItem._id}
                 variant="outline"
-                className="justify-start text-gray-700 border-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-full py-2 px-4"
+                className="justify-center text-gray-700 border-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-full py-2 px-4 text-xs sm:text-sm md:text-base whitespace-normal break-words w-full min-w-0 h-auto"
                 onClick={() => handleCategoryClick(categoryItem._id)}
               >
                 {categoryItem.name}
