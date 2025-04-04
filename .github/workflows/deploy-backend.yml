@@ -9,30 +9,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout code (includes pre-built dist/)
       - uses: actions/checkout@v3
-
-      # Set up Node.js (still needed for npm install on GCE)
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-
-      # Set up SSH key
       - run: |
           echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" > ssh_key
           chmod 600 ssh_key
-
-      # Deploy to GCE via SSH (no build step)
       - run: |
           ssh -i ssh_key -o StrictHostKeyChecking=no ${{ secrets.GCE_SSH_USER }}@${{ secrets.GCE_SSH_HOST }} << 'EOF'
             cd ~/NewLearn-MERN-LMS || git clone ${{ github.repository }} NewLearn-MERN-LMS && cd ~/NewLearn-MERN-LMS
             git pull origin main
             cd Server
-            echo "${{ secrets.SERVER_ENV }}" > .env  # Add .env file
-            npm install  # Install dependencies for runtime
+            echo -e "${{ secrets.SERVER_ENV }}" > .env  # Use -e for newlines
+            npm install
             pm2 reload lms-backend || pm2 start dist/server.js --name lms-backend
             sudo systemctl reload nginx
           EOF
-
-      # Cleanup SSH key
       - run: rm -f ssh_key
