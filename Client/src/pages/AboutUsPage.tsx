@@ -8,7 +8,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="flex flex-col lg:flex-row items-center justify-between py-16 px-4 lg:px-8 bg-gradient-to-r from-teal-50 to-purple-50">
         <div className="lg:w-1/2 lg:pr-12 mb-8 lg:mb-0">
           <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
@@ -91,7 +90,7 @@ export default function AboutPage() {
             {/* Team Member 1 */}
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
               <img
-                src="https://via.placeholder.com/150" // Replace with team member photo
+                src="https://via.placeholder.com/150" 
                 alt="Team Member"
                 className="w-24 h-24 rounded-full mx-auto mb-4"
               />
