@@ -41,6 +41,7 @@ import CreateEditPage from "./pages/CreateEditPage";
 import MockLoadPage from "./pages/MockLoadPage";
 import InterviewPage from "./pages/InterviewPage";
 import FeedBack from "./pages/FeedBack";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 function App() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -81,6 +82,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Navbar />
       <div className="pt-20">
         <Routes>
@@ -146,7 +148,10 @@ function App() {
               <Route index element={<AIDashboard />} />
               <Route path=":interviewId" element={<CreateEditPage />} />
               <Route path="interview/:interviewId" element={<MockLoadPage />} />
-              <Route path="interview/:interviewId/start" element={<InterviewPage />} />
+              <Route
+                path="interview/:interviewId/start"
+                element={<InterviewPage />}
+              />
               <Route path="feedback/:interviewId" element={<FeedBack />} />
             </Route>
           </Route>

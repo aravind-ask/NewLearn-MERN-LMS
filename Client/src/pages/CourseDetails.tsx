@@ -20,7 +20,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle,
   Globe,
@@ -60,9 +59,12 @@ import { useGetReviewsByCourseIdQuery } from "@/redux/services/ratingsApi";
 import { format } from "date-fns";
 import Loading from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
+import { RootState } from "@/redux/store";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { data, isLoading, isError, error } =
@@ -126,6 +128,10 @@ const CourseDetails = () => {
 
   const handleAddToCart = async () => {
     try {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
       await addToCartApi({ courseId, offer: course?.appliedOffer }).unwrap();
       dispatch(addToCart(course));
     } catch (error) {
@@ -135,6 +141,10 @@ const CourseDetails = () => {
 
   const handleRemoveFromCart = async () => {
     try {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
       await removeFromCartApi(courseId).unwrap();
       dispatch(removeFromCart(courseId));
     } catch (error) {
@@ -144,6 +154,10 @@ const CourseDetails = () => {
 
   const handleAddToWishlist = async () => {
     try {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
       await addToWishlistApi(courseId).unwrap();
       dispatch(addToWishlist(course));
     } catch (error) {
@@ -153,6 +167,10 @@ const CourseDetails = () => {
 
   const handleRemoveFromWishlist = async () => {
     try {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
       await removeFromWishlistApi(courseId).unwrap();
       dispatch(removeFromWishlist(courseId));
     } catch (error) {
@@ -214,43 +232,45 @@ const CourseDetails = () => {
           Go Back
         </Button>
       </div>
-      <div className="bg-gray-900 text-white p-8 rounded-t-lg">
-        <h1 className="text-3xl font-bold mb-4">{course?.title}</h1>
-        <p className="text-xl mb-4">{course?.subtitle}</p>
-        <div className="flex items-center space-x-4 mt-2 text-sm">
-          <span className="flex">
+      <div className="bg-gray-900 text-white p-4 sm:p-6 md:p-8 rounded-t-lg">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4">
+          {course?.title}
+        </h1>
+        <p className="text-lg sm:text-xl mb-2 sm:mb-4">{course?.subtitle}</p>
+        <div className="flex flex-wrap gap-3 sm:gap-4 mt-2 text-xs sm:text-sm">
+          <span className="flex items-center whitespace-nowrap">
             Created By {course?.instructorName}
             <Link
               to={`/instructor/profile/${course?.instructorId}`}
               className="ml-2 text-blue-500 hover:underline"
             >
-              <LinkIcon className="mr-1 h-4 w-4" />
+              <LinkIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </span>
-          <span className="flex items-center">
-            <BookIcon className="mr-1 h-4 w-4" />
+          <span className="flex items-center whitespace-nowrap">
+            <BookIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
             {course?.category.name}
           </span>
-          <span>
+          <span className="flex items-center whitespace-nowrap">
             Created On {format(new Date(course.date), "MMM dd, yyyy")}
           </span>
-          <span className="flex items-center">
-            <Globe className="mr-1 h-4 w-4" />
+          <span className="flex items-center whitespace-nowrap">
+            <Globe className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
             {course?.primaryLanguage}
           </span>
-          <span className="flex items-center">
-            <User2 className="mr-1 h-4 w-4" />
+          <span className="flex items-center whitespace-nowrap">
+            <User2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
             {course?.students.length}{" "}
             {course?.students.length <= 1 ? "Student" : "Students"}
           </span>
           {averageRating ? (
-            <span className="flex items-center">
-              <Star className="mr-1 h-4 w-4 text-yellow-500" />
+            <span className="flex items-center whitespace-nowrap">
+              <Star className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
               {averageRating} ({ratings.length} Reviews)
             </span>
           ) : (
-            <span className="flex items-center">
-              <Star className="mr-1 h-4 w-4 text-gray-500" />
+            <span className="flex items-center whitespace-nowrap">
+              <Star className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
               No ratings yet
             </span>
           )}

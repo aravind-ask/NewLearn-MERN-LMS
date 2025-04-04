@@ -7,15 +7,16 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useGetInterviewsByUserQuery } from "@/redux/services/interviewApi";
+import notfound from "../assets/images/not-found.svg";
 
- const AIDashboard = () => {
+const AIDashboard = () => {
   const {
     data: interviews = [],
     isLoading,
     isError,
     error,
-  } = useGetInterviewsByUserQuery("",{
-    pollingInterval: 5000
+  } = useGetInterviewsByUserQuery("", {
+    pollingInterval: 5000,
   });
 
   // Handle error state
@@ -51,15 +52,11 @@ import { useGetInterviewsByUserQuery } from "@/redux/services/interviewApi";
           ))
         ) : interviews.length > 0 ? (
           interviews.map((interview) => (
-            <InterviewPin key={interview.id} interview={interview} />
+            <InterviewPin key={interview._id} interview={interview} />
           ))
         ) : (
           <div className="md:col-span-3 w-full flex flex-grow items-center justify-center h-96 flex-col">
-            <img
-              src="/assets/svg/not-found.svg"
-              className="w-44 h-44 object-contain"
-              alt=""
-            />
+            <img src={notfound} className="w-44 h-44 object-contain" alt="" />
 
             <h2 className="text-lg font-semibold text-muted-foreground">
               No Data Found
@@ -82,6 +79,5 @@ import { useGetInterviewsByUserQuery } from "@/redux/services/interviewApi";
     </>
   );
 };
-
 
 export default AIDashboard;
