@@ -23,8 +23,24 @@ class AuthService {
     register(name, email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const existingUser = yield this.userRepo.findUserByEmail(email);
-            if (existingUser)
-                throw new appError_1.AppError("User already exists", 409);
+            if (existingUser) {
+                if (existingUser.isVerified) {
+                    throw new appError_1.AppError("Account already exists, Please Login!", 409);
+                }
+                else {
+                    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+                    yield this.userRepo.updateUser(existingUser._id, { otp, otpExpires });
+                    try {
+                        yield (0, emailUtils_1.sendOTPEmail)(email, otp);
+                    }
+                    catch (error) {
+                        console.error("Failed to send OTP:", error);
+                        throw new appError_1.AppError("Failed to send OTP email", 500);
+                    }
+                    return existingUser;
+                }
+            }
             const hashedPassword = yield (0, hashUtils_1.hashPassword)(password);
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
@@ -35,7 +51,14 @@ class AuthService {
                 otp,
                 otpExpires,
             });
-            yield (0, emailUtils_1.sendOTPEmail)(email, otp);
+            try {
+                yield (0, emailUtils_1.sendOTPEmail)(email, otp);
+            }
+            catch (error) {
+                console.log(error);
+                yield this.userRepo.deleteUser(user._id);
+                throw new appError_1.AppError("Failed to send OTP email", 500);
+            }
             return user;
         });
     }
@@ -75,6 +98,35 @@ class AuthService {
             const isPasswordValid = yield (0, hashUtils_1.comparePassword)(password, user.password);
             if (!isPasswordValid)
                 throw new appError_1.AppError("Invalid credentials", 400);
+            if (!user.isVerified) {
+                // User is not verified, send OTP
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+                yield this.userRepo.updateUser(user._id, { otp, otpExpires });
+                try {
+                    yield (0, emailUtils_1.sendOTPEmail)(email, otp);
+                }
+                catch (error) {
+                    console.error("Failed to send OTP:", error);
+                    throw new appError_1.AppError("Failed to send OTP email", 500);
+                }
+                return {
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        photoUrl: user.photoUrl,
+                        bio: user.bio,
+                        phoneNumber: user.phoneNumber,
+                        address: user.address,
+                        dateOfBirth: user.dateOfBirth,
+                        education: user.education,
+                        isBlocked: user.isBlocked,
+                    },
+                    requiresVerification: true,
+                };
+            }
             const accessToken = tokenUtils_1.tokenUtils.generateAccessToken({
                 userId: user._id,
                 role: user.role,

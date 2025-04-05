@@ -105,4 +105,12 @@ export class UserRepository implements IUserRepository {
       throw new Error("Error updating user role");
     }
   }
+
+  async deleteUser(userId: string): Promise<null> {
+    try {
+      return await User.findByIdAndDelete(userId);
+    } catch (error) {
+      throw new Error("Error deleting user");
+    }
+  }
 }

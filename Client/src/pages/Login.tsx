@@ -16,26 +16,28 @@ import {
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { useDispatch } from "react-redux";
 import {
   useForgotPasswordMutation,
   useLoginMutation,
   useSendOTPMutation,
 } from "@/redux/services/authApi";
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { Link, useLocation } from "react-router-dom"; // Added useLocation
+import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { useToast } from "../hooks/use-toast";
 import { motion } from "framer-motion";
+import { OTPModal } from "@/components/otpModal";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 
 export default function Component() {
   const [sendOtp] = useSendOTPMutation();
   const [forgotPassword] = useForgotPasswordMutation();
-  const dispatch = useDispatch();
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Added for location.state
+  const location = useLocation();
   const [login, { isLoading, error }] = useLoginMutation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState("");
@@ -84,14 +86,32 @@ export default function Component() {
         return;
       }
       const response = await login(form).unwrap();
-      console.log("Login Successful", response);
-      if (response.data.user.role === "admin") {
-        navigate("/dashboard");
+      console.log("Login Response:", response);
+
+      if (response?.data?.requiresVerification) {
+        setIsOtpModalOpen(true);
+        toast({
+          title: "Verification Required",
+          description: "Please verify your email with the OTP sent.",
+        });
       } else {
-        navigate("/");
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+        if (response?.data?.user?.role === "admin") {
+          navigate("/dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       console.error("Login Error", err);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: err.data?.message || "Invalid credentials",
+      });
     }
   };
 
@@ -106,10 +126,18 @@ export default function Component() {
     try {
       await sendOtp({ email }).unwrap();
       setIsOtpSent(true);
-      toast({ title: "OTP sent successfully!" });
+      toast({
+        title: "OTP Sent",
+        description: "Check your email for the OTP.",
+      });
     } catch (error) {
       setErrors({ ...errors, otp: "Error sending OTP" });
       console.error("Error sending OTP", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send OTP",
+      });
     }
   };
 
@@ -132,10 +160,18 @@ export default function Component() {
       });
       setIsForgotPasswordModalOpen(false);
       setIsOtpSent(false);
-      toast({ title: "OTP submitted successfully!" });
+      toast({
+        title: "Success",
+        description: "Password reset successfully!",
+      });
     } catch (error) {
       setErrors({ ...errors, otp: "Error submitting OTP" });
       console.error("Error submitting OTP", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reset password",
+      });
     }
   };
 
@@ -179,7 +215,7 @@ export default function Component() {
               Enter your email and password to login
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 pt-0">
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <p className="text-red-500 text-sm">
@@ -328,14 +364,23 @@ export default function Component() {
                   <Label htmlFor="otp" className="text-gray-700">
                     OTP
                   </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    name="otp"
+                  <InputOTP
+                    maxLength={6}
+                    pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
                     value={formData.otp}
-                    onChange={handleOtpChange}
-                    className="w-full border-gray-300"
-                  />
+                    onChange={(value) =>
+                      setFormData({ ...formData, otp: value })
+                    }
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                   {errors.otp && (
                     <p className="text-red-500 text-sm">{errors.otp}</p>
                   )}
@@ -362,7 +407,7 @@ export default function Component() {
                   </Label>
                   <Input
                     id="confPassword"
-                    type="password" // Changed to password for security
+                    type="password"
                     name="confPassword"
                     value={formData.confPassword}
                     onChange={handleOtpChange}
@@ -393,6 +438,14 @@ export default function Component() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* OTP Modal for Verification */}
+      {isOtpModalOpen && (
+        <OTPModal
+          email={form.email}
+          open={isOtpModalOpen}
+          onClose={() => setIsOtpModalOpen(false)}
+        />
+      )}
     </motion.div>
   );
 }

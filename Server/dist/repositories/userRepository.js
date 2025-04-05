@@ -103,5 +103,15 @@ class UserRepository {
             }
         });
     }
+    deleteUser(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield User_1.User.findByIdAndDelete(userId);
+            }
+            catch (error) {
+                throw new Error("Error deleting user");
+            }
+        });
+    }
 }
 exports.UserRepository = UserRepository;

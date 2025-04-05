@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Component() {
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -27,6 +28,7 @@ export default function Component() {
   const [formErrors, setFormErrors] = useState("");
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormErrors("");
@@ -51,11 +53,28 @@ export default function Component() {
         setFormErrors("Passwords do not match");
         return;
       }
-      await register(formData).unwrap();
-      console.log("Registration successful, check email for OTP");
+      const response = await register(formData).unwrap();
+      console.log("Registration response:", response);
       setOtpModalOpen(true);
+      toast({
+        title: "Registration Successful",
+        description: "Please check your email for the OTP.",
+      });
     } catch (err) {
       console.error("Registration failed", err);
+      // if (
+      //   err.status === 409 &&
+      //   err.data?.message === "User already exists and is verified"
+      // ) {
+      //   setFormErrors("User already exists and is verified. Please log in.");
+      // } else {
+      //   setFormErrors(err.data?.message || "Registration failed");
+      // }
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: err.data?.message || "Something went wrong",
+      });
     }
   };
 
@@ -99,7 +118,7 @@ export default function Component() {
               Create your account to get started
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 pt-0">
             <form onSubmit={handleSubmit} className="space-y-6">
               {formErrors && (
                 <p className="text-red-500 text-sm">{formErrors}</p>

@@ -130,3 +130,10 @@
       /* Top-right */ -1px 1px 0 rgba(0, 0, 0, 0.6),
       /* Bottom-left */ 1px 1px 0 rgba(0, 0, 0, 0.6); /* Bottom-right */
   }
+
+  .google-login-button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  box-sizing: border-box; /* Ensures padding doesn’t affect width */
+}

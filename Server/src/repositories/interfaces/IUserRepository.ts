@@ -16,4 +16,5 @@ export interface IUserRepository {
   updateUser(userId: string, updateData: Partial<IUser>): Promise<IUser | null>;
   toggleBlockUser(userId: string, isBlocked: boolean): Promise<IUser | null>;
   updateUserRole(userId: string, role: string): Promise<IUser | null>;
+  deleteUser(userId: string): Promise<null>;
 }

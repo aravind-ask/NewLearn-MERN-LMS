@@ -18,8 +18,23 @@ export class AuthService {
     password: string
   ): Promise<IUser> {
     const existingUser = await this.userRepo.findUserByEmail(email);
-    if (existingUser) throw new AppError("User already exists", 409);
+    if (existingUser) {
+      if (existingUser.isVerified) {
+        throw new AppError("Account already exists, Please Login!", 409);
+      } else {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
+        await this.userRepo.updateUser(existingUser._id, { otp, otpExpires });
+        try {
+          await sendOTPEmail(email, otp);
+        } catch (error) {
+          console.error("Failed to send OTP:", error);
+          throw new AppError("Failed to send OTP email", 500);
+        }
+        return existingUser;
+      }
+    }
     const hashedPassword = await hashPassword(password);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
@@ -31,7 +46,13 @@ export class AuthService {
       otp,
       otpExpires,
     });
-    await sendOTPEmail(email, otp);
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (error) {
+      console.log(error);
+      await this.userRepo.deleteUser(user._id);
+      throw new AppError("Failed to send OTP email", 500);
+    }
     return user;
   }
 
@@ -64,9 +85,10 @@ export class AuthService {
     email: string,
     password: string
   ): Promise<{
-    accessToken: string;
-    refreshToken: string;
+    accessToken?: string;
+    refreshToken?: string;
     user: Partial<IUser>;
+    requiresVerification?: boolean;
   }> {
     const user = await this.userRepo.findUserByEmail(email);
     if (!user) throw new AppError("Invalid credentials", 400);
@@ -74,6 +96,37 @@ export class AuthService {
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) throw new AppError("Invalid credentials", 400);
+
+    if (!user.isVerified) {
+      // User is not verified, send OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await this.userRepo.updateUser(user._id, { otp, otpExpires });
+
+      try {
+        await sendOTPEmail(email, otp);
+      } catch (error) {
+        console.error("Failed to send OTP:", error);
+        throw new AppError("Failed to send OTP email", 500);
+      }
+
+      return {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          photoUrl: user.photoUrl,
+          bio: user.bio,
+          phoneNumber: user.phoneNumber,
+          address: user.address,
+          dateOfBirth: user.dateOfBirth,
+          education: user.education,
+          isBlocked: user.isBlocked,
+        },
+        requiresVerification: true,
+      };
+    }
 
     const accessToken = tokenUtils.generateAccessToken({
       userId: user._id,
