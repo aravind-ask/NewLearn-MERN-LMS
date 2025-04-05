@@ -72,22 +72,22 @@ export default function Homepage() {
 
       {/* Progress Section with Carousel */}
       {studentCoursesData?.data?.courses?.length > 0 && (
-        <section className="py-12 px-4 lg:px-8 bg-white">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">
+        <section className="py-8 px-4 sm:py-12 sm:px-6 lg:px-8 bg-white">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center sm:text-left">
               Your Learning Progress
             </h2>
             <Button
               variant="link"
               onClick={() => navigate("/profile/my-courses")}
-              className="text-teal-600 hover:underline"
+              className="text-teal-600 hover:underline mt-2 sm:mt-0"
             >
               View All
             </Button>
           </div>
           <div className="flex justify-center">
             <Carousel
-              className="w-full max-w-4xl"
+              className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl"
               opts={{ align: "center", loop: true }}
             >
               <CarouselContent>
@@ -102,54 +102,43 @@ export default function Homepage() {
                   return (
                     <CarouselItem
                       key={course.courseId}
-                      className="md:basis-1/3 lg:basis-1/3"
+                      className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 p-2"
                     >
-                      <div className="p-2">
-                        <div
-                          className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer bg-white"
-                          onClick={() =>
-                            navigate(`/course/${course.courseId}/learn`)
-                          }
-                        >
-                          <img
-                            src={course.courseImage}
-                            alt={course.courseTitle}
-                            className="w-full h-40 object-cover"
-                          />
-                          <div className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
-                              {course.courseTitle}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                              by {course.instructorName}
-                            </p>
-                            <div className="space-y-2">
-                              <ProgressPrimitive.Root
-                                value={progress}
-                                className="w-full h-3 rounded-full bg-gray-200 overflow-hidden"
-                              >
-                                <ProgressPrimitive.Indicator
-                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </ProgressPrimitive.Root>
-                              {course.courseProgressId?.viewedLectures &&
-                              course?.courseProgressId?.totalLectures ? (
-                                <div className="space-y-2">
-                                  <p className="text-xs text-gray-500 text-center">
-                                    {progress === 100
-                                      ? "Course Completed!"
-                                      : `${course.courseProgressId?.viewedLectures} of ${course.courseProgressId?.totalLectures} lectures completed`}
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <p className="text-xs text-gray-500 text-center">
-                                    Start Learning now!
-                                  </p>
-                                </div>
-                              )}
-                            </div>
+                      <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer bg-white">
+                        <img
+                          src={course.courseImage}
+                          alt={course.courseTitle}
+                          className="w-full h-32 sm:h-40 object-cover"
+                        />
+                        <div className="p-3 sm:p-4">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-800 line-clamp-1">
+                            {course.courseTitle}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                            by {course.instructorName}
+                          </p>
+                          <div className="space-y-2">
+                            <ProgressPrimitive.Root
+                              value={progress}
+                              className="w-full h-2 sm:h-3 rounded-full bg-gray-200 overflow-hidden"
+                            >
+                              <ProgressPrimitive.Indicator
+                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </ProgressPrimitive.Root>
+                            {course.courseProgressId?.viewedLectures &&
+                            course?.courseProgressId?.totalLectures ? (
+                              <p className="text-xs text-gray-500 text-center">
+                                {progress === 100
+                                  ? "Course Completed!"
+                                  : `${course.courseProgressId?.viewedLectures} of ${course.courseProgressId?.totalLectures} lectures completed`}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-gray-500 text-center">
+                                Start Learning now!
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -157,8 +146,8 @@ export default function Homepage() {
                   );
                 })}
               </CarouselContent>
-              <CarouselPrevious className="text-teal-600 hover:bg-teal-100" />
-              <CarouselNext className="text-teal-600 hover:bg-teal-100" />
+              <CarouselPrevious className="hidden sm:flex text-teal-600 hover:bg-teal-100" />
+              <CarouselNext className="hidden sm:flex text-teal-600 hover:bg-teal-100" />
             </Carousel>
           </div>
         </section>
