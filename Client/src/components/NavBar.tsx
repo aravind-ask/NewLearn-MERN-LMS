@@ -11,6 +11,9 @@ import {
   Book,
   Info,
   Mail,
+  User,
+  LogOut,
+  Sparkles,
 } from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -164,6 +167,7 @@ export default function Navbar() {
         )}
       </div>
 
+      {/* Mobile Menu */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
           <Button
@@ -177,6 +181,7 @@ export default function Navbar() {
         </SheetTrigger>
         <SheetContent side="right" className="w-72 bg-white p-6">
           <div className="flex flex-col gap-6">
+            {/* Logo */}
             <Link
               to="/"
               className="flex items-center gap-2 mb-4"
@@ -185,93 +190,119 @@ export default function Navbar() {
               <Mountain className="h-6 w-6 text-teal-600" />
               <span className="text-xl font-bold text-gray-800">NewLearn</span>
             </Link>
-            {user && (
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={user?.photoUrl || "https://github.com/shadcn.png"}
-                    alt={user?.name}
-                  />
-                  <AvatarFallback>
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-lg font-semibold text-gray-800">
-                  {user.name}
-                </span>
-              </div>
-            )}
-            <nav className="flex flex-col gap-4">
+
+            {/* Navigation Section */}
+            <div className="flex flex-col gap-4">
+              <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">
+                Navigation
+              </h3>
               <Link
                 to="/"
-                className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
                 onClick={() => setIsSheetOpen(false)}
               >
-                <Home />
+                <Home className="h-5 w-5" />
                 Home
               </Link>
               <Link
                 to="/all-courses"
-                className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
                 onClick={() => setIsSheetOpen(false)}
               >
-                <Book />
+                <Book className="h-5 w-5" />
                 Courses
               </Link>
               <Link
                 to="/about"
-                className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
                 onClick={() => setIsSheetOpen(false)}
               >
-                <Info />
+                <Info className="h-5 w-5" />
                 About
               </Link>
               <Link
                 to="/contact-us"
-                className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
                 onClick={() => setIsSheetOpen(false)}
               >
-                <Mail />
+                <Mail className="h-5 w-5" />
                 Contact
               </Link>
               <Link
                 to="/instructor/apply"
-                className="flex gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
                 onClick={() => setIsSheetOpen(false)}
               >
-                <Mountain />
+                <Mountain className="h-5 w-5" />
                 Teach on NewLearn
               </Link>
               {user && (
-                <>
-                  <Link
-                    to="/mock-interview"
-                    className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
-                    onClick={() => setIsSheetOpen(false)}
-                  >
-                    AI Mock Interview
-                  </Link>
-                  <Link
-                    to="/profile/cart"
-                    className="text-sm font-medium text-gray-600 hover:text-teal-600 flex items-center gap-4"
-                    onClick={() => setIsSheetOpen(false)}
-                  >
-                    <ShoppingCart />
-                    Cart
-                  </Link>
-                  <Link
-                    to="/profile/wishlist"
-                    className="text-sm font-medium text-gray-600 hover:text-teal-600 flex items-center gap-4"
-                    onClick={() => setIsSheetOpen(false)}
-                  >
-                    <Heart />
-                    Wishlist
-                  </Link>
-                  <NotificationDropdown />
-                </>
+                <Link
+                  to="/mock-interview"
+                  className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                  onClick={() => setIsSheetOpen(false)}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  AI Mock Interview
+                </Link>
               )}
-            </nav>
-            {!user && (
+            </div>
+
+            {/* Profile Section */}
+            {user ? (
+              <div className="flex flex-col gap-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">
+                  Profile
+                </h3>
+                <div className="flex items-center gap-3 mb-2">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={user?.photoUrl || "https://github.com/shadcn.png"}
+                      alt={user?.name}
+                    />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-base font-semibold text-gray-800">
+                    {user.name}
+                  </span>
+                  <NotificationDropdown />
+                </div>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                  onClick={() => setIsSheetOpen(false)}
+                >
+                  <User className="h-5 w-5" />
+                  Profile
+                </Link>
+                <Link
+                  to="/profile/cart"
+                  className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                  onClick={() => setIsSheetOpen(false)}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Cart
+                </Link>
+                <Link
+                  to="/profile/wishlist"
+                  className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
+                  onClick={() => setIsSheetOpen(false)}
+                >
+                  <Heart className="h-5 w-5" />
+                  Wishlist
+                </Link>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-4 text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors justify-start p-0"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-5 w-5 text-red-600" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
               <div className="flex flex-col gap-2 mt-4">
                 <Button
                   variant="outline"

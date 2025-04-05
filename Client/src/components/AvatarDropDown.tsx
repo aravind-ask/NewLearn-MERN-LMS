@@ -13,7 +13,6 @@ import { useLogoutMutation } from "@/redux/services/authApi";
 
 export function AvatarDropdown() {
   const { user } = useSelector((state: RootState) => state.auth);
-  console.log(user?.photoUrl)
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
