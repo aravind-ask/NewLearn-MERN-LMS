@@ -70,6 +70,7 @@ export class PaymentRepository implements IPaymentRepository {
       const payments = await PaymentModel.find({ userId })
         .skip(skip)
         .limit(limit)
+        .sort({ orderDate: -1 })
         .exec();
       const totalPayments = await PaymentModel.countDocuments({ userId });
       const totalPages = Math.ceil(totalPayments / limit);

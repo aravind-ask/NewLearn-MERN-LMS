@@ -68,6 +68,7 @@ class PaymentRepository {
                 const payments = yield Payment_1.default.find({ userId })
                     .skip(skip)
                     .limit(limit)
+                    .sort({ orderDate: -1 })
                     .exec();
                 const totalPayments = yield Payment_1.default.countDocuments({ userId });
                 const totalPages = Math.ceil(totalPayments / limit);
