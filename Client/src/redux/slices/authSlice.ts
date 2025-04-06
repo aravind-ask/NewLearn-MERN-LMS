@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/authApi";
 
-type User = {
+export type User = {
   id: string;
   name: string;
   email: string;
@@ -90,6 +90,19 @@ const authSlice = createSlice({
           state.refreshToken = action.payload.refreshToken;
           setLocalStorage("token", action.payload.accessToken);
           setLocalStorage("refreshToken", action.payload.refreshToken);
+        }
+      )
+      .addMatcher(
+        (action) => action.type === "/auth/logout",
+        (
+          state,
+        ) => {
+          state.user = null;
+          state.token = null;
+          state.refreshToken = null;
+          removeLocalStorage("user");
+          removeLocalStorage("token");
+          removeLocalStorage("refreshToken");
         }
       )
       .addMatcher(

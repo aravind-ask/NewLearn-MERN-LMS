@@ -38,7 +38,7 @@ const MyLearnings = () => {
   const limit = 10;
   const navigate = useNavigate();
 
-  const { data, isLoading, isError } = useGetStudentCoursesQuery({
+  const { data, isLoading, isError, error } = useGetStudentCoursesQuery({
     page,
     limit,
   });
@@ -49,7 +49,7 @@ const MyLearnings = () => {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    setCarouselIndex(0); // Reset carousel when page changes
+    setCarouselIndex(0);
   };
 
   const handleNextSlide = () => {
@@ -72,17 +72,21 @@ const MyLearnings = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <Card className="max-w-md mx-auto mt-20 border-red-200 shadow-sm">
-        <CardContent className="p-6 text-center">
-          <p className="text-red-600 font-medium">
-            Failed to load courses. Please try again later.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // if (isError) {
+  //   // Extract error message from the error object
+  //   const errorMessage =
+  //     (error as any)?.data?.message || // RTK Query typically puts the server message here
+  //     (error as any)?.error || // Fallback for network errors
+  //     "An unexpected error occurred. Please try again later.";
+
+  //   return (
+  //     <Card className="max-w-md mx-auto mt-20 border-red-200 shadow-sm">
+  //       <CardContent className="p-6 text-center">
+  //         <p className="text-red-600 font-medium">{errorMessage}</p>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <div className="container mx-auto px-6 py-12 max-w-7xl">
@@ -100,7 +104,7 @@ const MyLearnings = () => {
         </div>
       </div>
 
-      {courses.length > 0 ? (
+      {courses && courses.length > 0 ? (
         <div className="space-y-8">
           {/* Carousel */}
           <div className="relative">
@@ -249,7 +253,7 @@ const MyLearnings = () => {
             {totalSlides > 1 && (
               <div className="flex justify-center gap-2 mt-4">
                 {Array.from({ length: totalSlides }).map((_, i) => (
-                  <button
+                  <Button
                     key={i}
                     className={`w-2 h-2 rounded-full transition-all ${
                       i === carouselIndex ? "bg-indigo-500 w-4" : "bg-gray-300"
@@ -300,7 +304,7 @@ const MyLearnings = () => {
               Begin your learning journey by exploring our course catalog!
             </p>
             <Button
-              onClick={() => navigate("/courses")}
+              onClick={() => navigate("/all-courses")}
               className="bg-indigo-500 hover:bg-indigo-600"
             >
               Explore Courses

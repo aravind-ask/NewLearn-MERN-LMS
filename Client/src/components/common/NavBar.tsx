@@ -19,11 +19,11 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { AvatarDropdown } from "./AvatarDropDown";
-import SearchBar from "./SearchBar";
+import { AvatarDropdown } from "../AvatarDropDown";
+import SearchBar from "../SearchBar";
 import { logout } from "@/redux/slices/authSlice";
 import { useLogoutMutation } from "@/redux/services/authApi";
-import NotificationDropdown from "./common/NotificationDropdown";
+import NotificationDropdown from "./NotificationDropdown";
 import { useState } from "react";
 
 export default function Navbar() {

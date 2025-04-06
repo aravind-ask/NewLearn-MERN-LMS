@@ -158,7 +158,7 @@ export class UserController {
       if (!courses.length) {
         errorResponse(
           res,
-          "No courses found for this student",
+          "You have not enrolled to any courses yet. Enroll now and start learning",
           HttpStatus.NOT_FOUND
         );
         return;

@@ -1,3 +1,4 @@
+import { User } from "../slices/authSlice";
 import { api } from "./apiSetup";
 
 export const authApi = api.injectEndpoints({
@@ -37,13 +38,21 @@ export const authApi = api.injectEndpoints({
 
     login: builder.mutation<
       {
-        token: string;
-        user: {
-          id: string;
-          name: string;
-          email: string;
-          role: "student" | "instructor" | "admin";
-          photoUrl: string;
+        // token: string;
+        // user: {
+        //   id: string;
+        //   name: string;
+        //   email: string;
+        //   role: "student" | "instructor" | "admin";
+        //   photoUrl: string;
+        // };
+        success: boolean;
+        message: string;
+        data: {
+          accessToken: string;
+          refreshToken: string;
+          user: User;
+          requiresVerification: boolean;
         };
       },
       { email: string; password: string }

@@ -29,7 +29,11 @@ import GoogleAuth from "@/components/OAuth";
 import { useToast } from "../hooks/use-toast";
 import { motion } from "framer-motion";
 import { OTPModal } from "@/components/otpModal";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 
 export default function Component() {
@@ -100,8 +104,10 @@ export default function Component() {
           description: "Logged in successfully!",
         });
         if (response?.data?.user?.role === "admin") {
+          console.log("navigating to admin dashboard");
           navigate("/dashboard");
         } else {
+          console.log("navigating to home");
           navigate("/");
         }
       }

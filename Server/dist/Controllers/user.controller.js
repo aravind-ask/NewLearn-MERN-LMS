@@ -99,7 +99,7 @@ class UserController {
                 const limit = parseInt(req.query.limit) || 10;
                 const { courses, totalPages } = yield this.enrollmentService.fetchEnrolledCourses(userId, page, limit);
                 if (!courses.length) {
-                    (0, responseHandler_1.errorResponse)(res, "No courses found for this student", statusCodes_1.HttpStatus.NOT_FOUND);
+                    (0, responseHandler_1.errorResponse)(res, "You have not enrolled to any courses yet. Enroll now and start learning", statusCodes_1.HttpStatus.NOT_FOUND);
                     return;
                 }
                 (0, responseHandler_1.successResponse)(res, { courses, totalPages }, "Student courses fetched successfully", 200);

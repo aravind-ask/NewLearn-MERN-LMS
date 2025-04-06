@@ -59,7 +59,8 @@ export default function ProtectedRoute() {
   }
 
   if (user?.role === "admin") {
-    return <Navigate to="/dashboard" />;
+    navigate("/dashboard");
+    return;
   }
 
   return user ? <Outlet /> : <Navigate to="/login" />;

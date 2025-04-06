@@ -171,7 +171,7 @@ class AuthService {
                     name,
                     photoUrl: picture,
                     role: "student",
-                    isVerified: true, // Google users are auto-verified
+                    isVerified: true,
                 });
             }
             if (user.isBlocked)

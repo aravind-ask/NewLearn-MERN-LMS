@@ -2,12 +2,11 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Navbar from "./components/NavBar";
+import Navbar from "./components/common/NavBar";
 import AuthGuard from "./components/AuthGuard";
 import ProtectedRoute from "./components/ProctedRoute";
 import ProfilePage from "./pages/ProfilePage";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
 import InstructorRegistration from "./pages/InstructorRegistration";
 import InstructorDashboard from "./pages/InstructorDashboardPage";
 import AddNewCourse from "./pages/AddNewCourse";
@@ -25,7 +24,7 @@ import EnrolledCourseDetailsPage from "./pages/EnrolledCourseDetailsPage";
 import Profile from "./components/profile/Profile";
 import MyLearnings from "./components/profile/MyLearnings";
 import Certificates from "./components/profile/MyCertificates";
-import Footer from "./components/Footer";
+import Footer from "./components/common/Footer";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import AboutPage from "./pages/AboutUsPage";
 import ContactUsPage from "./pages/ContactUsPAge";
@@ -42,6 +41,8 @@ import MockLoadPage from "./pages/MockLoadPage";
 import InterviewPage from "./pages/InterviewPage";
 import FeedBack from "./pages/FeedBack";
 import ScrollToTop from "./components/common/ScrollToTop";
+import PublicGuard from "./components/PublicGuard";
+import AdminGuard from "./components/AdminGuard";
 
 function App() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -87,14 +88,26 @@ function App() {
       <div className="pt-20">
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact-us" element={<ContactUsPage />} />
-          <Route path="/all-courses" element={<AllCourses />} />
-          <Route path="/course/:courseId" element={<CourseDetails />} />
+          <Route element={<PublicGuard component={HomePage} />} path="/" />
           <Route
+            element={<PublicGuard component={AboutPage} />}
+            path="/about"
+          />
+          <Route
+            element={<PublicGuard component={ContactUsPage} />}
+            path="/contact-us"
+          />
+          <Route
+            element={<PublicGuard component={AllCourses} />}
+            path="/all-courses"
+          />
+          <Route
+            element={<PublicGuard component={CourseDetails} />}
+            path="/course/:courseId"
+          />
+          <Route
+            element={<PublicGuard component={VerifyCertificate} />}
             path="/verify-certificate/:certificateId"
-            element={<VerifyCertificate />}
           />
 
           {/* Auth Routes (Login/Signup) */}
@@ -157,10 +170,13 @@ function App() {
           </Route>
 
           {/* Admin Routes */}
-          <Route path="/dashboard" element={<AdminDashboard />} />
           <Route
+            element={<AdminGuard component={AdminDashboard} />}
+            path="/dashboard"
+          />
+          <Route
+            element={<AdminGuard component={InstructorApplicationDetails} />}
             path="/dashboard/instructor/:applicationId"
-            element={<InstructorApplicationDetails />}
           />
 
           {/* 404 Page */}

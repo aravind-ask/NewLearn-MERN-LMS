@@ -104,7 +104,12 @@ export default function Homepage() {
                       key={course.courseId}
                       className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 p-2"
                     >
-                      <div className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer bg-white">
+                      <div
+                        className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer bg-white"
+                        onClick={() =>
+                          navigate(`/course/${course.courseId}/learn`)
+                        }
+                      >
                         <img
                           src={course.courseImage}
                           alt={course.courseTitle}
