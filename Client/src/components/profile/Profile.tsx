@@ -11,6 +11,7 @@ import {
 import { PasswordChange } from "../PasswordChange";
 import { Loader2, UploadCloud, Edit, Save } from "lucide-react";
 import { format } from "date-fns";
+import { Textarea } from "../ui/textarea";
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -281,43 +282,44 @@ const Profile = () => {
             </div>
             <div className="col-span-2">
               <Label className="text-gray-600">Bio</Label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                className={`w-full p-3 mt-1 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  errors.bio ? "border-red-500" : "border-gray-300"
-                }`}
-                rows={4}
-              />
-              {errors.bio && (
-                <p className="text-red-500 text-sm mt-1">{errors.bio}</p>
-              )}
+              <div className="flex justify-between gap-4 items-center">
+                <Textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className={`w-full p-3 mt-1 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    errors.bio ? "border-red-500" : "border-gray-300"
+                  }`}
+                  rows={4}
+                />
+                {errors.bio && (
+                  <p className="text-red-500 text-sm mt-1">{errors.bio}</p>
+                )}
+                <Button
+                  onClick={() => setIsEditing(false)}
+                  variant="outline"
+                  className="border-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Save and Cancel Buttons */}
-          <div className="flex justify-end space-x-4 mt-6">
-            <Button
-              onClick={() => setIsEditing(false)}
-              variant="outline"
-              className="border-gray-300 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+          {/* <div className="flex justify-end spa  ce-x-4 mt-6"></div> */}
         </div>
       )}
     </div>

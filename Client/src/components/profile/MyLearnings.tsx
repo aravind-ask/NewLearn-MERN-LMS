@@ -89,7 +89,7 @@ const MyLearnings = () => {
   // }
 
   return (
-    <div className="container mx-auto px-6 py-12 max-w-7xl">
+    <div className="container mx-auto h-screen px-6 py-12 max-w-7xl">
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <h1 className="text-4xl font-bold text-gray-800">

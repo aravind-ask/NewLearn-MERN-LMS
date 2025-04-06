@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useGetWishlistQuery } from "@/redux/services/courseApi";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Heart, Trash, ShoppingCart } from "lucide-react";
 import {
   useRemoveFromWishlistMutation,
@@ -10,6 +9,7 @@ import {
 } from "@/redux/services/courseApi";
 import { useDispatch } from "react-redux";
 import { removeFromWishlist, addToCart } from "@/redux/slices/userSlice";
+import Loading from "@/components/Loading";
 
 const WishlistPage = () => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const WishlistPage = () => {
     }
   };
 
-  if (isLoading) return <Skeleton />;
+  if (isLoading) return <Loading />;
   if (isError)
     return (
       <p className="text-red-600 flex justify-center items-center">

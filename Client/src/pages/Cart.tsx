@@ -2,12 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useGetCartQuery } from "@/redux/services/courseApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart, Trash } from "lucide-react";
 import { useRemoveFromCartMutation } from "@/redux/services/courseApi";
 import { useDispatch } from "react-redux";
 import { removeFromCart } from "@/redux/slices/userSlice";
 import { Badge } from "@/components/ui/badge";
+import Loading from "@/components/Loading";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const CartPage = () => {
     navigate("/checkout", { state: { cartItems: cart?.data?.items } });
   };
 
-  if (isLoading) return <Skeleton />;
+  if (isLoading) return <Loading />;
   if (isError)
     return (
       <p className="text-red-600 flex justify-center items-center">

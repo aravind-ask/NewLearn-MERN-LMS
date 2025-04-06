@@ -65,7 +65,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-max bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 sticky top-28 bg-white shadow-md p-4 flex flex-col gap-4">
         <h2 className="text-xl font-bold text-center mb-4">Dashboard</h2>
@@ -93,7 +93,7 @@ const ProfilePage = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
+      <main className="h-full flex-1 p-6">
         <Card className="p-4">
           {selectedTab === "profile" && <Profile />}
           {selectedTab === "cart" && <CartPage />}

@@ -83,7 +83,7 @@ const Footer = () => {
             </li>
             <li>
               <button
-                onClick={() => navigate("/my-learnings")}
+                onClick={() => navigate("/profile/my-courses")}
                 className="text-gray-400 hover:text-teal-400 transition-colors"
               >
                 My Learnings
@@ -116,34 +116,42 @@ const Footer = () => {
           <ul className="space-y-2 text-sm">
             <li>
               <button
-                onClick={() => navigate("/all-courses?category=programming")}
+                onClick={() =>
+                  navigate("/all-courses?category=67b354b5f628392589d37a5f")
+                }
                 className="text-gray-400 hover:text-teal-400 transition-colors"
               >
-                Programming
+                Web Development
               </button>
             </li>
             <li>
               <button
-                onClick={() => navigate("/all-courses?category=design")}
+                onClick={() =>
+                  navigate("/all-courses?category=67b354c0f628392589d37a62")
+                }
                 className="text-gray-400 hover:text-teal-400 transition-colors"
               >
-                Design
+                Backend Development
               </button>
             </li>
             <li>
               <button
-                onClick={() => navigate("/all-courses?category=business")}
+                onClick={() =>
+                  navigate("/all-courses?category=67b354cff628392589d37a65")
+                }
                 className="text-gray-400 hover:text-teal-400 transition-colors"
               >
-                Business
+                Frontend Development
               </button>
             </li>
             <li>
               <button
-                onClick={() => navigate("/all-courses?category=marketing")}
+                onClick={() =>
+                  navigate("/all-courses?category=67b354d7f628392589d37a68")
+                }
                 className="text-gray-400 hover:text-teal-400 transition-colors"
               >
-                Marketing
+                Data Science
               </button>
             </li>
             <li>
@@ -191,7 +199,7 @@ const Footer = () => {
           <Button
             variant="outline"
             className="mt-2 bg-transparent border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-gray-900 transition-all"
-            onClick={() => navigate("/contact")}
+            onClick={() => navigate("/contact-us")}
           >
             Get in Touch
           </Button>

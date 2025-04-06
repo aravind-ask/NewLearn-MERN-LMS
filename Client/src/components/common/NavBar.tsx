@@ -77,14 +77,7 @@ export default function Navbar() {
       </Link>
 
       <div className="flex-1 flex items-center mx-2 lg:hidden">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search courses..."
-            className="pl-10 py-2 border-gray-300 focus:border-teal-500 focus:ring-teal-500 rounded-full"
-          />
-        </div>
+        <SearchBar />
       </div>
 
       <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
@@ -128,7 +121,9 @@ export default function Navbar() {
         )}
       </nav>
 
-      <SearchBar />
+      <div className="hidden lg:flex items-center flex-1 justify-center mx-4">
+        <SearchBar />
+      </div>
 
       <div className="hidden lg:flex items-center gap-4">
         {user ? (
