@@ -1,23 +1,25 @@
-import { Course } from "../models/Course";
-import { ICourse } from "../models/Course";
+// src/repositories/CourseRepository.ts
+import { Course, ICourse } from "../models/Course";
 import { CreateCourseInput } from "../utils/course.dto";
 import { ICourseRepository } from "./interfaces/ICourseRepository";
+import { BaseRepository } from "./base.repository";
 import mongoose from "mongoose";
 
-interface InstructorCoursesResult {
-  courses: ICourse[];
-  totalCourses: number;
-  totalPages?: number;
-}
+export class CourseRepository
+  extends BaseRepository<ICourse>
+  implements ICourseRepository
+{
+  constructor() {
+    super(Course);
+  }
 
-export class CourseRepository implements ICourseRepository {
   async createCourse(courseCreationData: CreateCourseInput): Promise<ICourse> {
     try {
       const courseData = {
         ...courseCreationData,
         category: new mongoose.Types.ObjectId(courseCreationData.category),
       };
-      return await Course.create(courseData);
+      return await this.create(courseData);
     } catch (error) {
       console.error("Error creating course:", error);
       throw new Error("Failed to create course");
@@ -25,12 +27,7 @@ export class CourseRepository implements ICourseRepository {
   }
 
   async findCourseById(courseId: string): Promise<ICourse | null> {
-    try {
-      return await Course.findById(courseId).populate("category").exec();
-    } catch (error) {
-      console.error("Error finding course by ID:", error);
-      throw new Error("Failed to find course by ID");
-    }
+    return await this.findById(courseId, "category");
   }
 
   async updateCourse(
@@ -39,7 +36,8 @@ export class CourseRepository implements ICourseRepository {
   ): Promise<ICourse | null> {
     try {
       console.log("data", data);
-      return await Course.findByIdAndUpdate(courseId, data, { new: true })
+      return await this.model
+        .findByIdAndUpdate(courseId, data, { new: true })
         .populate("category")
         .exec();
     } catch (error) {
@@ -58,15 +56,16 @@ export class CourseRepository implements ICourseRepository {
     }
   ): Promise<ICourse | null> {
     try {
-      return await Course.findByIdAndUpdate(
-        courseId,
-        {
-          $addToSet: {
-            students: { ...data, dateJoined: new Date() },
+      return await this.model
+        .findByIdAndUpdate(
+          courseId,
+          {
+            $addToSet: {
+              students: { ...data, dateJoined: new Date() },
+            },
           },
-        },
-        { new: true }
-      )
+          { new: true }
+        )
         .populate("category")
         .exec();
     } catch (error) {
@@ -100,17 +99,18 @@ export class CourseRepository implements ICourseRepository {
       const sortField = sortBy === "price" ? "pricing" : "createdAt";
       const sortDirection = sortOrder === "asc" ? 1 : -1;
 
-      const courses = await Course.find(query)
-        .populate("category")
-        .sort({ [sortField]: sortDirection })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .exec();
+      const result = await this.findAll(page, limit, query, {
+        [sortField]: sortDirection,
+      });
+      const courses = await this.model.populate(result.items, {
+        path: "category",
+      });
 
-      const totalCourses = await Course.countDocuments(query);
-      const totalPages = Math.ceil(totalCourses / limit);
-
-      return { courses, totalCourses, totalPages };
+      return {
+        courses,
+        totalCourses: result.totalItems,
+        totalPages: result.totalPages,
+      };
     } catch (error) {
       console.error("Error getting all courses:", error);
       throw new Error("Failed to get all courses");
@@ -118,12 +118,7 @@ export class CourseRepository implements ICourseRepository {
   }
 
   async getCourseDetails(courseId: string): Promise<ICourse | null> {
-    try {
-      return await Course.findById(courseId).populate("category").exec();
-    } catch (error) {
-      console.error("Error getting course details:", error);
-      throw new Error("Failed to get course details");
-    }
+    return await this.findById(courseId, "category");
   }
 
   async getInstructorCourses(
@@ -133,16 +128,11 @@ export class CourseRepository implements ICourseRepository {
     sortOptions: { [key: string]: 1 | -1 }
   ): Promise<{ courses: ICourse[]; totalCourses: number }> {
     try {
-      const skip = (page - 1) * limit;
-      const courses = await Course.find(filter)
-        .populate("category")
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(limit)
-        .exec();
-
-      const totalCourses = await Course.countDocuments(filter);
-      return { courses, totalCourses };
+      const result = await this.findAll(page, limit, filter, sortOptions);
+      const courses = await this.model.populate(result.items, {
+        path: "category",
+      });
+      return { courses, totalCourses: result.totalItems };
     } catch (error) {
       console.error("Error getting instructor courses:", error);
       throw new Error("Failed to get instructor courses");
@@ -150,11 +140,6 @@ export class CourseRepository implements ICourseRepository {
   }
 
   async deleteCourse(courseId: string): Promise<ICourse | null> {
-    try {
-      return await Course.findByIdAndDelete(courseId).exec();
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      throw new Error("Failed to delete course");
-    }
+    return await this.delete(courseId);
   }
 }

@@ -1,16 +1,24 @@
+// src/repositories/ChatRepository.ts
 import { ChatMessage, IChatMessage } from "../models/ChatMessage";
 import { IChatRepository } from "./interfaces/IChatRepository";
 import { NotFoundError } from "../utils/customError";
+import { BaseRepository } from "./base.repository";
 import mongoose from "mongoose";
 
-export class ChatRepository implements IChatRepository {
+export class ChatRepository
+  extends BaseRepository<IChatMessage>
+  implements IChatRepository
+{
+  constructor() {
+    super(ChatMessage);
+  }
+
   async saveMessage(message: Partial<IChatMessage>): Promise<IChatMessage> {
-    const newMessage = new ChatMessage(message);
-    return await newMessage.save();
+    return await this.create(message);
   }
 
   async getMessageById(messageId: string): Promise<IChatMessage | null> {
-    return await ChatMessage.findById(messageId).exec();
+    return await this.findById(messageId);
   }
 
   async updateMessage(
@@ -22,17 +30,13 @@ export class ChatRepository implements IChatRepository {
       isEdited?: boolean;
     }
   ): Promise<IChatMessage> {
-    const message = await ChatMessage.findByIdAndUpdate(
-      messageId,
-      { $set: updates },
-      { new: true }
-    ).exec();
+    const message = await this.update(messageId, updates);
     if (!message) throw new NotFoundError("Message not found");
     return message;
   }
 
   async deleteMessage(messageId: string): Promise<IChatMessage> {
-    const message = await ChatMessage.findByIdAndDelete(messageId).exec();
+    const message = await this.delete(messageId);
     if (!message) throw new NotFoundError("Message not found");
     return message;
   }
@@ -42,38 +46,52 @@ export class ChatRepository implements IChatRepository {
     userId: string | undefined,
     trainerId: string
   ): Promise<IChatMessage[]> {
-    return await ChatMessage.find({
-      courseId: new mongoose.Types.ObjectId(courseId),
-      $or: [
-        {
-          senderId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
-          recipientId: new mongoose.Types.ObjectId(trainerId),
-        },
-        {
-          senderId: new mongoose.Types.ObjectId(trainerId),
-          recipientId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
-        },
-      ],
-    }).sort({ timestamp: 1 });
+    try {
+      const query = {
+        courseId: new mongoose.Types.ObjectId(courseId),
+        $or: [
+          {
+            senderId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+            recipientId: new mongoose.Types.ObjectId(trainerId),
+          },
+          {
+            senderId: new mongoose.Types.ObjectId(trainerId),
+            recipientId: userId
+              ? new mongoose.Types.ObjectId(userId)
+              : undefined,
+          },
+        ],
+      };
+      return await this.model.find(query).sort({ timestamp: 1 }).exec();
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      throw new Error("Failed to fetch messages");
+    }
   }
 
   async markAsRead(messageId: string): Promise<IChatMessage> {
-    const message = await ChatMessage.findByIdAndUpdate(
-      new mongoose.Types.ObjectId(messageId),
-      { isRead: true },
-      { new: true }
-    );
+    const message = await this.update(messageId, { isRead: true });
     if (!message) throw new NotFoundError("Message not found");
     return message;
   }
 
   async getAllMessagesForTrainer(trainerId: string): Promise<IChatMessage[]> {
-    return await ChatMessage.find({
-      $or: [{ senderId: trainerId }, { recipientId: trainerId }],
-    })
-      .populate("courseId", "title")
-      .populate("senderId", "name")
-      .populate("recipientId", "name")
-      .sort({ timestamp: 1 });
+    try {
+      return await this.model
+        .find({
+          $or: [
+            { senderId: new mongoose.Types.ObjectId(trainerId) },
+            { recipientId: new mongoose.Types.ObjectId(trainerId) },
+          ],
+        })
+        .populate("courseId", "title")
+        .populate("senderId", "name")
+        .populate("recipientId", "name")
+        .sort({ timestamp: 1 })
+        .exec();
+    } catch (error) {
+      console.error("Error fetching all messages for trainer:", error);
+      throw new Error("Failed to fetch all messages for trainer");
+    }
   }
 }

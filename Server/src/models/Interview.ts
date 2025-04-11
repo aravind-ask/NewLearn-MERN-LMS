@@ -1,3 +1,4 @@
+// interview.model.ts
 import { Schema, model, Document } from "mongoose";
 import { Interview } from "../types/types";
 
@@ -9,6 +10,7 @@ export interface IInterview extends Document {
   userId: string;
   techStack: string;
   questions: { question: string; answer: string }[];
+  videoUrl?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -26,6 +28,7 @@ const interviewSchema = new Schema<IInterview>(
         answer: { type: String, required: true },
       },
     ],
+    videoUrl: { type: String },
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },

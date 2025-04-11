@@ -1,7 +1,7 @@
 // src/controllers/user.controller.ts
 import { Request, Response, NextFunction } from "express";
 import { UserService } from "../services/user.service";
-import { getPresignedUrl } from "../config/s3.config";
+import { getPresignedUploadUrl, getPresignedDownloadUrl } from "../config/s3.config";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { v4 as uuidv4 } from "uuid";
 import EnrollmentService from "../services/enrollment.service";
@@ -18,19 +18,25 @@ export class UserController {
     private enrollmentService: EnrollmentService
   ) {}
 
-  async getUploadUrl(req: Request, res: Response, next: NextFunction) {
+  async getUploadUrl(req: Request, res: Response): Promise<void> {
     try {
       const { fileName } = req.body;
-      const url = await getPresignedUrl(fileName);
-      res
-        .status(HttpStatus.OK)
-        .json({ url, key: `uploads/${uuidv4()}-${Date.now()}-${fileName}` });
-    } catch (error: any) {
-      errorResponse(
-        res,
-        "Error generating upload URL",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      if (!fileName) throw new Error("fileName is required");
+      const { url, key } = await getPresignedUploadUrl(fileName);
+      res.status(200).json({ url, key });
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  }
+
+  async getDownloadUrl(req: Request, res: Response): Promise<void> {
+    try {
+      const { key } = req.body;
+      if (!key) throw new Error("key is required");
+      const url = await getPresignedDownloadUrl(key);
+      res.status(200).json({ url });
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
     }
   }
 
@@ -101,15 +107,17 @@ export class UserController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string | undefined;
       const { users, totalPages } = await this.userService.getUsers(
         page,
-        limit
+        limit,
+        search
       );
       successResponse(
         res,
         { users, totalPages },
         "Users fetched successfully",
-        200
+        HttpStatus.OK
       );
     } catch (error: any) {
       errorResponse(

@@ -1,36 +1,51 @@
+// src/repositories/CategoryRepository.ts
 import { Category, ICategory } from "../models/Category";
+import { BaseRepository } from "./base.repository";
+import { ICategoryRepository } from "./interfaces/ICategoryRepository";
 
-export class CategoryRepository {
+export class CategoryRepository
+  extends BaseRepository<ICategory>
+  implements ICategoryRepository
+{
+  constructor() {
+    super(Category);
+  }
+
   async getAllCategories(
     page: number = 1,
     limit: number = 10
   ): Promise<{ categories: ICategory[]; total: number }> {
-    const skip = (page - 1) * limit;
-    const [categories, total] = await Promise.all([
-      Category.find().skip(skip).limit(limit).lean(),
-      Category.countDocuments(),
-    ]);
-    return { categories, total };
+    try {
+      const result = await this.findAll(page, limit);
+      return {
+        categories: result.items,
+        total: result.totalItems,
+      };
+    } catch (error) {
+      console.error("Error fetching all categories:", error);
+      throw new Error("Failed to fetch all categories");
+    }
   }
+
   async getCategoryById(id: string): Promise<ICategory | null> {
-    return Category.findById(id);
+    return await this.findById(id);
   }
 
   async createCategory(data: {
     name: string;
     description?: string;
   }): Promise<ICategory> {
-    return Category.create(data);
+    return await this.create(data);
   }
 
   async updateCategory(
     id: string,
-    data: Partial<ICategory>
+    name: Partial<ICategory>
   ): Promise<ICategory | null> {
-    return Category.findByIdAndUpdate(id, data, { new: true });
+    return await this.update(id, name);
   }
 
   async deleteCategory(id: string): Promise<ICategory | null> {
-    return Category.findByIdAndDelete(id);
+    return await this.delete(id);
   }
 }

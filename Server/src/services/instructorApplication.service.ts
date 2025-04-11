@@ -3,8 +3,12 @@ import { IInstructorApplicationRepository } from "../repositories/interfaces/IIn
 import { IUserRepository } from "../repositories/interfaces/IUserRepository";
 import { BadRequestError, NotFoundError } from "../utils/customError";
 import { IInstructorApplication } from "../models/InstructorApplication";
+import { IInstructorApplicationService } from "./interfaces/IInstructorApplicationService";
+import mongoose, { Mongoose, Schema, Types } from "mongoose";
 
-export class InstructorApplicationService {
+export class InstructorApplicationService
+  implements IInstructorApplicationService
+{
   constructor(
     private instructorAppRepo: IInstructorApplicationRepository,
     private userRepo: IUserRepository
@@ -12,9 +16,11 @@ export class InstructorApplicationService {
 
   async applyForInstructor(
     userId: string | undefined,
-    applicationData: any
+    applicationData: Partial<IInstructorApplication>
   ): Promise<IInstructorApplication> {
     if (!userId) throw new BadRequestError("User ID is required");
+    if (!Types.ObjectId.isValid(userId))
+      throw new BadRequestError("Invalid user ID");
 
     const existingApplication = await this.instructorAppRepo.getApplication(
       userId
@@ -26,16 +32,18 @@ export class InstructorApplicationService {
     }
 
     return await this.instructorAppRepo.createApplication({
-      user: userId,
+      user: new mongoose.Types.ObjectId(userId),
       ...applicationData,
     });
   }
 
   async updateApplication(
     applicationId: string,
-    data: any
+    data: Partial<IInstructorApplication>
   ): Promise<IInstructorApplication> {
-
+    if (!Types.ObjectId.isValid(applicationId)) {
+      throw new BadRequestError("Invalid application ID");
+    }
 
     const application = await this.instructorAppRepo.getApplicationById(
       applicationId
@@ -58,10 +66,11 @@ export class InstructorApplicationService {
   async getInstructorApplications(
     page: number,
     limit: number
-  ): Promise<{
-    applications: IInstructorApplication[];
-    totalPages: number;
-  }> {
+  ): Promise<{ applications: IInstructorApplication[]; totalPages: number }> {
+    if (page < 1 || limit < 1) {
+      throw new BadRequestError("Page and limit must be positive integers");
+    }
+
     const { applications, totalPages } =
       await this.instructorAppRepo.getApplications(page, limit);
     return { applications, totalPages };
@@ -71,6 +80,8 @@ export class InstructorApplicationService {
     userId: string | undefined
   ): Promise<IInstructorApplication> {
     if (!userId) throw new BadRequestError("User ID is required");
+    if (!Types.ObjectId.isValid(userId))
+      throw new BadRequestError("Invalid user ID");
 
     const application = await this.instructorAppRepo.getApplication(userId);
     if (!application) throw new NotFoundError("Application not found");
@@ -80,10 +91,25 @@ export class InstructorApplicationService {
   async getApplicationDetails(
     applicationId: string
   ): Promise<IInstructorApplication> {
+    if (!Types.ObjectId.isValid(applicationId)) {
+      throw new BadRequestError("Invalid application ID");
+    }
+
     const application = await this.instructorAppRepo.getApplicationById(
       applicationId
     );
     if (!application) throw new NotFoundError("Application not found");
+    return application;
+  }
+
+  async getInstructorDetails(userId: string): Promise<IInstructorApplication> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestError("Invalid user ID");
+    }
+
+    const application = await this.instructorAppRepo.getApplication(userId);
+    if (!application)
+      throw new NotFoundError("Instructor application not found");
     return application;
   }
 
@@ -92,6 +118,13 @@ export class InstructorApplicationService {
     status: "approved" | "rejected",
     rejectionReason?: string
   ): Promise<IInstructorApplication> {
+    if (!Types.ObjectId.isValid(applicationId)) {
+      throw new BadRequestError("Invalid application ID");
+    }
+    if (!["approved", "rejected"].includes(status)) {
+      throw new BadRequestError("Invalid status value");
+    }
+
     const application = await this.instructorAppRepo.getApplicationById(
       applicationId
     );

@@ -37,9 +37,10 @@ export class UserService {
 
   async getUsers(
     page: number,
-    limit: number
+    limit: number,
+    search?: string 
   ): Promise<{ users: IUser[]; totalPages: number }> {
-    return await this.userRepo.getAllUsers(page, limit);
+    return await this.userRepo.getAllUsers(page, limit, search);
   }
 
   async blockUser(userId: string, isBlocked: boolean): Promise<IUser> {
@@ -55,4 +56,4 @@ export class UserService {
   }
 }
 
-export default UserService; // Keep as a class for DI, not instantiated here
+export default UserService;

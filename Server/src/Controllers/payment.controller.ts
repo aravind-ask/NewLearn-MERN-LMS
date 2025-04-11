@@ -1,5 +1,6 @@
+// src/controllers/PaymentController.ts
 import { Request, Response, NextFunction } from "express";
-import { PaymentService } from "../services/payment.service";
+import { IPaymentService } from "../services/interfaces/IPaymentService";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { HttpStatus } from "../utils/statusCodes";
 
@@ -8,7 +9,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 export class PaymentController {
-  constructor(private paymentService: PaymentService) {}
+  constructor(private paymentService: IPaymentService) {}
 
   async createOrder(req: Request, res: Response, next: NextFunction) {
     try {
@@ -25,7 +26,7 @@ export class PaymentController {
       errorResponse(
         res,
         error.message || "Failed to create order",
-        error.statusCode
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -45,7 +46,7 @@ export class PaymentController {
       errorResponse(
         res,
         error.message || "Payment verification failed",
-        error.statusCode
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -63,7 +64,7 @@ export class PaymentController {
       errorResponse(
         res,
         error.message || "Error fetching payments",
-        error.statusCode
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -89,7 +90,7 @@ export class PaymentController {
       errorResponse(
         res,
         error.message || "Error fetching payments by date range",
-        error.statusCode
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -117,7 +118,7 @@ export class PaymentController {
       errorResponse(
         res,
         error.message || "Error fetching user payment history",
-        error.statusCode
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }

@@ -1,7 +1,9 @@
+// src/services/CategoryService.ts
 import { CategoryRepository } from "../repositories/categoryRepository";
 import { ICategory } from "../models/Category";
+import { ICategoryService } from "./interfaces/ICategoryService";
 
-export class CategoryService {
+export class CategoryService implements ICategoryService {
   private categoryRepository: CategoryRepository;
 
   constructor() {
@@ -15,22 +17,22 @@ export class CategoryService {
     if (page < 1 || limit < 1) {
       throw new Error("Page and limit must be positive numbers");
     }
-    return this.categoryRepository.getAllCategories(page, limit);
+    return await this.categoryRepository.getAllCategories(page, limit);
   }
 
   async createCategory(name: string, description?: string): Promise<ICategory> {
     if (!name) throw new Error("Category name is required");
-    return this.categoryRepository.createCategory({ name, description });
+    return await this.categoryRepository.createCategory({ name, description });
   }
 
   async updateCategory(
     id: string,
-    data: Partial<ICategory>
+    name: Partial<ICategory>
   ): Promise<ICategory | null> {
-    return this.categoryRepository.updateCategory(id, data);
+    return await this.categoryRepository.updateCategory(id, name);
   }
 
   async deleteCategory(id: string): Promise<ICategory | null> {
-    return this.categoryRepository.deleteCategory(id);
+    return await this.categoryRepository.deleteCategory(id);
   }
 }

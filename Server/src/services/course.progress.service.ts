@@ -1,10 +1,15 @@
+// src/services/CourseProgressService.ts
 import { CourseProgressRepository } from "../repositories/course.progress.repository";
-import EnrollmentModel from "../models/Enrollment";
+import { ICourseProgressService } from "./interfaces/ICourseProgressService";
 import { CourseRepository } from "../repositories/course.repository";
+import EnrollmentModel from "../models/Enrollment";
+import { ICourseProgress } from "../models/CourseProgress";
+import { ICourseProgressRepository } from "../repositories/interfaces/ICourseProgressRepository";
+import { ICourseRepository } from "../repositories/interfaces/ICourseRepository";
 
-export class CourseProgressService {
-  private courseProgressRepository: CourseProgressRepository;
-  private courseRepo: CourseRepository;
+export class CourseProgressService implements ICourseProgressService {
+  private courseProgressRepository: ICourseProgressRepository;
+  private courseRepo: ICourseRepository;
 
   constructor() {
     this.courseProgressRepository = new CourseProgressRepository();
@@ -15,7 +20,7 @@ export class CourseProgressService {
     userId: string,
     courseId: string,
     lectureId: string
-  ) {
+  ): Promise<ICourseProgress> {
     const progress = await this.courseProgressRepository.updateLectureProgress(
       userId,
       courseId,
@@ -41,7 +46,10 @@ export class CourseProgressService {
     return progress;
   }
 
-  async getCurrentCourseProgress(userId: string, courseId: string) {
+  async getCurrentCourseProgress(
+    userId: string,
+    courseId: string
+  ): Promise<any> {
     const studentPurchasedCourses = await EnrollmentModel.findOne({ userId });
 
     const isCoursePurchased = studentPurchasedCourses?.courses.some(
@@ -86,7 +94,13 @@ export class CourseProgressService {
     };
   }
 
-  async resetCurrentCourseProgress(userId: string, courseId: string) {
-    return this.courseProgressRepository.resetCourseProgress(userId, courseId);
+  async resetCurrentCourseProgress(
+    userId: string,
+    courseId: string
+  ): Promise<ICourseProgress | null> {
+    return await this.courseProgressRepository.resetCourseProgress(
+      userId,
+      courseId
+    );
   }
 }

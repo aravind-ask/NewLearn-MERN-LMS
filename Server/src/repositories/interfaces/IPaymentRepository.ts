@@ -18,4 +18,5 @@ export interface IPaymentRepository {
     page: number,
     limit: number
   ): Promise<{ payments: IPayment[]; totalPages: number }>;
+  findById(id: string): Promise<IPayment | null>;
 }

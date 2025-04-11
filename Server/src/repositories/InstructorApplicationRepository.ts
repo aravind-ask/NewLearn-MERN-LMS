@@ -4,34 +4,42 @@ import {
   IInstructorApplication,
 } from "../models/InstructorApplication";
 import { IInstructorApplicationRepository } from "./interfaces/IInstructorApplicationRepository";
+import { BaseRepository } from "./base.repository";
+import { Types } from "mongoose";
 
 export class InstructorApplicationRepository
+  extends BaseRepository<IInstructorApplication>
   implements IInstructorApplicationRepository
 {
+  constructor() {
+    super(InstructorApplication);
+  }
+
   async createApplication(
     data: Partial<IInstructorApplication>
   ): Promise<IInstructorApplication> {
     try {
-      return await InstructorApplication.create(data);
+      return await this.create(data);
     } catch (error) {
+      console.error("Error creating instructor application:", error);
       throw new Error("Error creating instructor application");
     }
   }
 
   async updateApplication(
     applicationId: string,
-    data: any
+    data: Partial<IInstructorApplication>
   ): Promise<IInstructorApplication> {
-    const application = await InstructorApplication.findByIdAndUpdate(
-      applicationId,
-      { ...data, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    ).exec();
-
-    if (!application) {
-      throw new Error("Application not found");
+    try {
+      const application = await this.update(applicationId, data);
+      if (!application) {
+        throw new Error("Application not found");
+      }
+      return application;
+    } catch (error) {
+      console.error("Error updating instructor application:", error);
+      throw new Error("Error updating instructor application");
     }
-    return application;
   }
 
   async getApplications(
@@ -44,16 +52,17 @@ export class InstructorApplicationRepository
   }> {
     try {
       const skip = (page - 1) * limit;
-      const applications = await InstructorApplication.find()
+      const applications = await this.model
+        .find()
         .skip(skip)
         .limit(limit)
         .exec();
-
-      const totalApplications = await InstructorApplication.countDocuments();
+      const totalApplications = await this.model.countDocuments();
       const totalPages = Math.ceil(totalApplications / limit);
 
       return { applications, totalPages, totalApplications };
     } catch (error) {
+      console.error("Error fetching instructor applications:", error);
       throw new Error("Error fetching instructor applications");
     }
   }
@@ -62,32 +71,38 @@ export class InstructorApplicationRepository
     applicationId: string
   ): Promise<IInstructorApplication | null> {
     try {
-      return await InstructorApplication.findById(applicationId).exec();
+      return await this.findById(applicationId);
     } catch (error) {
+      console.error("Error fetching application by ID:", error);
       throw new Error("Error fetching application by ID");
     }
   }
 
   async getApplication(userId: string): Promise<IInstructorApplication | null> {
     try {
-      return await InstructorApplication.findOne({ user: userId }).exec();
+      return await this.findOne({ user: new Types.ObjectId(userId) });
     } catch (error) {
+      console.error("Error fetching application by user ID:", error);
       throw new Error("Error fetching application by user ID");
     }
   }
 
   async updateApplicationStatus(
     applicationId: string,
-    status: string,
+    status: "pending" | "approved" | "rejected",
     rejectionReason?: string
   ): Promise<IInstructorApplication | null> {
     try {
-      return await InstructorApplication.findByIdAndUpdate(
-        applicationId,
-        { status, rejectionReason },
-        { new: true }
-      ).exec();
+      const application = await this.update(applicationId, {
+        status,
+        rejectionReason,
+      });
+      if (!application) {
+        throw new Error("Application not found");
+      }
+      return application;
     } catch (error) {
+      console.error("Error updating application status:", error);
       throw new Error("Error updating application status");
     }
   }

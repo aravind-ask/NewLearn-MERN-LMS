@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import RatingService from "../services/rating.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { HttpStatus } from "../utils/statusCodes";
+import { IRatingService } from "../services/interfaces/IRatingService";
 
 export default class RatingController {
-  private ratingService: RatingService;
+  private ratingService: IRatingService;
 
   constructor() {
     this.ratingService = new RatingService();
@@ -70,11 +71,15 @@ export default class RatingController {
     try {
       const { reviewId } = req.params;
       await this.ratingService.deleteReview(reviewId);
-      res.status(HttpStatus.OK).send();
+      successResponse(res, null, "Review deleted successfully", HttpStatus.OK);
     } catch (error: any) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: error.message });
+      errorResponse(
+        res,
+        error.message || "Failed to delete review",
+        error.message === "Review not found"
+          ? HttpStatus.NOT_FOUND
+          : HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }

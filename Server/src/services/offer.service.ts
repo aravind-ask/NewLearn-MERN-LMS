@@ -1,3 +1,4 @@
+// src/services/OfferService.ts
 import { IOfferRepository } from "../repositories/interfaces/IOfferRepository";
 import { IOffer } from "../models/Offers";
 import { IOfferService } from "./interfaces/IOfferService";
@@ -5,7 +6,10 @@ import { IOfferService } from "./interfaces/IOfferService";
 export class OfferService implements IOfferService {
   constructor(private offerRepository: IOfferRepository) {}
 
-  async getOffers(page: number, limit: number): Promise<IOffer[]> {
+  async getOffers(
+    page: number,
+    limit: number
+  ): Promise<{ items: IOffer[]; totalItems: number; totalPages: number }> {
     try {
       return await this.offerRepository.findAll(page, limit);
     } catch (error: any) {

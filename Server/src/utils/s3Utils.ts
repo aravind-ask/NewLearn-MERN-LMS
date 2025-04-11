@@ -17,13 +17,11 @@ export const getPresignedUrl = async (fileName: string) => {
     Bucket: process.env.AWS_S3_BUCKET_NAME!,
     Key: key,
     Expires: 60,
-    ContentType: "application/pdf", // Changed to PDF
   };
 
   const url = await s3.getSignedUrlPromise("putObject", params);
-  const permanentUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
-  return { url, key, permanentUrl };
+  return { url, key };
 };
 
 export const uploadToS3 = async (file: Buffer, key: string) => {
@@ -31,7 +29,6 @@ export const uploadToS3 = async (file: Buffer, key: string) => {
     Bucket: process.env.AWS_S3_BUCKET_NAME!,
     Key: key,
     Body: file,
-    ContentType: "application/pdf",
   };
 
   await s3.upload(params).promise();

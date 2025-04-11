@@ -18,10 +18,10 @@ export const categoryApi = api.injectEndpoints({
       invalidatesTags: ["Categories"],
     }),
     updateCategory: builder.mutation({
-      query: ({ id, data }) => ({
+      query: ({ id, name }) => ({
         url: `/categories/${id}`,
         method: "PUT",
-        body: data,
+        body: { name },
       }),
       invalidatesTags: ["Categories"],
     }),

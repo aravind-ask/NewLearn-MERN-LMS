@@ -1,20 +1,35 @@
-import * as wishlistRepository from "../repositories/wishlist.repository";
+// src/services/WishlistService.ts
+import { IWishlistRepository } from "../repositories/interfaces/IWishlistRepository";
+import { IWishlistService } from "./interfaces/IWishlistService";
 import { Course } from "../types/types";
+import { Types } from "mongoose";
 
-export const addToWishlist = async (
-  userId: string,
-  courseId: string
-): Promise<Course> => {
-  return await wishlistRepository.addToWishlist(userId, courseId);
-};
+export class WishlistService implements IWishlistService {
+  constructor(private wishlistRepository: IWishlistRepository) {}
 
-export const removeFromWishlist = async (
-  userId: string,
-  courseId: string
-): Promise<void> => {
-  await wishlistRepository.removeFromWishlist(userId, courseId);
-};
+  async addToWishlist(userId: string, courseId: string): Promise<Course> {
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(courseId)) {
+      throw new Error("Invalid ID format");
+    }
 
-export const getWishlist = async (userId: string): Promise<Course[]> => {
-  return await wishlistRepository.getWishlist(userId);
-};
+    return await this.wishlistRepository.addToWishlist(userId, courseId);
+  }
+
+  async removeFromWishlist(userId: string, courseId: string): Promise<void> {
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(courseId)) {
+      throw new Error("Invalid ID format");
+    }
+
+    await this.wishlistRepository.removeFromWishlist(userId, courseId);
+  }
+
+  async getWishlist(userId: string): Promise<Course[] | null> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid user ID");
+    }
+
+    return await this.wishlistRepository.getWishlist(userId);
+  }
+}
+
+export default WishlistService;

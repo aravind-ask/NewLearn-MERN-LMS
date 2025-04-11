@@ -1,14 +1,15 @@
+import { User } from "../slices/authSlice";
 import { api } from "./apiSetup";
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<
-      { users: User[]; totalPages: number },
-      { page: number; limit: number }
+      { data: { users: User[]; totalPages: number } },
+      { page: number; limit: number; search?: string }
     >({
-      query: ({ page, limit }) => ({
-        url: `/user/get-users?page=${page}&limit=${limit}`,
-        method: "GET",
+      query: ({ page, limit, search }) => ({
+        url: "/user/get-users",
+        params: { page, limit, search },
       }),
     }),
     blockUser: builder.mutation<

@@ -1,11 +1,19 @@
-// src/repositories/payment.repository.ts
+// src/repositories/PaymentRepository.ts
 import PaymentModel, { IPayment } from "../models/Payment";
 import { IPaymentRepository } from "./interfaces/IPaymentRepository";
+import { BaseRepository } from "./base.repository";
 
-export class PaymentRepository implements IPaymentRepository {
+export class PaymentRepository
+  extends BaseRepository<IPayment>
+  implements IPaymentRepository
+{
+  constructor() {
+    super(PaymentModel);
+  }
+
   async createPayment(paymentData: Partial<IPayment>): Promise<IPayment> {
     try {
-      return await PaymentModel.create({
+      return await this.create({
         ...paymentData,
         paymentId: "pending",
         payerId: "pending",
@@ -13,6 +21,7 @@ export class PaymentRepository implements IPaymentRepository {
         orderStatus: "pending",
       });
     } catch (error) {
+      console.error("Error creating payment:", error);
       throw new Error("Error creating payment");
     }
   }
@@ -26,20 +35,29 @@ export class PaymentRepository implements IPaymentRepository {
     }
   ): Promise<IPayment | null> {
     try {
-      return await PaymentModel.findOneAndUpdate(
-        { orderId },
-        { $set: updateData },
-        { new: true }
-      ).exec();
+      return await this.model
+        .findOneAndUpdate({ orderId }, { $set: updateData }, { new: true })
+        .exec();
     } catch (error) {
+      console.error("Error updating payment status:", error);
       throw new Error("Error updating payment status");
+    }
+  }
+
+  async findById(id: string): Promise<IPayment | null> {
+    try {
+      return await this.model.findOne({ orderId: id }).exec();
+    } catch (error) {
+      console.error(`Error finding payment by orderId ${id}:`, error);
+      throw new Error(`Error finding payment by orderId ${id}`);
     }
   }
 
   async getAllPayments(): Promise<IPayment[]> {
     try {
-      return await PaymentModel.find().exec();
+      return await this.model.find().exec();
     } catch (error) {
+      console.error("Error fetching all payments:", error);
       throw new Error("Error fetching all payments");
     }
   }
@@ -49,13 +67,16 @@ export class PaymentRepository implements IPaymentRepository {
     endDate: Date
   ): Promise<IPayment[]> {
     try {
-      return await PaymentModel.find({
-        orderDate: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      }).exec();
+      return await this.model
+        .find({
+          orderDate: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        })
+        .exec();
     } catch (error) {
+      console.error("Error fetching payments by date range:", error);
       throw new Error("Error fetching payments by date range");
     }
   }
@@ -67,16 +88,20 @@ export class PaymentRepository implements IPaymentRepository {
   ): Promise<{ payments: IPayment[]; totalPages: number }> {
     try {
       const skip = (page - 1) * limit;
-      const payments = await PaymentModel.find({ userId })
-        .skip(skip)
-        .limit(limit)
-        .sort({ orderDate: -1 })
-        .exec();
-      const totalPayments = await PaymentModel.countDocuments({ userId });
+      const [payments, totalPayments] = await Promise.all([
+        this.model
+          .find({ userId })
+          .skip(skip)
+          .limit(limit)
+          .sort({ orderDate: -1 })
+          .exec(),
+        this.model.countDocuments({ userId }),
+      ]);
       const totalPages = Math.ceil(totalPayments / limit);
       return { payments, totalPages };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error) {
+      console.error("Error fetching user payment history:", error);
+      throw new Error("Error fetching user payment history");
     }
   }
 }

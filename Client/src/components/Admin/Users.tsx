@@ -1,5 +1,5 @@
 // pages/AdminUsers.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useBlockUserMutation,
   useGetUsersQuery,
@@ -17,18 +17,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: "instructor" | "student";
-  profilePic?: string;
+  photoUrl?: string;
   isBlocked: boolean;
 }
 
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{
     id: string;
@@ -37,7 +41,21 @@ export default function AdminUsers() {
 
   const limit = 2;
   const [blockUser] = useBlockUserMutation();
-  const { data, isLoading, error, refetch } = useGetUsersQuery({ page, limit });
+  const { data, isLoading, error, refetch } = useGetUsersQuery({
+    page,
+    limit,
+    search: debouncedSearch,
+  });
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
   const handleBlock = async (userId: string, isBlocked: boolean) => {
     setSelectedUser({ id: userId, action: isBlocked ? "unblock" : "block" });
@@ -87,7 +105,7 @@ export default function AdminUsers() {
         <div className="flex justify-end gap-2">
           <Button
             variant={user.isBlocked ? "outline" : "destructive"}
-            onClick={() => handleBlock(user.id, user.isBlocked)}
+            onClick={() => handleBlock(user._id, user.isBlocked)}
           >
             {user.isBlocked ? "Unblock" : "Block"}
           </Button>
@@ -99,7 +117,18 @@ export default function AdminUsers() {
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-4">User Management</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold">User Management</h2>
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+          />
+        </div>
+      </div>
 
       <DataTable
         columns={columns}

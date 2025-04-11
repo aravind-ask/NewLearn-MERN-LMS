@@ -10,13 +10,52 @@ export const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
 });
 
-export const getPresignedUrl = async (fileName: string) => {
+// Helper function to determine ContentType based on file extension
+const getContentType = (fileName: string): string => {
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  switch (extension) {
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+      return "image/*";
+    case "webm":
+      return "video/webm";
+    case "mp4":
+      return "video/mp4";
+    default:
+      return "application/octet-stream"; // Fallback for unknown types
+  }
+};
+
+// Generate presigned URL for uploading files (PUT)
+export const getPresignedUploadUrl = async (
+  fileName: string,
+  options: { expires?: number } = {}
+): Promise<{ url: string; key: string }> => {
+  const key = `uploads/${uuidv4()}-${Date.now()}-${fileName}`;
   const params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME!,
-    Key: `uploads/${uuidv4()}-${Date.now()}-${fileName}`,
-    Expires: 60,
-    ContentType: "image/*",
+    Key: key,
+    Expires: options.expires || 60, // Default to 60 seconds, customizable
+    ContentType: getContentType(fileName), // Dynamic ContentType
   };
 
-  return await s3.getSignedUrlPromise("putObject", params);
+  const url = await s3.getSignedUrlPromise("putObject", params);
+  return { url, key };
+};
+
+// Generate presigned URL for downloading files (GET)
+export const getPresignedDownloadUrl = async (
+  key: string,
+  options: { expires?: number } = {}
+): Promise<string> => {
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME!,
+    Key: key,
+    Expires: options.expires || 3600, // Default to 1 hour for playback
+    ResponseContentType: getContentType(key), // Ensure correct type for playback
+  };
+
+  return await s3.getSignedUrlPromise("getObject", params);
 };

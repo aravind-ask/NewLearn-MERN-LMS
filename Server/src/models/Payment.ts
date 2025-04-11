@@ -11,6 +11,7 @@ export interface IPayment extends Document {
   orderDate: Date;
   orderId: string;
   paymentId: string;
+  payerId: string;
   courses: {
     courseId: string;
     courseTitle: string;
@@ -33,6 +34,7 @@ const paymentSchema = new mongoose.Schema<IPayment>(
     orderDate: { type: Date, default: Date.now },
     orderId: { type: String, required: true },
     paymentId: { type: String, required: true },
+    payerId: { type: String },
     courses: [
       {
         courseId: { type: String, required: true },

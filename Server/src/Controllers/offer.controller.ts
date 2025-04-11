@@ -1,3 +1,4 @@
+// src/controllers/OfferController.ts
 import { Request, Response } from "express";
 import { OfferService } from "../services/offer.service";
 
@@ -9,14 +10,16 @@ export class OfferController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const offers = await this.offerService.getOffers(page, limit);
+      const { items, totalItems, totalPages } =
+        await this.offerService.getOffers(page, limit);
       res.json({
         success: true,
-        data: offers,
+        data: items,
         pagination: {
           page,
           limit,
-          total: offers.length,
+          total: totalItems,
+          totalPages,
         },
       });
     } catch (error: any) {

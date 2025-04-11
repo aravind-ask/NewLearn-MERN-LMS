@@ -46,8 +46,9 @@ export class InterviewService {
       throw new Error("User ID and Mock ID are required");
     }
     return this.interviewRepository.createUserAnswer(userAnswer);
+    // Removed videoUrl update here since it’s handled by updateInterview
   }
-
+  
   async getUserAnswer(
     userId: string,
     question: string,

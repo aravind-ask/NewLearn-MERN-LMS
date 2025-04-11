@@ -1,5 +1,5 @@
-// src/services/enrollment.service.ts
-import { IEnrollment } from "@/models/Enrollment";
+// src/services/EnrollmentService.ts
+import { IEnrollment } from "../models/Enrollment";
 import { IEnrollmentRepository } from "../repositories/interfaces/IEnrollmentRepository";
 import { IEnrollmentService } from "./interfaces/IEnrollmentService";
 
@@ -14,23 +14,33 @@ export class EnrollmentService implements IEnrollmentService {
     courses: IEnrollment["courses"];
     totalPages: number;
   }> {
-    const enrollment = await this.enrollmentRepo.getEnrolledCourses(userId);
-    if (!enrollment || !enrollment.courses.length) {
-      return { courses: [], totalPages: 0 };
+    try {
+      const enrollment = await this.enrollmentRepo.getEnrolledCourses(userId);
+      if (!enrollment || !enrollment.courses.length) {
+        return { courses: [], totalPages: 0 };
+      }
+
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
+      const paginatedCourses = enrollment.courses.slice(startIndex, endIndex);
+      const totalPages = Math.ceil(enrollment.courses.length / limit);
+
+      return { courses: paginatedCourses, totalPages };
+    } catch (error) {
+      console.error("Error fetching enrolled courses:", error);
+      throw new Error("Failed to fetch enrolled courses");
     }
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const paginatedCourses = enrollment.courses.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(enrollment.courses.length / limit);
-
-    return { courses: paginatedCourses, totalPages };
   }
 
   async checkEnrolled(userId: string, courseId: string): Promise<boolean> {
-    console.log("Checking enrollment");
-    return await this.enrollmentRepo.isCourseEnrolled(userId, courseId);
+    try {
+      console.log("Checking enrollment");
+      return await this.enrollmentRepo.isCourseEnrolled(userId, courseId);
+    } catch (error) {
+      console.error("Error checking enrollment:", error);
+      throw new Error("Failed to check enrollment");
+    }
   }
 }
 
-export default EnrollmentService; 
+export default EnrollmentService;

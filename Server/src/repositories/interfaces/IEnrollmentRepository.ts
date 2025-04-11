@@ -15,4 +15,5 @@ export interface IEnrollmentRepository {
   ): Promise<IEnrollment>;
   isCourseEnrolled(userId: string, courseId: string): Promise<boolean>;
   getEnrolledCourses(userId: string): Promise<IEnrollment | null>;
+  isUserEnrolled(userId: string, courseId: string): Promise<boolean>;
 }

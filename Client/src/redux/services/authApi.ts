@@ -126,6 +126,15 @@ export const authApi = api.injectEndpoints({
         body,
       }),
     }),
+    getPresignedDownloadUrl: builder.mutation<{ url: string }, { key: string }>(
+      {
+        query: (body) => ({
+          url: "/user/download-url",
+          method: "POST",
+          body,
+        }),
+      }
+    ),
     updateProfile: builder.mutation<
       {
         message: string;
@@ -172,6 +181,7 @@ export const {
   useGoogleAuthMutation,
   useUpdateProfileMutation,
   useGetPresignedUrlMutation,
+  useGetPresignedDownloadUrlMutation,
   useRefreshAccessTokenMutation,
   useGetUserStatusQuery,
 } = authApi;

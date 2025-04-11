@@ -9,7 +9,7 @@ export interface IUser extends Document {
   isVerified?: boolean;
   isBlocked?: boolean;
   googleId?: string;
-  otp: string | undefined;
+  otp?: string | null;
   otpExpires: Date;
   enrolledCourses?: string[];
   photoUrl?: string;

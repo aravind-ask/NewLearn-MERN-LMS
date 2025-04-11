@@ -1,14 +1,16 @@
+// src/services/RatingService.ts
 import RatingRepository from "../repositories/rating.repository";
 import { IRating } from "../models/Ratings";
+import { IRatingService } from "./interfaces/IRatingService";
+import { IRatingRepository } from "../repositories/interfaces/IRatingRepository";
 
-export default class RatingService {
-  private ratingRepository: RatingRepository;
+export default class RatingService implements IRatingService {
+  private ratingRepository: IRatingRepository;
 
   constructor() {
     this.ratingRepository = new RatingRepository();
   }
 
-  // Get all reviews for a course
   async getReviewsByCourseId(
     courseId: string,
     limit: number,
@@ -17,10 +19,13 @@ export default class RatingService {
     if (!courseId) throw new Error("Course ID is required");
     if (limit < 1 || offset < 0)
       throw new Error("Invalid pagination parameters");
-    return this.ratingRepository.getReviewsByCourseId(courseId, limit, offset);
+    return await this.ratingRepository.getReviewsByCourseId(
+      courseId,
+      limit,
+      offset
+    );
   }
 
-  // Create a new review
   async createReview(reviewData: {
     userId: string;
     courseId: string;
@@ -37,7 +42,6 @@ export default class RatingService {
     return await this.ratingRepository.createReview(reviewData);
   }
 
-  // Update a review
   async updateReview(
     reviewId: string,
     updateData: { rating?: number; comment?: string }
@@ -51,8 +55,10 @@ export default class RatingService {
     return await this.ratingRepository.updateReview(reviewId, updateData);
   }
 
-  // Delete a review
   async deleteReview(reviewId: string): Promise<void> {
-    await this.ratingRepository.deleteReview(reviewId);
+    const result = await this.ratingRepository.deleteReview(reviewId);
+    if (!result) {
+      throw new Error("Review not found");
+    }
   }
 }

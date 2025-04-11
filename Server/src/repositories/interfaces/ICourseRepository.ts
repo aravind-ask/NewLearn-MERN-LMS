@@ -1,9 +1,9 @@
-// src/repositories/ICourseRepository.ts
+// src/repositories/interfaces/ICourseRepository.ts
 import { ICourse } from "../../models/Course";
 import { CreateCourseInput } from "../../utils/course.dto";
 
 export interface ICourseRepository {
-  createCourse(data: CreateCourseInput): Promise<ICourse>;
+  createCourse(courseCreationData: CreateCourseInput): Promise<ICourse>;
   findCourseById(courseId: string): Promise<ICourse | null>;
   updateCourse(
     courseId: string,
@@ -30,7 +30,7 @@ export interface ICourseRepository {
   ): Promise<{ courses: ICourse[]; totalCourses: number; totalPages?: number }>;
   getCourseDetails(courseId: string): Promise<ICourse | null>;
   getInstructorCourses(
-    filter: { instructorId: string; title: any },
+    filter: { instructorId: string; title: { $regex: any; $options: string } },
     page: number,
     limit: number,
     sortOptions: { [key: string]: 1 | -1 }

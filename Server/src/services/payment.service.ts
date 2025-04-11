@@ -1,16 +1,19 @@
-// src/services/payment.service.ts
+// src/services/PaymentService.ts
 import razorpay from "../utils/razorpay";
 import { IPaymentRepository } from "../repositories/interfaces/IPaymentRepository";
 import { IEnrollmentRepository } from "../repositories/interfaces/IEnrollmentRepository";
-import { CourseService } from "./course.service";
 import { AppError } from "../utils/appError";
-import { IPayment } from "@/models/Payment";
+import { IPayment } from "../models/Payment";
+import { IPaymentService } from "./interfaces/IPaymentService";
+import { ICourseService } from "./interfaces/ICourseService";
+import { PaymentLock } from "../models/PaymentLock";
+import mongoose from "mongoose";
 
-export class PaymentService {
+export class PaymentService implements IPaymentService {
   constructor(
     private paymentRepo: IPaymentRepository,
     private enrollmentRepo: IEnrollmentRepository,
-    private courseService: CourseService
+    private courseService: ICourseService
   ) {}
 
   async createRazorpayOrder(orderData: {
@@ -26,25 +29,87 @@ export class PaymentService {
     userId: string;
     userName: string;
     userEmail: string;
-  }) {
+  }): Promise<any> {
     const { amount, courses, userId, userName, userEmail } = orderData;
+    const lockTimeout = new Date(Date.now() + 10000); // 10s expiration
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: amount * 100, // Convert to paise
-      currency: "INR",
-    });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    await this.paymentRepo.createPayment({
-      userId,
-      userName,
-      userEmail,
-      orderId: razorpayOrder.id,
-      paymentMethod: "razorpay",
-      amount,
-      courses,
-    });
+    try {
+      // Step 1: Acquire locks for all courses
+      for (const course of courses) {
+        const lockKey = { userId, courseId: course.courseId };
+        const existingLock = await PaymentLock.findOne(lockKey).session(
+          session
+        );
+        if (existingLock) {
+          throw new AppError(
+            "Another payment process is in progress for this course. Please wait.",
+            409
+          );
+        }
+        await PaymentLock.create(
+          [{ userId, courseId: course.courseId, expiresAt: lockTimeout }],
+          {
+            session,
+          }
+        );
+      }
 
-    return razorpayOrder;
+      // Step 2: Check enrollment status
+      for (const course of courses) {
+        const isEnrolled = await this.enrollmentRepo.isUserEnrolled(
+          userId,
+          course.courseId
+        );
+        if (isEnrolled) {
+          throw new AppError(
+            `You are already enrolled in "${course.courseTitle}"`,
+            400
+          );
+        }
+      }
+
+      // Step 3: Create Razorpay order
+      const razorpayOrder = await razorpay.orders.create({
+        amount: amount * 100,
+        currency: "INR",
+      });
+
+      // Step 4: Store payment record
+      await this.paymentRepo.createPayment({
+        userId,
+        userName,
+        userEmail,
+        orderId: razorpayOrder.id,
+        paymentMethod: "razorpay",
+        amount,
+        courses,
+        paymentStatus: "pending",
+        orderStatus: "pending",
+      });
+
+      await session.commitTransaction();
+      return razorpayOrder;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+      // Clean up locks immediately after order creation attempt
+      for (const course of courses) {
+        await PaymentLock.deleteOne({
+          userId,
+          courseId: course.courseId,
+        }).catch((err) =>
+          console.error(
+            `Failed to delete lock for ${userId}:${course.courseId}:`,
+            err
+          )
+        );
+      }
+    }
   }
 
   async verifyRazorpayPayment(paymentData: {
@@ -53,37 +118,65 @@ export class PaymentService {
   }): Promise<{ success: boolean }> {
     const { razorpay_payment_id, razorpay_order_id } = paymentData;
 
-    const payment = await razorpay.payments.fetch(razorpay_payment_id);
-    if (payment.status !== "captured") {
-      throw new AppError("Payment not captured", 400);
-    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const updatedPayment = await this.paymentRepo.updatePaymentStatus(
-      razorpay_order_id,
-      {
-        paymentId: razorpay_payment_id,
-        orderStatus: "completed",
-        paymentStatus: "completed",
+    try {
+      const payment = await razorpay.payments.fetch(razorpay_payment_id);
+      if (payment.status !== "captured") {
+        throw new AppError("Payment not captured", 400);
       }
-    );
 
-    if (!updatedPayment) {
-      throw new AppError("Payment record not found", 404);
+      const updatedPayment = await this.paymentRepo.updatePaymentStatus(
+        razorpay_order_id,
+        {
+          paymentId: razorpay_payment_id,
+          orderStatus: "completed",
+          paymentStatus: "completed",
+        }
+      );
+
+      if (!updatedPayment) {
+        throw new AppError("Payment record not found", 404);
+      }
+
+      const { userId, courses } = updatedPayment;
+
+      // Double-check enrollment before proceeding
+      for (const course of courses) {
+        const isEnrolled = await this.enrollmentRepo.isUserEnrolled(
+          userId,
+          course.courseId
+        );
+        if (isEnrolled) {
+          throw new AppError(
+            `You are already enrolled in "${course.courseTitle}"`,
+            400
+          );
+        }
+      }
+
+      // Enroll user
+      await this.enrollmentRepo.enrollUserInCourses(userId, courses);
+
+      // Update course stats
+      for (const course of courses) {
+        await this.courseService.updateCourseEnrollment(course.courseId, {
+          studentId: userId,
+          studentName: updatedPayment.userName,
+          studentEmail: updatedPayment.userEmail,
+          paidAmount: course.coursePrice,
+        });
+      }
+
+      await session.commitTransaction();
+      return { success: true };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    const { userId, userName, userEmail, courses } = updatedPayment;
-    await this.enrollmentRepo.enrollUserInCourses(userId, courses);
-
-    for (const course of courses) {
-      await this.courseService.updateCourseEnrollment(course.courseId, {
-        studentId: userId,
-        studentName: userName,
-        studentEmail: userEmail,
-        paidAmount: course.coursePrice,
-      });
-    }
-
-    return { success: true };
   }
 
   async getAllPayments(): Promise<IPayment[]> {
@@ -93,7 +186,12 @@ export class PaymentService {
   async getPaymentsByDate(startDate: Date, endDate: Date): Promise<IPayment[]> {
     return await this.paymentRepo.getPaymentsByDateRange(startDate, endDate);
   }
-  async getUserPaymentHistory(userId: string, page: number, limit: number) {
+
+  async getUserPaymentHistory(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
     return await this.paymentRepo.getUserPaymentHistory(userId, page, limit);
   }
 }

@@ -1,5 +1,6 @@
 import { IUserAnswer } from "../../models/UserAnswer";
 import { IInterview } from "../../models/Interview";
+import { UpdateQuery } from "mongoose";
 
 export interface IInterviewRepository {
   create(interview: Partial<IInterview>): Promise<IInterview>;
@@ -7,8 +8,8 @@ export interface IInterviewRepository {
   findByUserId(userId: string): Promise<IInterview[]>;
   update(
     id: string,
-    interview: Partial<IInterview>
-  ): Promise<IInterview | null>;
+    interview: UpdateQuery<IInterview>
+  ): Promise<IInterview | null>; // Updated type
   createUserAnswer(userAnswer: Partial<IUserAnswer>): Promise<IUserAnswer>;
   findByUserAndQuestion(
     userId: string,

@@ -15,12 +15,13 @@ export interface Interview {
   userId: string;
   techStack: string;
   questions: { question: string; answer: string }[];
+  videoUrl: string;
   createdAt: Date | string;
   updatedAt: Date | string; // Changed from updateAt to updatedAt for consistency
 }
 
 export interface UserAnswer {
-  id: string;
+  _id: string;
   mockIdRef: string;
   question: string;
   correct_ans: string;

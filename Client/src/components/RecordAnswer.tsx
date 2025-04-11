@@ -6,12 +6,9 @@ import {
   Save,
   Video,
   VideoOff,
-  WebcamIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import useSpeechToText, { ResultType } from "react-hook-speech-to-text";
-import { useParams } from "react-router-dom";
-import WebCam from "react-webcam";
 import { TooltipButton } from "./common/tooltip-button";
 import { useToast } from "@/hooks/use-toast";
 import { chatSession } from "@/scripts";
@@ -25,8 +22,10 @@ import {
 
 interface RecordAnswerProps {
   question: { question: string; answer: string };
+  interviewId: string;
   isWebCam: boolean;
   setIsWebCam: (value: boolean) => void;
+  isRecording: boolean;
 }
 
 interface AIResponse {
@@ -36,8 +35,10 @@ interface AIResponse {
 
 export const RecordAnswer = ({
   question,
+  interviewId,
   isWebCam,
   setIsWebCam,
+  isRecording: pageIsRecording,
 }: RecordAnswerProps) => {
   const {
     interimResult,
@@ -56,9 +57,9 @@ export const RecordAnswer = ({
   const [aiResult, setAiResult] = useState<AIResponse | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const { user } = useSelector((state: RootState) => state.auth);
   const userId = user?.id;
-  const { interviewId } = useParams<{ interviewId: string }>();
 
   const [createUserAnswer] = useCreateUserAnswerMutation();
   const { data: existingAnswer, isLoading: isCheckingAnswer } =
@@ -72,11 +73,8 @@ export const RecordAnswer = ({
     );
 
   const recordUserAnswer = async () => {
-    console.log("recordUserAnswer called, isRecording:", isRecording); // Debug
     if (isRecording) {
       stopSpeechToText();
-
-      console.log("Stopped recording, userAnswer length:", userAnswer?.length); // Debug
       if (userAnswer?.length < 30) {
         toast({
           title: "Error",
@@ -85,20 +83,13 @@ export const RecordAnswer = ({
         });
         return;
       }
-
-      console.log("Generating AI result for:", {
-        question: question.question,
-        userAnswer,
-      }); // Debug
       const aiResult = await generateResult(
         question.question,
         question.answer,
         userAnswer
       );
-      console.log("AI result generated:", aiResult); // Debug
       setAiResult(aiResult);
     } else {
-      console.log("Starting speech-to-text"); // Debug
       startSpeechToText();
     }
   };
@@ -116,18 +107,13 @@ export const RecordAnswer = ({
     Please compare the user's answer to the correct answer, and provide a rating (from 1 to 10) based on answer quality, and offer feedback for improvement.
     Return the result in JSON format with the fields "ratings" (number) and "feedback" (string).
   `;
-
-    console.log("Sending prompt to AI:", prompt); // Debug
     try {
       const aiResult = await chatSession.sendMessage(prompt);
-      console.log("Raw AI response:", aiResult.response.text()); // Debug
       const parsedResult: AIResponse = cleanJsonResponse(
         aiResult.response.text()
       );
-      console.log("Parsed AI result:", parsedResult); // Debug
       return parsedResult;
     } catch (error) {
-      console.log("Error in generateResult:", error); // Debug
       toast({
         title: "Error",
         description: "An error occurred while generating feedback",
@@ -140,8 +126,7 @@ export const RecordAnswer = ({
   };
 
   const cleanJsonResponse = (responseText: string) => {
-    let cleanText = responseText.trim();
-    cleanText = cleanText.replace(/(json|```|`)/g, "");
+    const cleanText = responseText.trim().replace(/(json|```|`)/g, "");
     try {
       return JSON.parse(cleanText);
     } catch (error) {
@@ -157,11 +142,10 @@ export const RecordAnswer = ({
 
   const saveUserAnswer = async () => {
     setLoading(true);
-
     if (!aiResult || !userId || !interviewId) {
       toast({
         title: "Error",
-        description: `Missing required data to save answer: aiResult=${!!aiResult}, userId=${!!userId}, interviewId=${!!interviewId}`,
+        description: `Missing required data: aiResult=${!!aiResult}, userId=${!!userId}, interviewId=${!!interviewId}`,
         variant: "destructive",
       });
       setLoading(false);
@@ -177,17 +161,6 @@ export const RecordAnswer = ({
         return;
       }
 
-      console.log("Attempting to create user answer with data:", {
-        mockIdRef: interviewId,
-        question: question.question,
-        correct_ans: question.answer,
-        user_ans: userAnswer,
-        feedback: aiResult.feedback,
-        rating: aiResult.ratings,
-        userId,
-        createdAt: new Date().toISOString(),
-      });
-
       const result = await createUserAnswer({
         mockIdRef: interviewId,
         question: question.question,
@@ -199,7 +172,6 @@ export const RecordAnswer = ({
         createdAt: new Date().toISOString(),
       }).unwrap();
 
-      console.log("Mutation result:", result);
       toast({
         title: "Saved",
         description: "Your answer has been saved",
@@ -235,18 +207,6 @@ export const RecordAnswer = ({
         onConfirm={saveUserAnswer}
         loading={loading || isCheckingAnswer}
       />
-
-      <div className="w-full h-[400px] md:w-96 flex flex-col items-center justify-center border p-4 bg-gray-50 rounded-md">
-        {isWebCam ? (
-          <WebCam
-            onUserMedia={() => setIsWebCam(true)}
-            onUserMediaError={() => setIsWebCam(false)}
-            className="w-full h-full object-cover rounded-md"
-          />
-        ) : (
-          <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />
-        )}
-      </div>
 
       <div className="flex items-center justify-center gap-3">
         <TooltipButton
@@ -301,6 +261,11 @@ export const RecordAnswer = ({
         {interimResult && (
           <p className="text-sm text-gray-500 mt-2">
             <strong>Current Speech:</strong> {interimResult}
+          </p>
+        )}
+        {pageIsRecording && (
+          <p className="text-sm text-green-500 mt-2">
+            <strong>Interview Recording:</strong> In progress...
           </p>
         )}
       </div>

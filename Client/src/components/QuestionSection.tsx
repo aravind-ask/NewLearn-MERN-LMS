@@ -7,18 +7,25 @@ import { RecordAnswer } from "./RecordAnswer";
 
 interface QuestionSectionProps {
   questions: { question: string; answer: string }[];
+  interviewId: string;
+  isWebCam: boolean;
+  setIsWebCam: (value: boolean) => void;
+  isRecording: boolean;
 }
 
-export const QuestionSection = ({ questions }: QuestionSectionProps) => {
+export const QuestionSection = ({
+  questions,
+  interviewId,
+  isWebCam,
+  setIsWebCam,
+  isRecording,
+}: QuestionSectionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isWebCam, setIsWebCam] = useState(false);
-
   const [currentSpeech, setCurrentSpeech] =
     useState<SpeechSynthesisUtterance | null>(null);
 
   const handlePlayQuestion = (qst: string) => {
     if (isPlaying && currentSpeech) {
-      // stop the speech if already playing
       window.speechSynthesis.cancel();
       setIsPlaying(false);
       setCurrentSpeech(null);
@@ -28,8 +35,6 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
         window.speechSynthesis.speak(speech);
         setIsPlaying(true);
         setCurrentSpeech(speech);
-
-        // handle the speech end
         speech.onend = () => {
           setIsPlaying(false);
           setCurrentSpeech(null);
@@ -81,8 +86,10 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
 
             <RecordAnswer
               question={tab}
+              interviewId={interviewId}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
+              isRecording={isRecording}
             />
           </TabsContent>
         ))}

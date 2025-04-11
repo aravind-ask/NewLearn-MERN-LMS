@@ -255,7 +255,7 @@ export class AuthService {
     const hashedPassword = await hashPassword(newPassword);
     await this.userRepo.updateUser(user._id, {
       password: hashedPassword,
-      otp: undefined,
+      otp: null,
       otpExpires: undefined,
     });
     return { message: "Password updated successfully" };
@@ -265,9 +265,9 @@ export class AuthService {
     const user = await this.userRepo.findUserById(userId);
     if (!user) throw new AppError("User not found", 404);
 
-    await this.userRepo.updateRefreshToken(user._id, ""); // Clear refresh token
+    await this.userRepo.updateRefreshToken(user._id, "");
     return { message: "Logged out successfully" };
   }
 }
 
-export default AuthService; // Export as class for DI
+export default AuthService;

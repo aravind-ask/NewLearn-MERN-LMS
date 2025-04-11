@@ -1,66 +1,55 @@
-// src/repositories/userRepository.ts
+// src/repositories/UserRepository.ts
 import { User, IUser } from "../models/User";
 import { IUserRepository } from "./interfaces/IUserRepository";
+import { BaseRepository } from "./base.repository";
 
-export class UserRepository implements IUserRepository {
+export class UserRepository extends BaseRepository<IUser> implements IUserRepository {
+  constructor() {
+    super(User);
+  }
+
   async createUser(userData: Partial<IUser>): Promise<IUser> {
-    try {
-      const user = new User(userData);
-      return await user.save();
-    } catch (error) {
-      throw new Error("Error creating user");
-    }
+    return await this.create(userData);
   }
 
   async findUserByEmail(email: string): Promise<IUser | null> {
     try {
-      return await User.findOne({ email }).exec();
+      return await this.model.findOne({ email }).exec();
     } catch (error) {
       throw new Error("Error finding user by email");
     }
   }
 
   async findUserById(userId: string): Promise<IUser | null> {
-    try {
-      return await User.findById(userId).exec();
-    } catch (error) {
-      throw new Error("Error finding user by ID");
-    }
+    return await this.findById(userId);
   }
 
   async updateRefreshToken(
     userId: string,
     refreshToken: string
   ): Promise<IUser | null> {
-    try {
-      return await User.findByIdAndUpdate(
-        userId,
-        { refreshToken },
-        { new: true }
-      ).exec();
-    } catch (error) {
-      throw new Error("Error updating refresh token");
-    }
+    return await this.update(userId, { refreshToken });
   }
 
   async getAllUsers(
     page: number,
-    limit: number
+    limit: number,
+    search?: string 
   ): Promise<{ users: IUser[]; totalPages: number }> {
     try {
-      const skip = (page - 1) * limit;
-      const users = await User.find(
-        { role: { $ne: "admin" } },
-        "id name email role photoUrl isBlocked"
-      )
-        .skip(skip)
-        .limit(limit)
-        .exec();
+      const query: any = { role: { $ne: "admin" } };
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: "i" } }, 
+          { email: { $regex: search, $options: "i" } },
+        ];
+      }
 
-      const totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
-      const totalPages = Math.ceil(totalUsers / limit);
-
-      return { users, totalPages };
+      const result = await this.findAll(page, limit, query);
+      return {
+        users: result.items,
+        totalPages: result.totalPages,
+      };
     } catch (error) {
       throw new Error("Error fetching users");
     }
@@ -70,47 +59,24 @@ export class UserRepository implements IUserRepository {
     userId: string,
     updateData: Partial<IUser>
   ): Promise<IUser | null> {
-    try {
-      return await User.findByIdAndUpdate(userId, updateData, {
-        new: true,
-      }).exec();
-    } catch (error) {
-      throw new Error("Error updating user");
-    }
+    return await this.update(userId, updateData);
   }
 
   async toggleBlockUser(
     userId: string,
     isBlocked: boolean
   ): Promise<IUser | null> {
-    try {
-      return await User.findByIdAndUpdate(
-        userId,
-        { isBlocked },
-        { new: true }
-      ).exec();
-    } catch (error) {
-      throw new Error("Error toggling block status");
-    }
+    return await this.update(userId, { isBlocked });
   }
 
-  async updateUserRole(userId: string, role: string): Promise<IUser | null> {
-    try {
-      return await User.findByIdAndUpdate(
-        userId,
-        { role },
-        { new: true }
-      ).exec();
-    } catch (error) {
-      throw new Error("Error updating user role");
-    }
+  async updateUserRole(
+    userId: string,
+    role: "student" | "instructor" | "admin"
+  ): Promise<IUser | null> {
+    return await this.update(userId, { role });
   }
 
-  async deleteUser(userId: string): Promise<null> {
-    try {
-      return await User.findByIdAndDelete(userId);
-    } catch (error) {
-      throw new Error("Error deleting user");
-    }
+  async deleteUser(userId: string): Promise<IUser | null> {
+    return await this.delete(userId);
   }
 }

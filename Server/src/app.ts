@@ -24,6 +24,11 @@ import interviewRoutes from "./Routes/interview.routes";
 import multer from "multer";
 import { setupChatSocket } from "./sockets/chat.socket";
 import { setupDiscussionSocket } from "./sockets/discussion.socket";
+import fs from "fs";
+const rfs = require("rotating-file-stream");
+import path from "path";
+
+declare const __dirname: string;
 
 dotenv.config();
 
@@ -56,6 +61,18 @@ app.set("io", io);
 
 const upload = multer();
 
+const logDirectory = path.join(__dirname, "logs");
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory, { recursive: true });
+}
+
+const accessLogStream = rfs.createStream("access.log", {
+  interval: "1d",
+  path: logDirectory,
+  maxFiles: 7,
+  compress: "gzip",
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -70,7 +87,16 @@ app.use(
     credentials: true,
   })
 );
-app.use(morgan("dev"));
+
+app.use(
+  morgan(
+    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
+    { stream: accessLogStream }
+  )
+);
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
 
 connectDB();
 
@@ -108,6 +134,5 @@ app.use(
     });
   }
 );
-//change comment
 
 export default httpServer;

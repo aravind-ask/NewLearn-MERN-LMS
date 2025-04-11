@@ -1,4 +1,3 @@
-// src/repositories/IUserRepository.ts
 import { IUser } from "../../models/User";
 
 export interface IUserRepository {
@@ -11,10 +10,11 @@ export interface IUserRepository {
   ): Promise<IUser | null>;
   getAllUsers(
     page: number,
-    limit: number
+    limit: number,
+    search?: string
   ): Promise<{ users: IUser[]; totalPages: number }>;
   updateUser(userId: string, updateData: Partial<IUser>): Promise<IUser | null>;
   toggleBlockUser(userId: string, isBlocked: boolean): Promise<IUser | null>;
   updateUserRole(userId: string, role: string): Promise<IUser | null>;
-  deleteUser(userId: string): Promise<null>;
+  deleteUser(userId: string): Promise<IUser | null>;
 }

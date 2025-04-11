@@ -9,6 +9,7 @@ export interface IUserAnswer extends Document {
   feedback: string;
   rating: number;
   userId: string;
+  videoUrl: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

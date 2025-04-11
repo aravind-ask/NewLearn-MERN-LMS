@@ -1,15 +1,16 @@
+// src/controllers/CourseProgressController.ts
 import { Request, Response } from "express";
-import { CourseProgressService } from "../services/course.progress.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
+import { ICourseProgressService } from "../services/interfaces/ICourseProgressService";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };
 }
 
 export class CourseProgressController {
-  private courseProgressService: CourseProgressService;
+  private courseProgressService: ICourseProgressService;
 
-  constructor(courseProgressService: CourseProgressService) {
+  constructor(courseProgressService: ICourseProgressService) {
     this.courseProgressService = courseProgressService;
   }
 
@@ -28,7 +29,6 @@ export class CourseProgressController {
       successResponse(res, progress, "Lecture marked as viewed", 200);
     } catch (error: any) {
       console.error(error);
-
       errorResponse(
         res,
         error.message || "Internal Server Error",

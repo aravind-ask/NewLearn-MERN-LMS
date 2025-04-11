@@ -1,10 +1,17 @@
+// src/pages/CheckoutPage.tsx
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ShoppingCart, CreditCard, Wallet, Gift, Loader } from "lucide-react";
+import {
+  ShoppingCart,
+  Wallet,
+  Loader,
+  CheckCircle,
+  ArrowLeft,
+  AlertCircle,
+} from "lucide-react";
 import { useState } from "react";
 import {
   useCreateRazorpayOrderMutation,
@@ -14,6 +21,15 @@ import { useGetCartQuery } from "@/redux/services/courseApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const CheckoutPage = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -23,13 +39,12 @@ const CheckoutPage = () => {
   const cartItems = location.state?.cartItems || [];
   const courseDetails = location.state?.courseDetails;
   const itemsToCheckout = courseDetails ? [courseDetails] : cartItems;
+  const [hasProcessed, setHasProcessed] = useState(false); // Track if payment was attempted
 
-  const [couponCode, setCouponCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("paypal");
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [discount, setDiscount] = useState(0);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [couponError, setCouponError] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for dialog error
 
   const [createRazorpayOrder] = useCreateRazorpayOrderMutation();
   const [verifyRazorpayPayment] = useVerifyRazorpayPaymentMutation();
@@ -55,31 +70,23 @@ const CheckoutPage = () => {
     (total, item) => total + item.pricing,
     0
   );
-
   const subtotal = normalizedItems.reduce(
     (total, item) => total + (item.discountedPrice || item.pricing),
     0
   );
-
   const offerDiscount = originalSubtotal - subtotal;
   const total = Math.round(subtotal - discount);
 
-  const handleApplyCoupon = () => {
-    setIsApplyingCoupon(true);
-    setCouponError("");
-    setTimeout(() => {
-      if (couponCode === "LEARN10") {
-        setDiscount(subtotal * 0.1);
-      } else {
-        setCouponError("Invalid coupon code");
-      }
-      setIsApplyingCoupon(false);
-    }, 1000);
-  };
-
   const handleRazorpayPayment = async () => {
-    setIsPlacingOrder(true);
+    if (hasProcessed) {
+      setErrorMessage(
+        "Payment process has already been initiated. Please wait or refresh the page."
+      );
+      return;
+    }
 
+    setIsPlacingOrder(true);
+    setHasProcessed(true);
     try {
       const courses = normalizedItems.map((item) => ({
         courseId: item._id,
@@ -109,11 +116,11 @@ const CheckoutPage = () => {
           const verificationResult = await verifyRazorpayPayment(
             response
           ).unwrap();
-
           if (verificationResult.success) {
-            navigate("/order-confirmation");
+            navigate("/order-confirmation", { state: { order, courses } });
           } else {
-            alert("Payment failed. Please try again.");
+            setErrorMessage("Payment failed. Please try again.");
+            setHasProcessed(false);
           }
         },
         prefill: {
@@ -121,215 +128,255 @@ const CheckoutPage = () => {
           email: user?.email,
           contact: "9999999999",
         },
-        theme: {
-          color: "#2563eb",
+        theme: { color: "#2563eb" },
+        modal: {
+          ondismiss: () => {
+            setHasProcessed(false);
+            setIsPlacingOrder(false);
+          },
         },
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment failed:", error);
-      alert("Payment failed. Please try again.");
+      if (error.status === 409) {
+        setErrorMessage(
+          "Another payment for this course is in progress. Please wait a moment and try again."
+        );
+      } else if (error.data?.message?.includes("already enrolled")) {
+        setErrorMessage(error.data.message);
+        navigate("/dashboard");
+      } else {
+        setErrorMessage("An error occurred during payment. Please try again.");
+        setHasProcessed(false);
+      }
     } finally {
       setIsPlacingOrder(false);
     }
   };
 
+  const closeErrorDialog = () => {
+    setErrorMessage(null);
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center justify-between mt-4 mb-8 gap-4">
-        <div className="flex items-center gap-4">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Header with Progress */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center gap-3">
           <ShoppingCart className="h-8 w-8 text-teal-600" />
-          <h1 className="text-3xl font-bold text-gray-800">Checkout</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Checkout
+          </h1>
         </div>
         <Button
+          variant="ghost"
           onClick={() => navigate(-1)}
-          variant="outline"
-          className="cursor-pointer hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-2 text-teal-600 hover:text-teal-800"
         >
-          Go Back
+          <ArrowLeft className="h-5 w-5" />
+          Back
         </Button>
-      </div>
+      </motion.div>
+      <Progress value={66} className="mb-6" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="col-span-2">
-          <Card className="shadow-lg">
-            <CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Order Details */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-2 space-y-6"
+        >
+          <Card className="border-none shadow-lg">
+            <CardHeader className="bg-gray-50 rounded-t-lg">
               <CardTitle className="text-xl font-semibold text-gray-800">
-                Order Details
+                Your Courses ({normalizedItems.length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {normalizedItems?.map((item) => (
-                  <div
+            <CardContent className="p-6">
+              {normalizedItems.length === 0 ? (
+                <p className="text-gray-500 text-center">
+                  No items to checkout.
+                </p>
+              ) : (
+                normalizedItems.map((item) => (
+                  <motion.div
                     key={item._id}
-                    className="flex gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow relative"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-4 p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-32 h-20 flex-shrink-0 relative">
+                    <div className="w-24 h-16 flex-shrink-0 relative">
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-md shadow-sm"
                       />
                       {item.appliedOffer && (
-                        <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white">
+                        <Badge className="absolute -top-2 -right-2 bg-teal-500 text-white">
                           {item.appliedOffer.discountPercentage}% OFF
                         </Badge>
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-800">
+                      <h3 className="text-lg font-medium text-gray-900">
                         {item.title}
                       </h3>
                       <p className="text-sm text-gray-600">
                         By {item.instructorName}
                       </p>
-                      <div className="flex flex-col gap-1 mt-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-lg font-bold text-teal-600">
-                            ₹{item.discountedPrice.toFixed(2)}
-                          </p>
-                          {item.appliedOffer && (
-                            <p className="text-sm text-gray-500 line-through">
-                              ₹{item.pricing}
-                            </p>
-                          )}
-                        </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-lg font-bold text-teal-600">
+                          ₹{item.discountedPrice.toFixed(2)}
+                        </span>
                         {item.appliedOffer && (
-                          <p className="text-xs text-green-600">
-                            {item.appliedOffer.title} Applied
-                          </p>
+                          <span className="text-sm text-gray-500 line-through">
+                            ₹{item.pricing}
+                          </span>
                         )}
                       </div>
+                      {item.appliedOffer && (
+                        <p className="text-xs text-teal-600 mt-1">
+                          Offer: {item.appliedOffer.title}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </motion.div>
+                ))
+              )}
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        <div className="col-span-1 space-y-8">
-          <Card className="shadow-lg">
-            <CardHeader>
+        {/* Sidebar */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-1 space-y-6"
+        >
+          {/* Order Summary */}
+          <Card className="border-none shadow-lg">
+            <CardHeader className="bg-gray-50 rounded-t-lg">
               <CardTitle className="text-xl font-semibold text-gray-800">
                 Order Summary
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="p-6 bg-white">
+              <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Original Price</span>
-                  <span className="font-bold text-gray-500 line-through">
-                    ₹ {originalSubtotal.toFixed(2)}
+                  <span className="text-gray-500 line-through">
+                    ₹{originalSubtotal.toFixed(2)}
                   </span>
                 </div>
                 {offerDiscount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Offer Discount</span>
-                    <span className="font-bold text-green-600">
-                      -₹ {offerDiscount.toFixed(2)}
+                    <span className="text-teal-600">
+                      -₹{offerDiscount.toFixed(2)}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-bold">₹ {subtotal.toFixed(2)}</span>
-                </div>
                 {discount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Coupon Discount</span>
-                    <span className="font-bold text-green-600">
-                      -₹ {discount.toFixed(2)}
+                    <span className="text-teal-600">
+                      -₹{discount.toFixed(2)}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between border-t pt-4">
-                  <span className="text-gray-600 font-semibold">Total</span>
+                <div className="flex justify-between border-t pt-3">
+                  <span className="font-semibold text-gray-800">Total</span>
                   <span className="font-bold text-lg text-teal-600">
-                    ₹ {total.toFixed(2)}
+                    ₹{total.toFixed(2)}
                   </span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-gray-800">
-                Apply Coupon
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <Input
-                  placeholder="Enter coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleApplyCoupon}
-                  disabled={isApplyingCoupon}
-                  className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 transition-colors"
-                >
-                  {isApplyingCoupon ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Gift className="h-4 w-4" />
-                  )}
-                  {isApplyingCoupon ? "Applying..." : "Apply"}
-                </Button>
-              </div>
-              {couponError && (
-                <p className="text-red-600 mt-2 text-sm">{couponError}</p>
-              )}
-              {discount > 0 && (
-                <p className="text-green-600 mt-2 text-sm">
-                  ₹ {discount.toFixed(2)} discount applied!
-                </p>
-              )}
-            </CardContent>
-          </Card> */}
-
-          <Card className="shadow-lg">
-            <CardHeader>
+          {/* Payment Method */}
+          <Card className="border-none shadow-lg">
+            <CardHeader className="bg-gray-50 rounded-t-lg">
               <CardTitle className="text-xl font-semibold text-gray-800">
                 Payment Method
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={setPaymentMethod}
-                className="space-y-4"
+                className="space-y-3"
               >
-                <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <RadioGroupItem value="paypal" id="paypal" />
-                  <Label htmlFor="paypal" className="flex items-center gap-2">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center gap-3 p-3 border rounded-lg bg-white shadow-sm"
+                >
+                  <RadioGroupItem value="razorpay" id="razorpay" />
+                  <Label
+                    htmlFor="razorpay"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Wallet className="h-5 w-5 text-teal-600" />
                     Razorpay
                   </Label>
-                </div>
+                </motion.div>
               </RadioGroup>
             </CardContent>
           </Card>
 
+          {/* Place Order Button */}
           <Button
             onClick={handleRazorpayPayment}
-            className="w-full mt-4 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 transition-colors"
-            disabled={normalizedItems.length === 0 || isPlacingOrder}
+            disabled={
+              normalizedItems.length === 0 || isPlacingOrder || hasProcessed
+            }
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
           >
             {isPlacingOrder ? (
-              <Loader className="h-4 w-4 animate-spin" />
+              <>
+                <Loader className="h-5 w-5 animate-spin" />
+                Processing...
+              </>
             ) : (
-              "Place Order"
+              <>
+                <CheckCircle className="h-5 w-5" />
+                Place Order
+              </>
             )}
           </Button>
-        </div>
+        </motion.div>
       </div>
+
+      {/* Error Dialog */}
+      <Dialog open={!!errorMessage} onOpenChange={closeErrorDialog}>
+        <DialogContent className="sm:max-w-[425px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              Payment Error
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700">{errorMessage}</p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={closeErrorDialog}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

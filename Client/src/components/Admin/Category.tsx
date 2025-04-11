@@ -59,7 +59,8 @@ const Category = () => {
   } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [editErrorMessage, setEditErrorMessage] = useState(""); // Added for edit dialog
+  const [editErrorMessage, setEditErrorMessage] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleCreateCategory = async () => {
     if (!categoryName.trim()) {
@@ -79,6 +80,7 @@ const Category = () => {
       toast.success("Category created successfully");
       setCategoryName("");
       setErrorMessage("");
+      setIsCreateModalOpen(false);
       refetch();
     } catch (error) {
       toast.error("Failed to create category");
@@ -90,7 +92,6 @@ const Category = () => {
       setEditErrorMessage("Category name is required");
       return;
     }
-    // Check for duplicate, excluding the current category being edited
     const isDuplicate = categories?.data?.data?.some(
       (cat) =>
         cat.name.toLowerCase() === editCategory.name.toLowerCase() &&
@@ -100,6 +101,7 @@ const Category = () => {
       setEditErrorMessage("Category already exists.");
       return;
     }
+    console.log(editCategory)
 
     try {
       await updateCategory({
@@ -171,7 +173,7 @@ const Category = () => {
           <CardTitle className="text-2xl font-bold text-gray-800">
             Category Management
           </CardTitle>
-          <Dialog>
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 Create Category

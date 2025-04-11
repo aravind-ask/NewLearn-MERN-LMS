@@ -19,6 +19,7 @@ import {
   useGetInterviewQuery,
   useGetUserAnswersByInterviewQuery,
 } from "@/redux/services/interviewApi";
+import { useGetPresignedUrlMutation, useGetPresignedDownloadUrlMutation } from "@/redux/services/authApi";
 import Loading from "@/components/Loading";
 
 const Feedback = () => {
@@ -27,15 +28,16 @@ const Feedback = () => {
   const userId = user?.id;
   const [activeFeed, setActiveFeed] = useState("");
   const navigate = useNavigate();
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-  // Fetch interview details
+  const [getPresignedDownloadUrl] = useGetPresignedDownloadUrlMutation();
+
   const {
     data: interview,
     error: interviewError,
     isLoading: isInterviewLoading,
   } = useGetInterviewQuery(interviewId || "", { skip: !interviewId });
 
-  // Fetch user answers for the interview
   const {
     data: feedbacks,
     error: feedbacksError,
@@ -45,14 +47,32 @@ const Feedback = () => {
     { skip: !userId || !interviewId }
   );
 
-  // Redirect if no interviewId
+ useEffect(() => {
+   const fetchVideoUrl = async () => {
+     if (interview?.videoUrl) {
+       try {
+         const { url } = await getPresignedDownloadUrl({
+           key: interview.videoUrl,
+         }).unwrap();
+         console.log("Fetched video URL:", url);
+         setVideoUrl(url);
+       } catch (error) {
+         console.error("Error fetching video URL:", error);
+         toast("Error", {
+           description: "Failed to load interview video",
+         });
+       }
+     }
+   };
+   fetchVideoUrl();
+ }, [interview, getPresignedDownloadUrl]);
+
   useEffect(() => {
     if (!interviewId) {
       navigate("/generate", { replace: true });
     }
   }, [interviewId, navigate]);
 
-  // Handle errors
   useEffect(() => {
     if (interviewError) {
       console.log("Interview fetch error:", interviewError);
@@ -69,7 +89,6 @@ const Feedback = () => {
     }
   }, [interviewError, feedbacksError]);
 
-  // Calculate overall rating
   const overAllRating = useMemo(() => {
     if (!feedbacks || feedbacks.length === 0) return "0.0";
     const totalRatings = feedbacks.reduce(
@@ -112,6 +131,15 @@ const Feedback = () => {
 
       {interview && <InterviewPin interview={interview} onMockPage />}
 
+      {videoUrl && (
+        <div className="w-full max-w-2xl mx-auto">
+          <h2 className="text-lg font-semibold mb-2">Interview Recording</h2>
+          <video controls src={videoUrl} className="w-full rounded-md">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      )}
+
       <Headings title="Interview Feedback" isSubHeading />
 
       {feedbacks && feedbacks.length > 0 ? (
@@ -135,7 +163,7 @@ const Feedback = () => {
               </AccordionTrigger>
 
               <AccordionContent className="px-5 py-6 bg-white rounded-b-lg space-y-5 shadow-inner">
-                <div className="text-lg font-semibold to-gray-700">
+                <div className="text-lg font-semibold text-gray-700">
                   <Star className="inline mr-2 text-yellow-400" />
                   Rating: {feed.rating}
                 </div>

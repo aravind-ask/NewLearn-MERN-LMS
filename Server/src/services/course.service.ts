@@ -50,17 +50,20 @@ export class CourseService implements ICourseService {
   }> {
     const offers = await this.offerService.getOffers(1, 100);
 
-    const activeOffers = offers.filter(
-      (offer) =>
+    // Access the 'offers' array from the returned object
+    const activeOffers = offers.items.filter(
+      (offer: IOffer) =>
         offer.isActive &&
         new Date(offer.startDate) <= new Date() &&
         new Date(offer.endDate) >= new Date()
     );
 
-    const globalOffers = activeOffers.filter((offer) => !offer.category);
+    const globalOffers = activeOffers.filter(
+      (offer: IOffer) => !offer.category
+    );
     const categoryOffers = course.category
       ? activeOffers.filter(
-          (offer) =>
+          (offer: IOffer) =>
             offer.category &&
             offer.category.toString() === course.category.toString()
         )
@@ -72,7 +75,7 @@ export class CourseService implements ICourseService {
       return { offer: null, discountedPrice: null };
     }
 
-    const bestOffer = applicableOffers.reduce((prev, current) =>
+    const bestOffer = applicableOffers.reduce((prev: IOffer, current: IOffer) =>
       prev.discountPercentage > current.discountPercentage ? prev : current
     );
 

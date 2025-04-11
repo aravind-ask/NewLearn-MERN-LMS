@@ -18,6 +18,10 @@ const userController = new UserController(userService, enrollmentService);
 const router: Router = express.Router();
 
 router.post("/upload-url", userController.getUploadUrl.bind(userController));
+router.post(
+  "/download-url",
+  userController.getDownloadUrl.bind(userController)
+);
 router.put(
   "/update-profile",
   authMiddleware.verifyAccessToken,
@@ -29,7 +33,7 @@ router.get(
   authorizeRoles(["admin"]),
   userController.getUsers.bind(userController)
 );
-router.put(
+router.post(
   "/block",
   authMiddleware.verifyAccessToken,
   authorizeRoles(["admin"]),

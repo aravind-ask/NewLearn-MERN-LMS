@@ -2,8 +2,8 @@
 import { Request, Response, NextFunction } from "express";
 import { InstructorApplicationService } from "../services/instructorApplication.service";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import mongoose from "mongoose";
 import { HttpStatus } from "../utils/statusCodes";
+import { Types } from "mongoose";
 
 interface CustomRequest extends Request {
   user?: { id: string };
@@ -79,7 +79,11 @@ export class InstructorApplicationController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -92,7 +96,7 @@ export class InstructorApplicationController {
       const { applicationId } = req.params;
       const { status, rejectionReason } = req.body;
 
-      if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+      if (!Types.ObjectId.isValid(applicationId)) {
         errorResponse(res, "Invalid application ID", HttpStatus.BAD_REQUEST);
         return;
       }
@@ -110,7 +114,11 @@ export class InstructorApplicationController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -127,14 +135,23 @@ export class InstructorApplicationController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
   async getInstructorDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const { instructorId } = req.params;
-      const application = await this.instructorAppService.getApplication(
+      if (!Types.ObjectId.isValid(instructorId)) {
+        errorResponse(res, "Invalid instructor ID", HttpStatus.BAD_REQUEST);
+        return;
+      }
+
+      const application = await this.instructorAppService.getInstructorDetails(
         instructorId
       );
       successResponse(
@@ -144,13 +161,22 @@ export class InstructorApplicationController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 
   async getApplicationDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const { applicationId } = req.params;
+      if (!Types.ObjectId.isValid(applicationId)) {
+        errorResponse(res, "Invalid application ID", HttpStatus.BAD_REQUEST);
+        return;
+      }
+
       const applicationDetails =
         await this.instructorAppService.getApplicationDetails(applicationId);
       successResponse(
@@ -160,7 +186,13 @@ export class InstructorApplicationController {
         HttpStatus.OK
       );
     } catch (error: any) {
-      errorResponse(res, error.message, error.statusCode);
+      errorResponse(
+        res,
+        error.message,
+        error.statusCode || HttpStatus.BAD_REQUEST
+      );
     }
   }
 }
+
+export default InstructorApplicationController;
