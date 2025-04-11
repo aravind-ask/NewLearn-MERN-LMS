@@ -51,7 +51,8 @@ class CourseService {
     getBestOfferForCourse(course) {
         return __awaiter(this, void 0, void 0, function* () {
             const offers = yield this.offerService.getOffers(1, 100);
-            const activeOffers = offers.filter((offer) => offer.isActive &&
+            // Access the 'offers' array from the returned object
+            const activeOffers = offers.items.filter((offer) => offer.isActive &&
                 new Date(offer.startDate) <= new Date() &&
                 new Date(offer.endDate) >= new Date());
             const globalOffers = activeOffers.filter((offer) => !offer.category);

@@ -9,27 +9,87 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWishlist = exports.removeFromWishlist = exports.addToWishlist = void 0;
+exports.WishlistRepository = void 0;
+// src/repositories/WishlistRepository.ts
 const Wishlist_1 = require("../models/Wishlist");
-const addToWishlist = (userId, courseId) => __awaiter(void 0, void 0, void 0, function* () {
-    const existingWishlistItem = yield Wishlist_1.Wishlist.findOne({ userId, courseId });
-    if (existingWishlistItem) {
-        throw new Error("Course already in wishlist");
+const base_repository_1 = require("./base.repository");
+const mongoose_1 = require("mongoose");
+class WishlistRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(Wishlist_1.Wishlist);
     }
-    const wishlistItem = new Wishlist_1.Wishlist({ userId, courseId });
-    yield wishlistItem.save();
-    const populatedWishlistItem = yield Wishlist_1.Wishlist.findById(wishlistItem._id)
-        .populate("courseId")
-        .exec();
-    return populatedWishlistItem.courseId;
-});
-exports.addToWishlist = addToWishlist;
-const removeFromWishlist = (userId, courseId) => __awaiter(void 0, void 0, void 0, function* () {
-    yield Wishlist_1.Wishlist.findOneAndDelete({ userId, courseId });
-});
-exports.removeFromWishlist = removeFromWishlist;
-const getWishlist = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const wishlistItems = yield Wishlist_1.Wishlist.find({ userId }).populate("courseId");
-    return wishlistItems.map((item) => item.courseId);
-});
-exports.getWishlist = getWishlist;
+    addToWishlist(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userObjectId = new mongoose_1.Types.ObjectId(userId);
+                const courseObjectId = new mongoose_1.Types.ObjectId(courseId);
+                const existingWishlistItem = yield this.findOne({
+                    userId: userObjectId,
+                    courseId: courseObjectId,
+                });
+                if (existingWishlistItem) {
+                    throw new Error("Course already in wishlist");
+                }
+                const wishlistItem = yield this.create({
+                    userId: userObjectId,
+                    courseId: courseObjectId,
+                    addedAt: new Date(),
+                });
+                const populatedWishlistItem = yield this.findById(wishlistItem._id, "courseId");
+                if (!populatedWishlistItem) {
+                    throw new Error("Failed to retrieve newly created wishlist item");
+                }
+                return populatedWishlistItem
+                    .courseId;
+            }
+            catch (error) {
+                console.error("Error adding to wishlist:", error);
+                throw error instanceof Error
+                    ? error
+                    : new Error("Failed to add to wishlist");
+            }
+        });
+    }
+    removeFromWishlist(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userObjectId = new mongoose_1.Types.ObjectId(userId);
+                const courseObjectId = new mongoose_1.Types.ObjectId(courseId);
+                const result = yield this.model
+                    .findOneAndDelete({ userId: userObjectId, courseId: courseObjectId })
+                    .exec();
+                if (!result) {
+                    throw new Error("Wishlist item not found");
+                }
+            }
+            catch (error) {
+                console.error("Error removing from wishlist:", error);
+                throw error instanceof Error
+                    ? error
+                    : new Error("Failed to remove from wishlist");
+            }
+        });
+    }
+    getWishlist(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userObjectId = new mongoose_1.Types.ObjectId(userId);
+                const wishlistItems = yield this.model
+                    .find({ userId: userObjectId })
+                    .populate("courseId")
+                    .exec();
+                if (!wishlistItems || wishlistItems.length === 0) {
+                    return null;
+                }
+                return wishlistItems.map((item) => item.courseId);
+            }
+            catch (error) {
+                console.error("Error fetching wishlist:", error);
+                throw error instanceof Error
+                    ? error
+                    : new Error("Failed to fetch wishlist");
+            }
+        });
+    }
+}
+exports.WishlistRepository = WishlistRepository;

@@ -19,9 +19,10 @@ const enrollmentService = new enrollment_service_1.default(enrollmentRepository)
 const userController = new user_controller_1.UserController(userService, enrollmentService);
 const router = express_1.default.Router();
 router.post("/upload-url", userController.getUploadUrl.bind(userController));
+router.post("/download-url", userController.getDownloadUrl.bind(userController));
 router.put("/update-profile", auth_middleware_1.authMiddleware.verifyAccessToken, userController.updateProfile.bind(userController));
 router.get("/get-users", auth_middleware_1.authMiddleware.verifyAccessToken, (0, authorizeRoles_1.authorizeRoles)(["admin"]), userController.getUsers.bind(userController));
-router.put("/block", auth_middleware_1.authMiddleware.verifyAccessToken, (0, authorizeRoles_1.authorizeRoles)(["admin"]), userController.blockUser.bind(userController));
+router.post("/block", auth_middleware_1.authMiddleware.verifyAccessToken, (0, authorizeRoles_1.authorizeRoles)(["admin"]), userController.blockUser.bind(userController));
 router.get("/courses", auth_middleware_1.authMiddleware.verifyAccessToken, userController.getStudentCourses.bind(userController));
 router.get("/get-student-courses", auth_middleware_1.authMiddleware.verifyAccessToken, userController.getStudentCourses.bind(userController));
 router.get("/status", auth_middleware_1.authMiddleware.verifyAccessToken, userController.getUserStatus.bind(userController));

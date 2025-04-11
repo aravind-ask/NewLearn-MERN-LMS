@@ -29,6 +29,9 @@ const interview_routes_1 = __importDefault(require("./Routes/interview.routes"))
 const multer_1 = __importDefault(require("multer"));
 const chat_socket_1 = require("./sockets/chat.socket");
 const discussion_socket_1 = require("./sockets/discussion.socket");
+const fs_1 = __importDefault(require("fs"));
+const rfs = require("rotating-file-stream");
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -55,6 +58,16 @@ const io = new socket_io_1.Server(httpServer, {
 });
 app.set("io", io);
 const upload = (0, multer_1.default)();
+const logDirectory = path_1.default.join(__dirname, "logs");
+if (!fs_1.default.existsSync(logDirectory)) {
+    fs_1.default.mkdirSync(logDirectory, { recursive: true });
+}
+const accessLogStream = rfs.createStream("access.log", {
+    interval: "1d",
+    path: logDirectory,
+    maxFiles: 7,
+    compress: "gzip",
+});
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cors_1.default)({
@@ -68,7 +81,10 @@ app.use((0, cors_1.default)({
     },
     credentials: true,
 }));
-app.use((0, morgan_1.default)("dev"));
+app.use((0, morgan_1.default)(':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', { stream: accessLogStream }));
+if (process.env.NODE_ENV === "development") {
+    app.use((0, morgan_1.default)("dev"));
+}
 (0, db_1.connectDB)();
 app.use("/api/auth", auth_routes_1.default);
 app.use("/api/user", user_routes_1.default);
@@ -95,5 +111,4 @@ app.use((err, req, res, next) => {
         message: err.message || "Internal Server Error",
     });
 });
-//change comment
 exports.default = httpServer;

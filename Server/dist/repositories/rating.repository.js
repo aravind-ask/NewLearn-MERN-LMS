@@ -13,37 +13,69 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Ratings_1 = __importDefault(require("../models/Ratings"));
-class RatingRepository {
+const base_repository_1 = require("./base.repository");
+class RatingRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(Ratings_1.default);
+    }
     getReviewsByCourseId(courseId, limit, offset) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [reviews, total] = yield Promise.all([
-                Ratings_1.default.find({ courseId }).skip(offset).limit(limit).lean().exec(),
-                Ratings_1.default.countDocuments({ courseId }),
-            ]);
-            return { reviews, total };
+            try {
+                const skip = offset; // Offset is equivalent to skip in this context
+                const [reviews, total] = yield Promise.all([
+                    this.model.find({ courseId }).skip(skip).limit(limit).lean().exec(),
+                    this.model.countDocuments({ courseId }),
+                ]);
+                return { reviews, total };
+            }
+            catch (error) {
+                console.error("Error fetching reviews by course ID:", error);
+                throw new Error("Failed to fetch reviews by course ID");
+            }
         });
     }
     getReviewById(reviewId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield Ratings_1.default.findById(reviewId).exec();
+            try {
+                return yield this.findById(reviewId);
+            }
+            catch (error) {
+                console.error("Error finding review by ID:", error);
+                throw new Error("Failed to find review by ID");
+            }
         });
     }
     createReview(reviewData) {
         return __awaiter(this, void 0, void 0, function* () {
-            const review = new Ratings_1.default(reviewData);
-            return yield review.save();
+            try {
+                return yield this.create(reviewData);
+            }
+            catch (error) {
+                console.error("Error creating review:", error);
+                throw new Error("Failed to create review");
+            }
         });
     }
     updateReview(reviewId, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield Ratings_1.default.findByIdAndUpdate(reviewId, updateData, {
-                new: true,
-            }).exec();
+            try {
+                return yield this.update(reviewId, updateData);
+            }
+            catch (error) {
+                console.error("Error updating review:", error);
+                throw new Error("Failed to update review");
+            }
         });
     }
     deleteReview(reviewId) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield Ratings_1.default.findByIdAndDelete(reviewId).exec();
+            try {
+                return yield this.delete(reviewId);
+            }
+            catch (error) {
+                console.error("Error deleting review:", error);
+                throw new Error("Failed to delete review");
+            }
         });
     }
 }

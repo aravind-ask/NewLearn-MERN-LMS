@@ -13,14 +13,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CourseRepository = void 0;
+// src/repositories/CourseRepository.ts
 const Course_1 = require("../models/Course");
+const base_repository_1 = require("./base.repository");
 const mongoose_1 = __importDefault(require("mongoose"));
-class CourseRepository {
+class CourseRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(Course_1.Course);
+    }
     createCourse(courseCreationData) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const courseData = Object.assign(Object.assign({}, courseCreationData), { category: new mongoose_1.default.Types.ObjectId(courseCreationData.category) });
-                return yield Course_1.Course.create(courseData);
+                return yield this.create(courseData);
             }
             catch (error) {
                 console.error("Error creating course:", error);
@@ -30,20 +35,15 @@ class CourseRepository {
     }
     findCourseById(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                return yield Course_1.Course.findById(courseId).populate("category").exec();
-            }
-            catch (error) {
-                console.error("Error finding course by ID:", error);
-                throw new Error("Failed to find course by ID");
-            }
+            return yield this.findById(courseId, "category");
         });
     }
     updateCourse(courseId, data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 console.log("data", data);
-                return yield Course_1.Course.findByIdAndUpdate(courseId, data, { new: true })
+                return yield this.model
+                    .findByIdAndUpdate(courseId, data, { new: true })
                     .populate("category")
                     .exec();
             }
@@ -56,7 +56,8 @@ class CourseRepository {
     updateCourseEnrollment(courseId, data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield Course_1.Course.findByIdAndUpdate(courseId, {
+                return yield this.model
+                    .findByIdAndUpdate(courseId, {
                     $addToSet: {
                         students: Object.assign(Object.assign({}, data), { dateJoined: new Date() }),
                     },
@@ -84,15 +85,17 @@ class CourseRepository {
                     query.instructorId = { $ne: excludeInstructorId };
                 const sortField = sortBy === "price" ? "pricing" : "createdAt";
                 const sortDirection = sortOrder === "asc" ? 1 : -1;
-                const courses = yield Course_1.Course.find(query)
-                    .populate("category")
-                    .sort({ [sortField]: sortDirection })
-                    .skip((page - 1) * limit)
-                    .limit(limit)
-                    .exec();
-                const totalCourses = yield Course_1.Course.countDocuments(query);
-                const totalPages = Math.ceil(totalCourses / limit);
-                return { courses, totalCourses, totalPages };
+                const result = yield this.findAll(page, limit, query, {
+                    [sortField]: sortDirection,
+                });
+                const courses = yield this.model.populate(result.items, {
+                    path: "category",
+                });
+                return {
+                    courses,
+                    totalCourses: result.totalItems,
+                    totalPages: result.totalPages,
+                };
             }
             catch (error) {
                 console.error("Error getting all courses:", error);
@@ -102,27 +105,17 @@ class CourseRepository {
     }
     getCourseDetails(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                return yield Course_1.Course.findById(courseId).populate("category").exec();
-            }
-            catch (error) {
-                console.error("Error getting course details:", error);
-                throw new Error("Failed to get course details");
-            }
+            return yield this.findById(courseId, "category");
         });
     }
     getInstructorCourses(filter, page, limit, sortOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const skip = (page - 1) * limit;
-                const courses = yield Course_1.Course.find(filter)
-                    .populate("category")
-                    .sort(sortOptions)
-                    .skip(skip)
-                    .limit(limit)
-                    .exec();
-                const totalCourses = yield Course_1.Course.countDocuments(filter);
-                return { courses, totalCourses };
+                const result = yield this.findAll(page, limit, filter, sortOptions);
+                const courses = yield this.model.populate(result.items, {
+                    path: "category",
+                });
+                return { courses, totalCourses: result.totalItems };
             }
             catch (error) {
                 console.error("Error getting instructor courses:", error);
@@ -132,13 +125,7 @@ class CourseRepository {
     }
     deleteCourse(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                return yield Course_1.Course.findByIdAndDelete(courseId).exec();
-            }
-            catch (error) {
-                console.error("Error deleting course:", error);
-                throw new Error("Failed to delete course");
-            }
+            return yield this.delete(courseId);
         });
     }
 }

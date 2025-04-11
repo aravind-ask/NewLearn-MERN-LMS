@@ -72,12 +72,12 @@ class RatingController {
             try {
                 const { reviewId } = req.params;
                 yield this.ratingService.deleteReview(reviewId);
-                res.status(statusCodes_1.HttpStatus.OK).send();
+                (0, responseHandler_1.successResponse)(res, null, "Review deleted successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                res
-                    .status(statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: error.message });
+                (0, responseHandler_1.errorResponse)(res, error.message || "Failed to delete review", error.message === "Review not found"
+                    ? statusCodes_1.HttpStatus.NOT_FOUND
+                    : statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }

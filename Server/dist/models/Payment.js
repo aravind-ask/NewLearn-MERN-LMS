@@ -15,6 +15,7 @@ const paymentSchema = new mongoose_1.default.Schema({
     orderDate: { type: Date, default: Date.now },
     orderId: { type: String, required: true },
     paymentId: { type: String, required: true },
+    payerId: { type: String },
     courses: [
         {
             courseId: { type: String, required: true },

@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -42,42 +9,69 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWishlist = exports.removeFromWishlist = exports.addToWishlist = void 0;
-const wishlistService = __importStar(require("../services/wishlist.service"));
+exports.WishlistController = void 0;
 const responseHandler_1 = require("../utils/responseHandler");
 const statusCodes_1 = require("../utils/statusCodes");
-const addToWishlist = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { courseId } = req.body;
-        const userId = req.user.id;
-        const wishlistItem = yield wishlistService.addToWishlist(userId, courseId);
-        (0, responseHandler_1.successResponse)(res, wishlistItem, "Course added to wishlist", statusCodes_1.HttpStatus.CREATED);
+class WishlistController {
+    constructor(wishlistService) {
+        this.wishlistService = wishlistService;
     }
-    catch (error) {
-        next(error);
+    addToWishlist(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                const { courseId } = req.body;
+                if (!userId) {
+                    (0, responseHandler_1.errorResponse)(res, "Unauthorized", statusCodes_1.HttpStatus.UNAUTHORIZED);
+                    return;
+                }
+                const wishlistItem = yield this.wishlistService.addToWishlist(userId, courseId);
+                (0, responseHandler_1.successResponse)(res, wishlistItem, "Course added to wishlist", statusCodes_1.HttpStatus.CREATED);
+            }
+            catch (error) {
+                const err = error;
+                (0, responseHandler_1.errorResponse)(res, err.message || "Internal Server Error", statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
     }
-});
-exports.addToWishlist = addToWishlist;
-const removeFromWishlist = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { courseId } = req.body;
-        const userId = req.user.id;
-        yield wishlistService.removeFromWishlist(userId, courseId);
-        (0, responseHandler_1.successResponse)(res, null, "Course removed from wishlist", statusCodes_1.HttpStatus.OK);
+    removeFromWishlist(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                const { courseId } = req.body;
+                if (!userId) {
+                    (0, responseHandler_1.errorResponse)(res, "Unauthorized", statusCodes_1.HttpStatus.UNAUTHORIZED);
+                    return;
+                }
+                yield this.wishlistService.removeFromWishlist(userId, courseId);
+                (0, responseHandler_1.successResponse)(res, null, "Course removed from wishlist", statusCodes_1.HttpStatus.OK);
+            }
+            catch (error) {
+                const err = error;
+                (0, responseHandler_1.errorResponse)(res, err.message || "Internal Server Error", statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
     }
-    catch (error) {
-        next(error);
+    getWishlist(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    (0, responseHandler_1.errorResponse)(res, "Unauthorized", statusCodes_1.HttpStatus.UNAUTHORIZED);
+                    return;
+                }
+                const wishlist = yield this.wishlistService.getWishlist(userId);
+                (0, responseHandler_1.successResponse)(res, wishlist || [], "Wishlist retrieved", statusCodes_1.HttpStatus.OK);
+            }
+            catch (error) {
+                const err = error;
+                (0, responseHandler_1.errorResponse)(res, err.message || "Internal Server Error", statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
     }
-});
-exports.removeFromWishlist = removeFromWishlist;
-const getWishlist = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userId = req.user.id;
-        const wishlist = yield wishlistService.getWishlist(userId);
-        (0, responseHandler_1.successResponse)(res, wishlist, "Wishlist fetched successfully", statusCodes_1.HttpStatus.OK);
-    }
-    catch (error) {
-        next(error);
-    }
-});
-exports.getWishlist = getWishlist;
+}
+exports.WishlistController = WishlistController;
+exports.default = WishlistController;

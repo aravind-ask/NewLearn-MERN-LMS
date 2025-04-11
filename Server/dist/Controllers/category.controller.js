@@ -45,14 +45,20 @@ class CategoryController {
             try {
                 const { id } = req.params;
                 const { name } = req.body;
-                console.log("name", name);
-                const updatedCategory = yield this.categoryService.updateCategory(id, name);
-                if (!updatedCategory)
+                console.log("Request body:", req.body, "Name:", name);
+                if (!name) {
+                    (0, responseHandler_1.errorResponse)(res, "Name is required", statusCodes_1.HttpStatus.BAD_REQUEST);
+                }
+                const updatedCategory = yield this.categoryService.updateCategory(id, {
+                    name,
+                });
+                if (!updatedCategory) {
                     (0, responseHandler_1.errorResponse)(res, "Category not found", statusCodes_1.HttpStatus.NOT_FOUND);
+                }
                 (0, responseHandler_1.successResponse)(res, updatedCategory, "Category updated successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, error.message, error.status);
+                (0, responseHandler_1.errorResponse)(res, error.message, error.status || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
         this.deleteCategory = (req, res, next) => __awaiter(this, void 0, void 0, function* () {

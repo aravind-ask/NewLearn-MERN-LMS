@@ -29,11 +29,9 @@ const getPresignedUrl = (fileName) => __awaiter(void 0, void 0, void 0, function
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: key,
         Expires: 60,
-        ContentType: "application/pdf", // Changed to PDF
     };
     const url = yield exports.s3.getSignedUrlPromise("putObject", params);
-    const permanentUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    return { url, key, permanentUrl };
+    return { url, key };
 });
 exports.getPresignedUrl = getPresignedUrl;
 const uploadToS3 = (file, key) => __awaiter(void 0, void 0, void 0, function* () {
@@ -41,7 +39,6 @@ const uploadToS3 = (file, key) => __awaiter(void 0, void 0, void 0, function* ()
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: key,
         Body: file,
-        ContentType: "application/pdf",
     };
     yield exports.s3.upload(params).promise();
 });

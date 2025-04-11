@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterviewModel = void 0;
+// interview.model.ts
 const mongoose_1 = require("mongoose");
 const interviewSchema = new mongoose_1.Schema({
     position: { type: String, required: true, maxlength: 100 },
@@ -14,6 +15,7 @@ const interviewSchema = new mongoose_1.Schema({
             answer: { type: String, required: true },
         },
     ],
+    videoUrl: { type: String },
 }, {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
 });

@@ -12,24 +12,37 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const s3_config_1 = require("../config/s3.config");
 const responseHandler_1 = require("../utils/responseHandler");
-const uuid_1 = require("uuid");
 const statusCodes_1 = require("../utils/statusCodes");
 class UserController {
     constructor(userService, enrollmentService) {
         this.userService = userService;
         this.enrollmentService = enrollmentService;
     }
-    getUploadUrl(req, res, next) {
+    getUploadUrl(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { fileName } = req.body;
-                const url = yield (0, s3_config_1.getPresignedUrl)(fileName);
-                res
-                    .status(statusCodes_1.HttpStatus.OK)
-                    .json({ url, key: `uploads/${(0, uuid_1.v4)()}-${Date.now()}-${fileName}` });
+                if (!fileName)
+                    throw new Error("fileName is required");
+                const { url, key } = yield (0, s3_config_1.getPresignedUploadUrl)(fileName);
+                res.status(200).json({ url, key });
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, "Error generating upload URL", statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
+                res.status(500).json({ message: error.message });
+            }
+        });
+    }
+    getDownloadUrl(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { key } = req.body;
+                if (!key)
+                    throw new Error("key is required");
+                const url = yield (0, s3_config_1.getPresignedDownloadUrl)(key);
+                res.status(200).json({ url });
+            }
+            catch (error) {
+                res.status(500).json({ message: error.message });
             }
         });
     }
@@ -67,8 +80,9 @@ class UserController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 5;
-                const { users, totalPages } = yield this.userService.getUsers(page, limit);
-                (0, responseHandler_1.successResponse)(res, { users, totalPages }, "Users fetched successfully", 200);
+                const search = req.query.search;
+                const { users, totalPages } = yield this.userService.getUsers(page, limit, search);
+                (0, responseHandler_1.successResponse)(res, { users, totalPages }, "Users fetched successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
                 (0, responseHandler_1.errorResponse)(res, "Error fetching users", statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);

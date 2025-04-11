@@ -30,7 +30,7 @@ class PaymentController {
                 (0, responseHandler_1.successResponse)(res, order, "Order created successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, error.message || "Failed to create order", error.statusCode);
+                (0, responseHandler_1.errorResponse)(res, error.message || "Failed to create order", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }
@@ -41,7 +41,7 @@ class PaymentController {
                 (0, responseHandler_1.successResponse)(res, { success }, "Payment verified successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, error.message || "Payment verification failed", error.statusCode);
+                (0, responseHandler_1.errorResponse)(res, error.message || "Payment verification failed", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }
@@ -52,7 +52,7 @@ class PaymentController {
                 (0, responseHandler_1.successResponse)(res, payments, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments", error.statusCode);
+                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }
@@ -64,7 +64,7 @@ class PaymentController {
                 (0, responseHandler_1.successResponse)(res, payments, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
-                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments by date range", error.statusCode);
+                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments by date range", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }
@@ -80,7 +80,7 @@ class PaymentController {
             }
             catch (error) {
                 console.log(error);
-                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching user payment history", error.statusCode);
+                (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching user payment history", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }

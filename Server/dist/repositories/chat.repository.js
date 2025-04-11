@@ -13,24 +13,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatRepository = void 0;
+// src/repositories/ChatRepository.ts
 const ChatMessage_1 = require("../models/ChatMessage");
 const customError_1 = require("../utils/customError");
+const base_repository_1 = require("./base.repository");
 const mongoose_1 = __importDefault(require("mongoose"));
-class ChatRepository {
+class ChatRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(ChatMessage_1.ChatMessage);
+    }
     saveMessage(message) {
         return __awaiter(this, void 0, void 0, function* () {
-            const newMessage = new ChatMessage_1.ChatMessage(message);
-            return yield newMessage.save();
+            return yield this.create(message);
         });
     }
     getMessageById(messageId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield ChatMessage_1.ChatMessage.findById(messageId).exec();
+            return yield this.findById(messageId);
         });
     }
     updateMessage(messageId, updates) {
         return __awaiter(this, void 0, void 0, function* () {
-            const message = yield ChatMessage_1.ChatMessage.findByIdAndUpdate(messageId, { $set: updates }, { new: true }).exec();
+            const message = yield this.update(messageId, updates);
             if (!message)
                 throw new customError_1.NotFoundError("Message not found");
             return message;
@@ -38,7 +42,7 @@ class ChatRepository {
     }
     deleteMessage(messageId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const message = yield ChatMessage_1.ChatMessage.findByIdAndDelete(messageId).exec();
+            const message = yield this.delete(messageId);
             if (!message)
                 throw new customError_1.NotFoundError("Message not found");
             return message;
@@ -46,24 +50,33 @@ class ChatRepository {
     }
     getMessages(courseId, userId, trainerId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield ChatMessage_1.ChatMessage.find({
-                courseId: new mongoose_1.default.Types.ObjectId(courseId),
-                $or: [
-                    {
-                        senderId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
-                        recipientId: new mongoose_1.default.Types.ObjectId(trainerId),
-                    },
-                    {
-                        senderId: new mongoose_1.default.Types.ObjectId(trainerId),
-                        recipientId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
-                    },
-                ],
-            }).sort({ timestamp: 1 });
+            try {
+                const query = {
+                    courseId: new mongoose_1.default.Types.ObjectId(courseId),
+                    $or: [
+                        {
+                            senderId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
+                            recipientId: new mongoose_1.default.Types.ObjectId(trainerId),
+                        },
+                        {
+                            senderId: new mongoose_1.default.Types.ObjectId(trainerId),
+                            recipientId: userId
+                                ? new mongoose_1.default.Types.ObjectId(userId)
+                                : undefined,
+                        },
+                    ],
+                };
+                return yield this.model.find(query).sort({ timestamp: 1 }).exec();
+            }
+            catch (error) {
+                console.error("Error fetching messages:", error);
+                throw new Error("Failed to fetch messages");
+            }
         });
     }
     markAsRead(messageId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const message = yield ChatMessage_1.ChatMessage.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(messageId), { isRead: true }, { new: true });
+            const message = yield this.update(messageId, { isRead: true });
             if (!message)
                 throw new customError_1.NotFoundError("Message not found");
             return message;
@@ -71,13 +84,24 @@ class ChatRepository {
     }
     getAllMessagesForTrainer(trainerId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield ChatMessage_1.ChatMessage.find({
-                $or: [{ senderId: trainerId }, { recipientId: trainerId }],
-            })
-                .populate("courseId", "title")
-                .populate("senderId", "name")
-                .populate("recipientId", "name")
-                .sort({ timestamp: 1 });
+            try {
+                return yield this.model
+                    .find({
+                    $or: [
+                        { senderId: new mongoose_1.default.Types.ObjectId(trainerId) },
+                        { recipientId: new mongoose_1.default.Types.ObjectId(trainerId) },
+                    ],
+                })
+                    .populate("courseId", "title")
+                    .populate("senderId", "name")
+                    .populate("recipientId", "name")
+                    .sort({ timestamp: 1 })
+                    .exec();
+            }
+            catch (error) {
+                console.error("Error fetching all messages for trainer:", error);
+                throw new Error("Failed to fetch all messages for trainer");
+            }
         });
     }
 }

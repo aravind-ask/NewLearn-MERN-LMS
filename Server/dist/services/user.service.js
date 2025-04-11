@@ -46,9 +46,9 @@ class UserService {
             return updatedUser;
         });
     }
-    getUsers(page, limit) {
+    getUsers(page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.userRepo.getAllUsers(page, limit);
+            return yield this.userRepo.getAllUsers(page, limit, search);
         });
     }
     blockUser(userId, isBlocked) {
@@ -69,4 +69,4 @@ class UserService {
     }
 }
 exports.UserService = UserService;
-exports.default = UserService; // Keep as a class for DI, not instantiated here
+exports.default = UserService;

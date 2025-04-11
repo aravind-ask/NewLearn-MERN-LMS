@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoryService = void 0;
+// src/services/CategoryService.ts
 const categoryRepository_1 = require("../repositories/categoryRepository");
 class CategoryService {
     constructor() {
@@ -20,24 +21,24 @@ class CategoryService {
             if (page < 1 || limit < 1) {
                 throw new Error("Page and limit must be positive numbers");
             }
-            return this.categoryRepository.getAllCategories(page, limit);
+            return yield this.categoryRepository.getAllCategories(page, limit);
         });
     }
     createCategory(name, description) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!name)
                 throw new Error("Category name is required");
-            return this.categoryRepository.createCategory({ name, description });
+            return yield this.categoryRepository.createCategory({ name, description });
         });
     }
-    updateCategory(id, data) {
+    updateCategory(id, name) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.categoryRepository.updateCategory(id, data);
+            return yield this.categoryRepository.updateCategory(id, name);
         });
     }
     deleteCategory(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.categoryRepository.deleteCategory(id);
+            return yield this.categoryRepository.deleteCategory(id);
         });
     }
 }

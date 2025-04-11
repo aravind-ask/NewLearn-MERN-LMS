@@ -16,21 +16,33 @@ class EnrollmentService {
     }
     fetchEnrolledCourses(userId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            const enrollment = yield this.enrollmentRepo.getEnrolledCourses(userId);
-            if (!enrollment || !enrollment.courses.length) {
-                return { courses: [], totalPages: 0 };
+            try {
+                const enrollment = yield this.enrollmentRepo.getEnrolledCourses(userId);
+                if (!enrollment || !enrollment.courses.length) {
+                    return { courses: [], totalPages: 0 };
+                }
+                const startIndex = (page - 1) * limit;
+                const endIndex = page * limit;
+                const paginatedCourses = enrollment.courses.slice(startIndex, endIndex);
+                const totalPages = Math.ceil(enrollment.courses.length / limit);
+                return { courses: paginatedCourses, totalPages };
             }
-            const startIndex = (page - 1) * limit;
-            const endIndex = page * limit;
-            const paginatedCourses = enrollment.courses.slice(startIndex, endIndex);
-            const totalPages = Math.ceil(enrollment.courses.length / limit);
-            return { courses: paginatedCourses, totalPages };
+            catch (error) {
+                console.error("Error fetching enrolled courses:", error);
+                throw new Error("Failed to fetch enrolled courses");
+            }
         });
     }
     checkEnrolled(userId, courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Checking enrollment");
-            return yield this.enrollmentRepo.isCourseEnrolled(userId, courseId);
+            try {
+                console.log("Checking enrollment");
+                return yield this.enrollmentRepo.isCourseEnrolled(userId, courseId);
+            }
+            catch (error) {
+                console.error("Error checking enrollment:", error);
+                throw new Error("Failed to check enrollment");
+            }
         });
     }
 }

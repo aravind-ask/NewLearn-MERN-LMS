@@ -13,63 +13,111 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OfferRepository = void 0;
+// src/repositories/OfferRepository.ts
 const Offers_1 = require("../models/Offers");
+const base_repository_1 = require("./base.repository");
 const mongoose_1 = __importDefault(require("mongoose"));
-class OfferRepository {
-    findAll(page, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (page < 1 || limit < 1) {
-                throw new Error("Invalid pagination parameters");
+class OfferRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(Offers_1.Offer);
+    }
+    findAll(page_1, limit_1) {
+        const _super = Object.create(null, {
+            findAll: { get: () => super.findAll }
+        });
+        return __awaiter(this, arguments, void 0, function* (page, limit, query = {}, sortOptions = { createdAt: -1 }) {
+            try {
+                if (page < 1 || limit < 1) {
+                    throw new Error("Invalid pagination parameters");
+                }
+                const result = yield _super.findAll.call(this, page, limit, query, sortOptions);
+                const populatedItems = yield this.model.populate(result.items, {
+                    path: "category",
+                });
+                return {
+                    items: populatedItems,
+                    totalItems: result.totalItems,
+                    totalPages: result.totalPages,
+                };
             }
-            return Offers_1.Offer.find()
-                .skip((page - 1) * limit)
-                .limit(limit)
-                .populate("category")
-                .sort({ createdAt: -1 });
+            catch (error) {
+                console.error("Error fetching all offers:", error);
+                throw new Error(error instanceof Error ? error.message : "Failed to fetch all offers");
+            }
         });
     }
     findById(id) {
+        const _super = Object.create(null, {
+            findById: { get: () => super.findById }
+        });
         return __awaiter(this, void 0, void 0, function* () {
-            if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
-                throw new Error("Invalid offer ID");
+            try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+                    throw new Error("Invalid offer ID");
+                }
+                return yield _super.findById.call(this, id, "category");
             }
-            return Offers_1.Offer.findById(id).populate("category");
+            catch (error) {
+                console.error("Error finding offer by ID:", error);
+                throw new Error(error instanceof Error ? error.message : "Failed to find offer by ID");
+            }
         });
     }
     create(offerData) {
+        const _super = Object.create(null, {
+            create: { get: () => super.create }
+        });
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const offer = new Offers_1.Offer(offerData);
-                return yield offer.save();
+                return yield _super.create.call(this, offerData);
             }
             catch (error) {
-                throw new Error(`Failed to create offer: ${error.message}`);
+                console.error("Error creating offer:", error);
+                throw new Error(error instanceof Error
+                    ? `Failed to create offer: ${error.message}`
+                    : "Failed to create offer");
             }
         });
     }
     update(id, offerData) {
+        const _super = Object.create(null, {
+            update: { get: () => super.update }
+        });
         return __awaiter(this, void 0, void 0, function* () {
-            if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
-                throw new Error("Invalid offer ID");
+            try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+                    throw new Error("Invalid offer ID");
+                }
+                const updatedOffer = yield _super.update.call(this, id, offerData);
+                if (!updatedOffer) {
+                    throw new Error("Offer not found");
+                }
+                return yield this.model.populate(updatedOffer, { path: "category" });
             }
-            const offer = yield Offers_1.Offer.findByIdAndUpdate(id, offerData, {
-                new: true,
-                runValidators: true,
-            }).populate("category");
-            if (!offer) {
-                throw new Error("Offer not found");
+            catch (error) {
+                console.error("Error updating offer:", error);
+                throw new Error(error instanceof Error ? error.message : "Failed to update offer");
             }
-            return offer;
         });
     }
     delete(id) {
+        const _super = Object.create(null, {
+            delete: { get: () => super.delete }
+        });
         return __awaiter(this, void 0, void 0, function* () {
-            if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
-                throw new Error("Invalid offer ID");
+            try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+                    throw new Error("Invalid offer ID");
+                }
+                const result = yield _super.delete.call(this, id);
+                if (!result) {
+                    throw new Error("Offer not found");
+                }
+                return result;
             }
-            const result = yield Offers_1.Offer.findByIdAndDelete(id);
-            if (!result) {
-                throw new Error("Offer not found");
+            catch (error) {
+                console.error("Error deleting offer:", error);
+                throw new Error(error instanceof Error ? error.message : "Failed to delete offer");
             }
         });
     }

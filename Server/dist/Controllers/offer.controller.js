@@ -19,14 +19,15 @@ class OfferController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
-                const offers = yield this.offerService.getOffers(page, limit);
+                const { items, totalItems, totalPages } = yield this.offerService.getOffers(page, limit);
                 res.json({
                     success: true,
-                    data: offers,
+                    data: items,
                     pagination: {
                         page,
                         limit,
-                        total: offers.length,
+                        total: totalItems,
+                        totalPages,
                     },
                 });
             }

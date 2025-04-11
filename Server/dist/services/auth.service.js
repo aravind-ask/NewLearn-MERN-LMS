@@ -238,7 +238,7 @@ class AuthService {
             const hashedPassword = yield (0, hashUtils_1.hashPassword)(newPassword);
             yield this.userRepo.updateUser(user._id, {
                 password: hashedPassword,
-                otp: undefined,
+                otp: null,
                 otpExpires: undefined,
             });
             return { message: "Password updated successfully" };
@@ -249,10 +249,10 @@ class AuthService {
             const user = yield this.userRepo.findUserById(userId);
             if (!user)
                 throw new appError_1.AppError("User not found", 404);
-            yield this.userRepo.updateRefreshToken(user._id, ""); // Clear refresh token
+            yield this.userRepo.updateRefreshToken(user._id, "");
             return { message: "Logged out successfully" };
         });
     }
 }
 exports.AuthService = AuthService;
-exports.default = AuthService; // Export as class for DI
+exports.default = AuthService;

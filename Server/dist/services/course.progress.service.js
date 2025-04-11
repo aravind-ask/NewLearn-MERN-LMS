@@ -13,9 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CourseProgressService = void 0;
+// src/services/CourseProgressService.ts
 const course_progress_repository_1 = require("../repositories/course.progress.repository");
-const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 const course_repository_1 = require("../repositories/course.repository");
+const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 class CourseProgressService {
     constructor() {
         this.courseProgressRepository = new course_progress_repository_1.CourseProgressRepository();
@@ -71,7 +72,7 @@ class CourseProgressService {
     }
     resetCurrentCourseProgress(userId, courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.courseProgressRepository.resetCourseProgress(userId, courseId);
+            return yield this.courseProgressRepository.resetCourseProgress(userId, courseId);
         });
     }
 }
