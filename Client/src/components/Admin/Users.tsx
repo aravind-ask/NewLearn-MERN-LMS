@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import  default_avatar from "/default-avatar.png";
 
 interface User {
   _id: string;
@@ -83,7 +84,7 @@ export default function AdminUsers() {
       header: "Profile",
       accessor: (user: User) => (
         <img
-          src={user.photoUrl || "/default-avatar.png"}
+          src={user.photoUrl || default_avatar}
           alt={user.name}
           className="w-10 h-10 rounded-full object-cover"
         />

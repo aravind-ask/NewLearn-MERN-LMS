@@ -12,6 +12,7 @@ import { PasswordChange } from "../PasswordChange";
 import { Loader2, UploadCloud, Edit, Save } from "lucide-react";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
+import default_avatar from "/default-avatar.png";
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -107,7 +108,7 @@ const Profile = () => {
           {/* Profile Picture */}
           <div className="flex flex-col items-center">
             <img
-              src={formData.photoUrl || "/default-avatar.png"}
+              src={formData.photoUrl || default_avatar}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />

@@ -41,7 +41,7 @@ const columns= [
   },
   {
     header: "Amount",
-    accessor: (payment) => `$${payment.amount.toFixed(2)}`,
+    accessor: (payment) => `₹${payment.amount.toFixed(2)}`,
     align: "right",
   },
   {
@@ -138,7 +138,7 @@ const SalesPage: React.FC = () => {
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
+            <p className="text-2xl font-bold">₹{totalSales.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>

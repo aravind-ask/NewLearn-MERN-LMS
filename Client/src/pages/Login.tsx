@@ -22,8 +22,8 @@ import {
   useSendOTPMutation,
 } from "@/redux/services/authApi";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { useToast } from "../hooks/use-toast";
@@ -70,6 +70,7 @@ export default function Component() {
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -80,6 +81,9 @@ export default function Component() {
   const handleForgotPasswordClick = () => {
     setIsOtpSent(false);
     setIsForgotPasswordModalOpen(true);
+    setEmail("");
+    setFormData({ otp: "", newPassword: "", confPassword: "" });
+    setErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +115,7 @@ export default function Component() {
           navigate("/");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login Error", err);
       toast({
         variant: "destructive",
@@ -122,11 +126,13 @@ export default function Component() {
   };
 
   const handleSendOtp = async () => {
-    setIsOtpSent(false);
     setErrors({});
-    setFormData({ otp: "", newPassword: "", confPassword: "" });
     if (!email) {
-      setErrors({ ...errors, email: "Email is required" });
+      setErrors({ email: "Email is required" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrors({ email: "Invalid email format" });
       return;
     }
     try {
@@ -136,47 +142,68 @@ export default function Component() {
         title: "OTP Sent",
         description: "Check your email for the OTP.",
       });
-    } catch (error) {
-      setErrors({ ...errors, otp: "Error sending OTP" });
-      console.error("Error sending OTP", error);
+    } catch (error: any) {
+      const errorMessage = error.data?.message || "Failed to send OTP";
+      setErrors({ sendOtp: errorMessage });
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send OTP",
+        description: errorMessage,
       });
     }
   };
 
   const handleSubmitOtp = async () => {
+    setErrors({});
+    if (!formData.otp) {
+      setErrors({ otp: "OTP is required" });
+      return;
+    }
+    if (formData.otp.length !== 6) {
+      setErrors({ otp: "OTP must be 6 digits" });
+      return;
+    }
+    if (!formData.newPassword) {
+      setErrors({ newPassword: "New password is required" });
+      return;
+    }
+    if (formData.newPassword.length < 8) {
+      setErrors({ newPassword: "Password must be at least 8 characters" });
+      return;
+    }
+    if (!formData.confPassword) {
+      setErrors({ confPassword: "Confirm password is required" });
+      return;
+    }
+    if (formData.newPassword !== formData.confPassword) {
+      setErrors({ confPassword: "Passwords do not match" });
+      return;
+    }
     try {
-      if (formData.newPassword !== formData.confPassword) {
-        setErrors({ ...errors, confPassword: "Passwords do not match" });
-        return;
-      }
       await forgotPassword({
         email,
         otp: formData.otp,
         newPassword: formData.newPassword,
       }).unwrap();
       setFormData({
-        ...formData,
+        otp: "",
         newPassword: "",
         confPassword: "",
-        otp: "",
       });
       setIsForgotPasswordModalOpen(false);
       setIsOtpSent(false);
+      setEmail("");
       toast({
         title: "Success",
         description: "Password reset successfully!",
       });
-    } catch (error) {
-      setErrors({ ...errors, otp: "Error submitting OTP" });
-      console.error("Error submitting OTP", error);
+    } catch (error: any) {
+      const errorMessage = error.data?.message || "Failed to reset password";
+      setErrors({ otp: errorMessage });
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to reset password",
+        description: errorMessage,
       });
     }
   };
@@ -312,7 +339,15 @@ export default function Component() {
       {/* Forgot Password Dialog */}
       <Dialog
         open={isForgotPasswordModalOpen}
-        onOpenChange={setIsForgotPasswordModalOpen}
+        onOpenChange={(open) => {
+          setIsForgotPasswordModalOpen(open);
+          if (!open) {
+            setIsOtpSent(false);
+            setEmail("");
+            setFormData({ otp: "", newPassword: "", confPassword: "" });
+            setErrors({});
+          }
+        }}
       >
         <DialogContent className="sm:max-w-[425px] bg-white rounded-lg shadow-xl">
           <DialogHeader>
@@ -325,7 +360,7 @@ export default function Component() {
               </DialogDescription>
             ) : (
               <DialogDescription className="text-gray-600">
-                Enter the OTP sent to your email.
+                Enter the OTP sent to your email and your new password.
               </DialogDescription>
             )}
           </DialogHeader>
@@ -342,11 +377,19 @@ export default function Component() {
                     type="email"
                     name="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border-gray-300"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors((prev) => ({ ...prev, email: "" }));
+                    }}
+                    className={`w-full ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                   {errors.email && (
                     <p className="text-red-500 text-sm">{errors.email}</p>
+                  )}
+                  {errors.sendOtp && (
+                    <p className="text-red-500 text-sm">{errors.sendOtp}</p>
                   )}
                 </div>
                 <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -401,7 +444,9 @@ export default function Component() {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleOtpChange}
-                    className="w-full border-gray-300"
+                    className={`w-full ${
+                      errors.newPassword ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                   {errors.newPassword && (
                     <p className="text-red-500 text-sm">{errors.newPassword}</p>
@@ -417,7 +462,9 @@ export default function Component() {
                     name="confPassword"
                     value={formData.confPassword}
                     onChange={handleOtpChange}
-                    className="w-full border-gray-300"
+                    className={`w-full ${
+                      errors.confPassword ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                   {errors.confPassword && (
                     <p className="text-red-500 text-sm">
@@ -444,6 +491,7 @@ export default function Component() {
           </div>
         </DialogContent>
       </Dialog>
+
       {/* OTP Modal for Verification */}
       {isOtpModalOpen && (
         <OTPModal

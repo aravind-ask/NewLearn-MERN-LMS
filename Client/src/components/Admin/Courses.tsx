@@ -27,12 +27,32 @@ import {
 import { Input } from "../ui/input";
 import { Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+
+interface Student {
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  paidAmount?: number;
+  dateJoined: string;
+  _id: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
 
 interface Course {
-  id: string;
+  _id: string;
   title: string;
-  students: string[];
+  students: Student[];
   pricing: number;
+  category: Category;
+  instructorName: string;
+  level: string;
+  primaryLanguage: string;
+  date: string;
 }
 
 const AllCourses = () => {
@@ -87,8 +107,42 @@ const AllCourses = () => {
       header: "Course Title",
       accessor: "title",
       render: (course: Course) => (
-        <span className="font-medium text-gray-900">{course.title}</span>
+        <span
+          className="font-medium text-gray-900 truncate max-w-xs cursor-pointer"
+          title={course.title}
+          onClick={() => navigate(`/instructor/courses/${course._id}`)}
+        >
+          {course.title}
+        </span>
       ),
+    },
+    {
+      header: "Category",
+      accessor: (course: Course) => course.category.name,
+      align: "left",
+    },
+    {
+      header: "Instructor",
+      accessor: "instructorName",
+      align: "left",
+    },
+    {
+      header: "Level",
+      accessor: (course: Course) =>
+        course.level.charAt(0).toUpperCase() + course.level.slice(1),
+      align: "center",
+    },
+    {
+      header: "Language",
+      accessor: (course: Course) =>
+        course.primaryLanguage.charAt(0).toUpperCase() +
+        course.primaryLanguage.slice(1),
+      align: "center",
+    },
+    {
+      header: "Price",
+      accessor: (course: Course) => `₹${course.pricing.toFixed(2)}`,
+      align: "right",
     },
     {
       header: "Students",
@@ -97,28 +151,39 @@ const AllCourses = () => {
     },
     {
       header: "Revenue",
-      accessor: (course: Course) =>
-        `$${course.students.length * course.pricing || 0}`,
+      accessor: (course: Course) => {
+        const revenue = course.students.reduce(
+          (sum, student) => sum + (student.paidAmount || 0),
+          0
+        );
+        return `₹${revenue.toFixed(2)}`;
+      },
       align: "right",
     },
-    // {
-    //   header: "Actions",
-    //   accessor: (course: Course) => (
-    //     <Button
-    //       variant="ghost"
-    //       size="sm"
-    //       onClick={(e) => {
-    //         e.stopPropagation();
-    //         setDeleteConfirm(course.id);
-    //       }}
-    //       disabled={isDeleting}
-    //       className="text-red-600 hover:text-red-800 hover:bg-red-50"
-    //     >
-    //       <Trash2 className="h-5 w-5" />
-    //     </Button>
-    //   ),
-    //   align: "right",
-    // },
+    {
+      header: "Created On",
+      accessor: (course: Course) =>
+        format(new Date(course.date), "MMM dd, yyyy"),
+      align: "right",
+    },
+    {
+      header: "Actions",
+      accessor: (course: Course) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeleteConfirm(course._id);
+          }}
+          disabled={isDeleting}
+          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+        >
+          <Trash2 className="h-5 w-5" />
+        </Button>
+      ),
+      align: "right",
+    },
   ];
 
   if (isError) {
@@ -156,26 +221,19 @@ const AllCourses = () => {
               </SelectTrigger>
               <SelectContent className="bg-white shadow-lg border-gray-200">
                 <SelectItem value="createdAt_desc">Most Recent</SelectItem>
-                <SelectItem value="revenue_desc">
-                  Revenue (High to Low)
+                <SelectItem value="createdAt_asc">Oldest First</SelectItem>
+                <SelectItem value="pricing_desc">
+                  Price (High to Low)
                 </SelectItem>
-                <SelectItem value="revenue_asc">
-                  Revenue (Low to High)
-                </SelectItem>
-                <SelectItem value="enrolledStudents_desc">
-                  Students (High to Low)
-                </SelectItem>
-                <SelectItem value="enrolledStudents_asc">
-                  Students (Low to High)
-                </SelectItem>
+                <SelectItem value="pricing_asc">Price (Low to High)</SelectItem>
               </SelectContent>
             </Select>
-            {/* <Button
+            <Button
               onClick={() => navigate("/instructor/create-new-course")}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Create New Course
-            </Button> */}
+            </Button>
           </div>
         </div>
       </CardHeader>
