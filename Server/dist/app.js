@@ -36,10 +36,7 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const allowedOrigins = [
-    process.env.CLIENT_URL || "https://newlearn-lms.el.r.appspot.com",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://newlearn-lms.el.r.appspot.com",
+    process.env.CLIENT_URL
 ];
 const io = new socket_io_1.Server(httpServer, {
     cors: {

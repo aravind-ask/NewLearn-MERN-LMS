@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentRepository = void 0;
-// src/repositories/PaymentRepository.ts
 const Payment_1 = __importDefault(require("../models/Payment"));
 const base_repository_1 = require("./base.repository");
 class PaymentRepository extends base_repository_1.BaseRepository {
@@ -55,10 +54,21 @@ class PaymentRepository extends base_repository_1.BaseRepository {
             }
         });
     }
-    getAllPayments() {
+    getAllPayments(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield this.model.find().exec();
+                const skip = (page - 1) * limit;
+                const [payments, totalPayments] = yield Promise.all([
+                    this.model
+                        .find()
+                        .skip(skip)
+                        .limit(limit)
+                        .sort({ orderDate: -1 })
+                        .exec(),
+                    this.model.countDocuments(),
+                ]);
+                const totalPages = Math.ceil(totalPayments / limit);
+                return { payments, totalPages };
             }
             catch (error) {
                 console.error("Error fetching all payments:", error);
@@ -66,17 +76,27 @@ class PaymentRepository extends base_repository_1.BaseRepository {
             }
         });
     }
-    getPaymentsByDateRange(startDate, endDate) {
+    getPaymentsByDateRange(startDate, endDate, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield this.model
-                    .find({
+                const skip = (page - 1) * limit;
+                const query = {
                     orderDate: {
                         $gte: startDate,
                         $lte: endDate,
                     },
-                })
-                    .exec();
+                };
+                const [payments, totalPayments] = yield Promise.all([
+                    this.model
+                        .find(query)
+                        .skip(skip)
+                        .limit(limit)
+                        .sort({ orderDate: -1 })
+                        .exec(),
+                    this.model.countDocuments(query),
+                ]);
+                const totalPages = Math.ceil(totalPayments / limit);
+                return { payments, totalPages };
             }
             catch (error) {
                 console.error("Error fetching payments by date range:", error);

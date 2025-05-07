@@ -48,8 +48,10 @@ class PaymentController {
     getAllPayments(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const payments = yield this.paymentService.getAllPayments();
-                (0, responseHandler_1.successResponse)(res, payments, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const { payments, totalPages } = yield this.paymentService.getAllPayments(page, limit);
+                (0, responseHandler_1.successResponse)(res, { payments, totalPages }, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
                 (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);
@@ -59,9 +61,11 @@ class PaymentController {
     getPaymentsByDateRange(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { startDate, endDate } = req.query;
-                const payments = yield this.paymentService.getPaymentsByDate(new Date(startDate), new Date(endDate));
-                (0, responseHandler_1.successResponse)(res, payments, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
+                const { startDate, endDate, page, limit } = req.query;
+                const pageNum = parseInt(page) || 1;
+                const limitNum = parseInt(limit) || 10;
+                const { payments, totalPages } = yield this.paymentService.getPaymentsByDate(new Date(startDate), new Date(endDate), pageNum, limitNum);
+                (0, responseHandler_1.successResponse)(res, { payments, totalPages }, "Payments fetched successfully", statusCodes_1.HttpStatus.OK);
             }
             catch (error) {
                 (0, responseHandler_1.errorResponse)(res, error.message || "Error fetching payments by date range", error.statusCode || statusCodes_1.HttpStatus.INTERNAL_SERVER_ERROR);

@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentService = void 0;
-// src/services/PaymentService.ts
 const razorpay_1 = __importDefault(require("../utils/razorpay"));
 const appError_1 = require("../utils/appError");
 const PaymentLock_1 = require("../models/PaymentLock");
@@ -134,14 +133,14 @@ class PaymentService {
             }
         });
     }
-    getAllPayments() {
+    getAllPayments(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.paymentRepo.getAllPayments();
+            return yield this.paymentRepo.getAllPayments(page, limit);
         });
     }
-    getPaymentsByDate(startDate, endDate) {
+    getPaymentsByDate(startDate, endDate, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.paymentRepo.getPaymentsByDateRange(startDate, endDate);
+            return yield this.paymentRepo.getPaymentsByDateRange(startDate, endDate, page, limit);
         });
     }
     getUserPaymentHistory(userId, page, limit) {

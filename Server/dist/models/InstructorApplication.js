@@ -50,7 +50,6 @@ const InstructorApplicationSchema = new mongoose_1.Schema({
     skills: [{ type: String, required: true }],
     bio: { type: String, required: true },
     certificates: [{ type: String, required: true }],
-    profilePicture: { type: String, required: true },
     linkedinProfile: { type: String },
     status: {
         type: String,
