@@ -10,7 +10,6 @@ export interface IInstructorApplication extends Document {
   skills: string[];
   bio: string;
   certificates: string[];
-  profilePicture: string;
   linkedinProfile?: string;
   status: "pending" | "approved" | "rejected";
   rejectionReason?: string;
@@ -32,7 +31,6 @@ const InstructorApplicationSchema = new Schema<IInstructorApplication>(
     skills: [{ type: String, required: true }],
     bio: { type: String, required: true },
     certificates: [{ type: String, required: true }],
-    profilePicture: { type: String, required: true },
     linkedinProfile: { type: String },
     status: {
       type: String,

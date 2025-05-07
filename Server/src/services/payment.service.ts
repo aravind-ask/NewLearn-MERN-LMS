@@ -1,4 +1,3 @@
-// src/services/PaymentService.ts
 import razorpay from "../utils/razorpay";
 import { IPaymentRepository } from "../repositories/interfaces/IPaymentRepository";
 import { IEnrollmentRepository } from "../repositories/interfaces/IEnrollmentRepository";
@@ -179,12 +178,25 @@ export class PaymentService implements IPaymentService {
     }
   }
 
-  async getAllPayments(): Promise<IPayment[]> {
-    return await this.paymentRepo.getAllPayments();
+  async getAllPayments(
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
+    return await this.paymentRepo.getAllPayments(page, limit);
   }
 
-  async getPaymentsByDate(startDate: Date, endDate: Date): Promise<IPayment[]> {
-    return await this.paymentRepo.getPaymentsByDateRange(startDate, endDate);
+  async getPaymentsByDate(
+    startDate: Date,
+    endDate: Date,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
+    return await this.paymentRepo.getPaymentsByDateRange(
+      startDate,
+      endDate,
+      page,
+      limit
+    );
   }
 
   async getUserPaymentHistory(

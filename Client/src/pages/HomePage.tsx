@@ -15,15 +15,18 @@ import {
 } from "@/components/ui/carousel";
 import Loading from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
 
 export default function Homepage() {
   const navigate = useNavigate();
+  const { user } = useSelector(
+    (state: RootState) => state.auth
+  );
 
-  // Fetch categories
   const { data: categoriesData, isLoading: isCategoriesLoading } =
     useGetCategoriesQuery({});
 
-  // Fetch featured courses
   const { data: coursesData, isLoading: isCoursesLoading } = useGetCoursesQuery(
     {
       limit: 8,
@@ -32,9 +35,11 @@ export default function Homepage() {
     }
   );
 
-  // Fetch enrolled courses with progress
-  const { data: studentCoursesData, isLoading: isStudentCoursesLoading } =
-    useGetStudentCoursesQuery({ page: 1, limit: 6 });
+  const { data: studentCoursesData,} =
+    useGetStudentCoursesQuery(
+      { page: 1, limit: 6 },
+      { skip: !user }
+    );
 
   const handleCategoryClick = (categoryId) => {
     navigate(`/all-courses?category=${categoryId}`);
@@ -221,7 +226,7 @@ export default function Homepage() {
                       By {course.instructorName}
                     </p>
                     <p className="text-sm text-gray-500 mb-2">
-                      {course.category.name}
+                      {course?.category?.name}
                     </p>
 
                     {/* Pricing Section */}

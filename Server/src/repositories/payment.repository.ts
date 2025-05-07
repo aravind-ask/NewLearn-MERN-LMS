@@ -1,4 +1,3 @@
-// src/repositories/PaymentRepository.ts
 import PaymentModel, { IPayment } from "../models/Payment";
 import { IPaymentRepository } from "./interfaces/IPaymentRepository";
 import { BaseRepository } from "./base.repository";
@@ -53,9 +52,23 @@ export class PaymentRepository
     }
   }
 
-  async getAllPayments(): Promise<IPayment[]> {
+  async getAllPayments(
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
     try {
-      return await this.model.find().exec();
+      const skip = (page - 1) * limit;
+      const [payments, totalPayments] = await Promise.all([
+        this.model
+          .find()
+          .skip(skip)
+          .limit(limit)
+          .sort({ orderDate: -1 })
+          .exec(),
+        this.model.countDocuments(),
+      ]);
+      const totalPages = Math.ceil(totalPayments / limit);
+      return { payments, totalPages };
     } catch (error) {
       console.error("Error fetching all payments:", error);
       throw new Error("Error fetching all payments");
@@ -64,17 +77,29 @@ export class PaymentRepository
 
   async getPaymentsByDateRange(
     startDate: Date,
-    endDate: Date
-  ): Promise<IPayment[]> {
+    endDate: Date,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }> {
     try {
-      return await this.model
-        .find({
-          orderDate: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        })
-        .exec();
+      const skip = (page - 1) * limit;
+      const query = {
+        orderDate: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+      const [payments, totalPayments] = await Promise.all([
+        this.model
+          .find(query)
+          .skip(skip)
+          .limit(limit)
+          .sort({ orderDate: -1 })
+          .exec(),
+        this.model.countDocuments(query),
+      ]);
+      const totalPages = Math.ceil(totalPayments / limit);
+      return { payments, totalPages };
     } catch (error) {
       console.error("Error fetching payments by date range:", error);
       throw new Error("Error fetching payments by date range");

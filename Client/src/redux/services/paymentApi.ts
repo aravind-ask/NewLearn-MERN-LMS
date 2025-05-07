@@ -22,18 +22,21 @@ export const paymentApi = api.injectEndpoints({
 
     // Fetch all payments
     getAllPayments: builder.query({
-      query: () => ({
+      query: ({ page, limit }) => ({
         url: "/payments",
         method: "GET",
+        params: { page, limit },
+        transformResponse: (response) => response.data,
       }),
     }),
 
     // Fetch payments by date range
     getPaymentsByDateRange: builder.query({
-      query: ({ startDate, endDate }) => ({
+      query: ({ startDate, endDate, page, limit }) => ({
         url: "/payments/date-range",
         method: "GET",
-        params: { startDate, endDate },
+        params: { startDate, endDate, page, limit },
+        transformResponse: (response) => response.data,
       }),
     }),
     getPaymentHistory: builder.query({

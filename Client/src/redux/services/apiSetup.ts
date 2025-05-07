@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
-// import { logout, setCredentials } from "../slices/authSlice";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3003";
 
@@ -64,13 +63,6 @@ const baseQueryWithReauth = async (
             refreshToken: refreshResult.data.data.refreshToken,
           },
         });
-        // await api.dispatch(
-        //   setCredentials({
-        //     user,
-        //     accessToken: refreshResult.data.data.accessToken,
-        //     refreshToken: refreshResult.data.data.refreshToken,
-        //   })
-        // );
 
         const requestArgs =
           typeof args === "string"

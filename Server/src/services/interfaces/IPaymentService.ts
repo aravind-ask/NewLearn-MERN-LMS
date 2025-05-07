@@ -16,13 +16,21 @@ export interface IPaymentService {
     userId: string;
     userName: string;
     userEmail: string;
-  }): Promise<any>; 
+  }): Promise<any>;
   verifyRazorpayPayment(paymentData: {
     razorpay_payment_id: string;
     razorpay_order_id: string;
   }): Promise<{ success: boolean }>;
-  getAllPayments(): Promise<IPayment[]>;
-  getPaymentsByDate(startDate: Date, endDate: Date): Promise<IPayment[]>;
+  getAllPayments(
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }>;
+  getPaymentsByDate(
+    startDate: Date,
+    endDate: Date,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }>;
   getUserPaymentHistory(
     userId: string,
     page: number,

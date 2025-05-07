@@ -1,32 +1,67 @@
-// src/pages/SalesPage.tsx
 import React, { useState } from "react";
 import {
   useGetAllPaymentsQuery,
   useGetPaymentsByDateRangeQuery,
 } from "../../redux/services/paymentApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import SalesChart from "@/components/SalesChart";
+import { DataTable } from "@/components/common/DataTable";
+
+const columns= [
+  {
+    header: "Order ID",
+    accessor: "orderId",
+  },
+  {
+    header: "User Name",
+    accessor: "userName",
+  },
+  {
+    header: "User Email",
+    accessor: "userEmail",
+  },
+  {
+    header: "Order Status",
+    accessor: "orderStatus",
+  },
+  {
+    header: "Payment Method",
+    accessor: "paymentMethod",
+  },
+  {
+    header: "Payment Status",
+    accessor: "paymentStatus",
+  },
+  {
+    header: "Order Date",
+    accessor: (payment) => format(new Date(payment.orderDate), "MMM dd, yyyy"),
+  },
+  {
+    header: "Amount",
+    accessor: (payment) => `$${payment.amount.toFixed(2)}`,
+    align: "right",
+  },
+  {
+    header: "Courses",
+    accessor: (payment) =>
+      payment.courses.map((course) => course.courseTitle).join(", "),
+  },
+];
 
 const SalesPage: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const limit = 10; // Number of payments per page
 
   const {
     data: allPayments,
     isLoading: isAllPaymentsLoading,
     isError: isAllPaymentsError,
-  } = useGetAllPaymentsQuery();
+  } = useGetAllPaymentsQuery({ page, limit });
 
   const {
     data: paymentsByDateRange,
@@ -34,35 +69,48 @@ const SalesPage: React.FC = () => {
     isError: isDateRangeError,
     refetch: refetchDateRange,
   } = useGetPaymentsByDateRangeQuery(
-    { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() },
+    {
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      page,
+      limit,
+    },
     { skip: !startDate || !endDate }
   );
 
   const handleDateRangeSearch = () => {
     if (startDate && endDate) {
+      setPage(1); // Reset to first page on new search
       refetchDateRange();
     }
   };
 
-  console.log("allpayments: ", allPayments)
-  console.log("paymentsByDateRange: ", paymentsByDateRange)
-  const payments = startDate && endDate ? paymentsByDateRange?.data : allPayments?.data;
-  console.log("payment: ",payments)
+  const paymentsData = startDate && endDate ? paymentsByDateRange : allPayments;
+  // Fallback for incorrect response structure
+  const payments = paymentsData?.payments ?? paymentsData?.data?.payments ?? [];
+  const totalPages =
+    paymentsData?.totalPages ?? paymentsData?.data?.totalPages ?? 1;
 
   const totalSales =
-    payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-  const totalOrders = payments?.length || 0;
+    payments.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+  const totalOrders = payments.length || 0;
   const successfulPayments =
-    payments?.filter((payment) => payment.paymentStatus === "completed").length ||
-    0;
+    payments.filter((payment) => payment.paymentStatus === "completed")
+      .length || 0;
   const pendingPayments =
-    payments?.filter((payment) => payment.paymentStatus === "pending").length ||
+    payments.filter((payment) => payment.paymentStatus === "pending").length ||
     0;
 
-  const chartData = payments?.map((payment) => ({
+  const chartData = payments.map((payment) => ({
     orderDate: format(new Date(payment.orderDate), "MMM dd, yyyy"),
     amount: payment.amount,
   }));
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
   if (isAllPaymentsLoading || isDateRangeLoading) {
     return (
@@ -81,7 +129,7 @@ const SalesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-full overflow-x-auto">
       <h1 className="text-3xl font-bold">Sales Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -154,41 +202,19 @@ const SalesPage: React.FC = () => {
         </CardContent>
       </Card>
 
-        <Card>
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl">Sales Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>User Name</TableHead>
-                <TableHead>User Email</TableHead>
-                <TableHead>Order Status</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead>Payment Status</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments?.map((payment) => (
-                <TableRow key={payment._id}>
-                  <TableCell>{payment.orderId}</TableCell>
-                  <TableCell>{payment.userName}</TableCell>
-                  <TableCell>{payment.userEmail}</TableCell>
-                  <TableCell>{payment.orderStatus}</TableCell>
-                  <TableCell>{payment.paymentMethod}</TableCell>
-                  <TableCell>{payment.paymentStatus}</TableCell>
-                  <TableCell>
-                    {format(new Date(payment.orderDate), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell>${payment.amount.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columns}
+            data={payments}
+            isLoading={isAllPaymentsLoading || isDateRangeLoading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </CardContent>
       </Card>
     </div>

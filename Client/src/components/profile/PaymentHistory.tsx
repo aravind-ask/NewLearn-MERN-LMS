@@ -5,15 +5,7 @@ import { Download, AlertCircle, CheckCircle2 } from "lucide-react";
 import { DataTable } from "@/components/common/DataTable";
 import { format } from "date-fns";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import {
-  Pagination as ShadcnPagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+// import "jspdf-autotable";
 
 interface Payment {
   _id: string;
@@ -90,7 +82,7 @@ const PaymentHistory = () => {
       `₹${course.coursePrice.toLocaleString()}`,
     ]);
 
-    autoTable(doc, {
+    doc.autoTable(doc, {
       startY: 110,
       head: [["#", "Course Title", "Amount"]],
       body: tableData,

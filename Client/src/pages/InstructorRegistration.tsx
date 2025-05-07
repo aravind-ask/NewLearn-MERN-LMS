@@ -18,7 +18,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +33,6 @@ type InstructorFormData = {
   skills: string;
   bio: string;
   linkedinProfile?: string;
-  profilePicture?: string;
   certificates: string[];
 };
 
@@ -45,7 +43,6 @@ const InstructorRegistration = () => {
   const [updateInstructorApplication, { isLoading: isUpdating }] =
     useUpdateInstructorApplicationMutation();
   const [certificateFiles, setCertificateFiles] = useState<File[]>([]);
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [getPresignedUrl] = useGetPresignedUrlMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setStatusIsModalOpen] = useState(false);
@@ -58,7 +55,11 @@ const InstructorRegistration = () => {
     setValue,
     reset,
     formState: { errors },
-  } = useForm<InstructorFormData>();
+  } = useForm<InstructorFormData>({
+    defaultValues: {
+      skills: "",
+    },
+  });
   const { data: application, isLoading: isApplicationLoading } =
     useGetInstructorApplicationQuery();
 
@@ -76,17 +77,19 @@ const InstructorRegistration = () => {
       ) {
         setRejectionReason(application.data.rejectionReason);
         setStatusIsModalOpen(true);
-        // Pre-fill form with existing data
+        // Convert skills array to comma-separated string
+        const skillsString = Array.isArray(application.data.skills)
+          ? application.data.skills.join(", ")
+          : application.data.skills || "";
         reset({
           fullName: application.data.fullName,
           email: application.data.email,
           phone: application.data.phone,
           qualification: application.data.qualification,
           experience: application.data.experience,
-          skills: application.data.skills,
+          skills: skillsString,
           bio: application.data.bio,
           linkedinProfile: application.data.linkedinProfile,
-          profilePicture: application.data.profilePicture,
           certificates: application.data.certificates,
         });
       }
@@ -105,7 +108,7 @@ const InstructorRegistration = () => {
       errors.qualification = "Qualification is required.";
     if (!data.experience || data.experience < 0)
       errors.experience = "Experience must be a positive number.";
-    if (!data.skills || data.skills.length < 3)
+    if (!data.skills || data.skills.trim().length < 3)
       errors.skills = "At least one skill is required.";
     if (!data.bio || data.bio.length < 10)
       errors.bio = "Bio must be at least 10 characters.";
@@ -143,24 +146,6 @@ const InstructorRegistration = () => {
     }
   };
 
-  const handleProfilePictureUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
-      setProfilePicture(file);
-      const { url, key } = await getPresignedUrl({
-        fileName: file.name,
-      }).unwrap();
-      await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      setValue("profilePicture", url);
-    }
-  };
-
   const onSubmit = async (data: InstructorFormData) => {
     if (!validateForm(data)) {
       toast.error("Please fix the errors in the form.");
@@ -168,7 +153,17 @@ const InstructorRegistration = () => {
     }
 
     try {
-      const payload = { ...data };
+      // Convert comma-separated skills string to array for backend
+      const skillsArray = data.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter((skill) => skill.length > 0);
+
+      const payload = {
+        ...data,
+        skills: skillsArray,
+      };
+
       const isReapplying = application?.data?.status === "rejected";
 
       if (isReapplying) {
@@ -196,6 +191,11 @@ const InstructorRegistration = () => {
     setStatusIsModalOpen(false);
   };
 
+  // Prevent modal from closing on outside click or escape key
+  const preventModalClose = () => {
+    // Do nothing to keep modal open
+  };
+
   if (isApplicationLoading || isApplying || isUpdating) {
     return <Loading />;
   }
@@ -204,18 +204,6 @@ const InstructorRegistration = () => {
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Apply to Become an Instructor</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="profilePicture">Profile Picture</Label>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleProfilePictureUpload}
-            id="profilePicture"
-          />
-          {formErrors.profilePicture && (
-            <p className="text-red-500 text-sm">{formErrors.profilePicture}</p>
-          )}
-        </div>
         <div>
           <Label>Full Name</Label>
           <Input {...register("fullName")} placeholder="John Doe" />
@@ -314,8 +302,8 @@ const InstructorRegistration = () => {
         </Button>
       </form>
 
-      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <DialogContent className="text-center bg-white">
+      <Dialog open={isModalOpen} onOpenChange={preventModalClose}>
+        <DialogContent className="text-center bg-white" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>
               <AiOutlineCheckCircle className="text-green-500 w-8 h-8 inline-block mr-2" />
@@ -329,11 +317,8 @@ const InstructorRegistration = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={isStatusModalOpen}
-        onOpenChange={() => setStatusIsModalOpen(false)}
-      >
-        <DialogContent className="text-center bg-white">
+      <Dialog open={isStatusModalOpen} onOpenChange={preventModalClose}>
+        <DialogContent className="text-center bg-white" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Application {application?.data?.status}</DialogTitle>
           </DialogHeader>

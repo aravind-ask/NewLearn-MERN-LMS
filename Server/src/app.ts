@@ -36,10 +36,7 @@ const app = express();
 const httpServer = createServer(app);
 
 const allowedOrigins = [
-  process.env.CLIENT_URL || "https://newlearn-lms.el.r.appspot.com",
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://newlearn-lms.el.r.appspot.com",
+  process.env.CLIENT_URL 
 ];
 
 const io = new Server(httpServer, {

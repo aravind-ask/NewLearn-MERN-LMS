@@ -11,8 +11,16 @@ export interface IPaymentRepository {
       paymentStatus: string;
     }
   ): Promise<IPayment | null>;
-  getAllPayments(): Promise<IPayment[]>;
-  getPaymentsByDateRange(startDate: Date, endDate: Date): Promise<IPayment[]>;
+  getAllPayments(
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }>;
+  getPaymentsByDateRange(
+    startDate: Date,
+    endDate: Date,
+    page: number,
+    limit: number
+  ): Promise<{ payments: IPayment[]; totalPages: number }>;
   getUserPaymentHistory(
     userId: string,
     page: number,

@@ -1,4 +1,3 @@
-// src/controllers/PaymentController.ts
 import { Request, Response, NextFunction } from "express";
 import { IPaymentService } from "../services/interfaces/IPaymentService";
 import { errorResponse, successResponse } from "../utils/responseHandler";
@@ -53,10 +52,15 @@ export class PaymentController {
 
   async getAllPayments(req: Request, res: Response, next: NextFunction) {
     try {
-      const payments = await this.paymentService.getAllPayments();
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const { payments, totalPages } = await this.paymentService.getAllPayments(
+        page,
+        limit
+      );
       successResponse(
         res,
-        payments,
+        { payments, totalPages },
         "Payments fetched successfully",
         HttpStatus.OK
       );
@@ -75,14 +79,19 @@ export class PaymentController {
     next: NextFunction
   ) {
     try {
-      const { startDate, endDate } = req.query;
-      const payments = await this.paymentService.getPaymentsByDate(
-        new Date(startDate as string),
-        new Date(endDate as string)
-      );
+      const { startDate, endDate, page, limit } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = parseInt(limit as string) || 10;
+      const { payments, totalPages } =
+        await this.paymentService.getPaymentsByDate(
+          new Date(startDate as string),
+          new Date(endDate as string),
+          pageNum,
+          limitNum
+        );
       successResponse(
         res,
-        payments,
+        { payments, totalPages },
         "Payments fetched successfully",
         HttpStatus.OK
       );
