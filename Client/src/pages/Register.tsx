@@ -16,8 +16,9 @@ import { Eye, EyeOff } from "lucide-react";
 import GoogleAuth from "@/components/OAuth";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { validatePassword } from "@/utils/validatePassword";
 
-export default function Component() {
+export default function Register() {
   const [register, { isLoading, error }] = useRegisterMutation();
   const [form, setForm] = useState({
     name: "",
@@ -25,13 +26,13 @@ export default function Component() {
     password: "",
     confirmPassword: "",
   });
-  const [formErrors, setFormErrors] = useState("");
+  const [formErrors, setFormErrors] = useState<string[]>([]);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormErrors("");
+    setFormErrors([]);
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -41,18 +42,24 @@ export default function Component() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormErrors("");
+    setFormErrors([]);
+
+    if (!form.email || !form.password || !form.name || !form.confirmPassword) {
+      setFormErrors(["All fields are required"]);
+      return;
+    }
+
+    const passwordErrors = validatePassword(
+      form.password,
+      form.confirmPassword
+    );
+    if (passwordErrors.length > 0) {
+      setFormErrors(passwordErrors);
+      return;
+    }
 
     try {
       const { confirmPassword, ...formData } = form;
-      if (!form.email || !form.password || !form.name) {
-        setFormErrors("All fields are required");
-        return;
-      }
-      if (formData.password !== confirmPassword) {
-        setFormErrors("Passwords do not match");
-        return;
-      }
       const response = await register(formData).unwrap();
       console.log("Registration response:", response);
       setOtpModalOpen(true);
@@ -60,16 +67,16 @@ export default function Component() {
         title: "Registration Successful",
         description: "Please check your email for the OTP.",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Registration failed", err);
-      // if (
-      //   err.status === 409 &&
-      //   err.data?.message === "User already exists and is verified"
-      // ) {
-      //   setFormErrors("User already exists and is verified. Please log in.");
-      // } else {
-      //   setFormErrors(err.data?.message || "Registration failed");
-      // }
+      if (
+        err.status === 409 &&
+        err.data?.message === "User already exists and is verified"
+      ) {
+        setFormErrors(["User already exists and is verified. Please log in."]);
+      } else {
+        setFormErrors([err.data?.message || "Registration failed"]);
+      }
       toast({
         variant: "destructive",
         title: "Registration Failed",
@@ -120,8 +127,12 @@ export default function Component() {
           </CardHeader>
           <CardContent className="p-6 pt-0">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {formErrors && (
-                <p className="text-red-500 text-sm">{formErrors}</p>
+              {formErrors.length > 0 && (
+                <ul className="text-red-500 text-sm space-y-1">
+                  {formErrors.map((err, index) => (
+                    <li key={index}>{err}</li>
+                  ))}
+                </ul>
               )}
               {error && (
                 <p className="text-red-500 text-sm">
@@ -139,7 +150,9 @@ export default function Component() {
                     placeholder="Enter your Full Name"
                     onChange={handleChange}
                     className={`w-full ${
-                      formErrors ? "border-red-500" : "border-gray-300"
+                      formErrors.length > 0
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
                 </div>
@@ -155,7 +168,9 @@ export default function Component() {
                     onChange={handleChange}
                     placeholder="Enter your Email"
                     className={`w-full ${
-                      formErrors ? "border-red-500" : "border-gray-300"
+                      formErrors.length > 0
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
                 </div>
@@ -171,7 +186,9 @@ export default function Component() {
                     value={form.password}
                     onChange={handleChange}
                     className={`w-full ${
-                      formErrors ? "border-red-500" : "border-gray-300"
+                      formErrors.length > 0
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
                 </div>
@@ -187,7 +204,9 @@ export default function Component() {
                       value={form.confirmPassword}
                       onChange={handleChange}
                       className={`w-full ${
-                        formErrors ? "border-red-500" : "border-gray-300"
+                        formErrors.length > 0
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                     />
                     <button

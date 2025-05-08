@@ -35,6 +35,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
+import { validatePassword } from "@/utils/validatePassword";
 
 export default function Component() {
   const [sendOtp] = useSendOTPMutation();
@@ -44,7 +45,7 @@ export default function Component() {
   const location = useLocation();
   const [login, { isLoading, error }] = useLoginMutation();
   const [form, setForm] = useState({ email: "", password: "" });
-  const [formErrors, setFormErrors] = useState("");
+  const [formErrors, setFormErrors] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
     useState(false);
@@ -55,22 +56,22 @@ export default function Component() {
     newPassword: "",
     confPassword: "",
   });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
   const { toast } = useToast();
 
   useEffect(() => {
     if (location.state?.error) {
-      setFormErrors(location.state.error);
+      setFormErrors([location.state.error]);
     }
   }, [location.state]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormErrors("");
+    setFormErrors([]);
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    setErrors((prev) => ({ ...prev, [e.target.name]: [] }));
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -88,11 +89,19 @@ export default function Component() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors([]);
+
+    if (!form.email || !form.password) {
+      setFormErrors(["All fields are required"]);
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setErrors({ email: ["Invalid email format"] });
+      return;
+    }
+
     try {
-      if (!form.email || !form.password) {
-        setFormErrors("All fields are required");
-        return;
-      }
       const response = await login(form).unwrap();
       console.log("Login Response:", response);
 
@@ -125,14 +134,41 @@ export default function Component() {
     }
   };
 
+  const handleVerifySuccess = async () => {
+    try {
+      const response = await login(form).unwrap();
+      toast({
+        title: "Success",
+        description: "Logged in successfully!",
+      });
+      setIsOtpModalOpen(false);
+      if (response?.data?.user?.role === "admin") {
+        console.log("navigating to admin dashboard");
+        navigate("/dashboard");
+      } else {
+        console.log("navigating to home");
+        navigate("/");
+      }
+    } catch (err: any) {
+      console.error("Auto-login Error", err);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description:
+          err.data?.message || "Failed to login after OTP verification",
+      });
+      setIsOtpModalOpen(false);
+    }
+  };
+
   const handleSendOtp = async () => {
     setErrors({});
     if (!email) {
-      setErrors({ email: "Email is required" });
+      setErrors({ email: ["Email is required"] });
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrors({ email: "Invalid email format" });
+      setErrors({ email: ["Invalid email format"] });
       return;
     }
     try {
@@ -144,7 +180,7 @@ export default function Component() {
       });
     } catch (error: any) {
       const errorMessage = error.data?.message || "Failed to send OTP";
-      setErrors({ sendOtp: errorMessage });
+      setErrors({ sendOtp: [errorMessage] });
       toast({
         variant: "destructive",
         title: "Error",
@@ -155,30 +191,33 @@ export default function Component() {
 
   const handleSubmitOtp = async () => {
     setErrors({});
+
     if (!formData.otp) {
-      setErrors({ otp: "OTP is required" });
+      setErrors({ otp: ["OTP is required"] });
       return;
     }
     if (formData.otp.length !== 6) {
-      setErrors({ otp: "OTP must be 6 digits" });
+      setErrors({ otp: ["OTP must be 6 digits"] });
       return;
     }
     if (!formData.newPassword) {
-      setErrors({ newPassword: "New password is required" });
-      return;
-    }
-    if (formData.newPassword.length < 8) {
-      setErrors({ newPassword: "Password must be at least 8 characters" });
+      setErrors({ newPassword: ["New password is required"] });
       return;
     }
     if (!formData.confPassword) {
-      setErrors({ confPassword: "Confirm password is required" });
+      setErrors({ confPassword: ["Confirm password is required"] });
       return;
     }
-    if (formData.newPassword !== formData.confPassword) {
-      setErrors({ confPassword: "Passwords do not match" });
+
+    const passwordErrors = validatePassword(
+      formData.newPassword,
+      formData.confPassword
+    );
+    if (passwordErrors.length > 0) {
+      setErrors({ newPassword: passwordErrors });
       return;
     }
+
     try {
       await forgotPassword({
         email,
@@ -199,7 +238,7 @@ export default function Component() {
       });
     } catch (error: any) {
       const errorMessage = error.data?.message || "Failed to reset password";
-      setErrors({ otp: errorMessage });
+      setErrors({ otp: [errorMessage] });
       toast({
         variant: "destructive",
         title: "Error",
@@ -255,8 +294,12 @@ export default function Component() {
                   {(error as any).data?.message || "Login failed"}
                 </p>
               )}
-              {formErrors && (
-                <p className="text-red-500 text-sm">{formErrors}</p>
+              {formErrors.length > 0 && (
+                <ul className="text-red-500 text-sm space-y-1">
+                  {formErrors.map((err, index) => (
+                    <li key={index}>{err}</li>
+                  ))}
+                </ul>
               )}
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -270,7 +313,9 @@ export default function Component() {
                     placeholder="Enter your Email"
                     onChange={handleChange}
                     className={`w-full ${
-                      formErrors ? "border-red-500" : "border-gray-300"
+                      formErrors.length > 0
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
                 </div>
@@ -286,7 +331,9 @@ export default function Component() {
                       value={form.password}
                       onChange={handleChange}
                       className={`w-full ${
-                        formErrors ? "border-red-500" : "border-gray-300"
+                        formErrors.length > 0
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                     />
                     <button
@@ -379,17 +426,27 @@ export default function Component() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      setErrors((prev) => ({ ...prev, email: "" }));
+                      setErrors((prev) => ({ ...prev, email: [] }));
                     }}
                     className={`w-full ${
-                      errors.email ? "border-red-500" : "border-gray-300"
+                      errors.email?.length
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
-                  {errors.email && (
-                    <p className="text-red-500 text-sm">{errors.email}</p>
+                  {errors.email?.length > 0 && (
+                    <ul className="text-red-500 text-sm space-y-1">
+                      {errors.email.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
                   )}
-                  {errors.sendOtp && (
-                    <p className="text-red-500 text-sm">{errors.sendOtp}</p>
+                  {errors.sendOtp?.length > 0 && (
+                    <ul className="text-red-500 text-sm space-y-1">
+                      {errors.sendOtp.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
                 <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -430,8 +487,12 @@ export default function Component() {
                       <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
-                  {errors.otp && (
-                    <p className="text-red-500 text-sm">{errors.otp}</p>
+                  {errors.otp?.length > 0 && (
+                    <ul className="text-red-500 text-sm space-y-1">
+                      {errors.otp.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -445,11 +506,17 @@ export default function Component() {
                     value={formData.newPassword}
                     onChange={handleOtpChange}
                     className={`w-full ${
-                      errors.newPassword ? "border-red-500" : "border-gray-300"
+                      errors.newPassword?.length
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
-                  {errors.newPassword && (
-                    <p className="text-red-500 text-sm">{errors.newPassword}</p>
+                  {errors.newPassword?.length > 0 && (
+                    <ul className="text-red-500 text-sm space-y-1">
+                      {errors.newPassword.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -463,13 +530,17 @@ export default function Component() {
                     value={formData.confPassword}
                     onChange={handleOtpChange}
                     className={`w-full ${
-                      errors.confPassword ? "border-red-500" : "border-gray-300"
+                      errors.confPassword?.length
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   />
-                  {errors.confPassword && (
-                    <p className="text-red-500 text-sm">
-                      {errors.confPassword}
-                    </p>
+                  {errors.confPassword?.length > 0 && (
+                    <ul className="text-red-500 text-sm space-y-1">
+                      {errors.confPassword.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
                 <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -498,6 +569,8 @@ export default function Component() {
           email={form.email}
           open={isOtpModalOpen}
           onClose={() => setIsOtpModalOpen(false)}
+          fromLogin={true}
+          onVerifySuccess={handleVerifySuccess}
         />
       )}
     </motion.div>

@@ -15,7 +15,11 @@ import {
 } from "@/redux/services/authApi";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 
 interface OTPModalProps {
@@ -23,6 +27,7 @@ interface OTPModalProps {
   open: boolean;
   onClose: () => void;
   fromLogin?: boolean;
+  onVerifySuccess?: () => void; // New callback for login flow
 }
 
 export function OTPModal({
@@ -30,6 +35,7 @@ export function OTPModal({
   open,
   onClose,
   fromLogin = false,
+  onVerifySuccess,
 }: OTPModalProps) {
   const [verifyOtp, { isLoading, error }] = useVerifyOtpMutation();
   const [otp, setOtp] = useState("");
@@ -88,11 +94,15 @@ export function OTPModal({
         title: "Success",
         description: "OTP verified successfully!",
       });
-      setOtp(""); 
+      setOtp("");
       setFormErrors("");
-      onClose(); 
-      if (!fromLogin) {
-        navigate("/login");
+      if (fromLogin && onVerifySuccess) {
+        onVerifySuccess(); // Trigger login in parent component
+      } else {
+        onClose();
+        if (!fromLogin) {
+          navigate("/login");
+        }
       }
     } catch (err) {
       console.error("OTP verification failed:", err);
@@ -170,7 +180,7 @@ export function OTPModal({
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? "Verifying..." : "Submit"}
-          </Button>{" "}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
