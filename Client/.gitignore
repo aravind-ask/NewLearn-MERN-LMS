@@ -24,3 +24,33 @@ dist-ssr
 *.sw?
 
 .env
+
+# Coverage directory
+coverage
+
+# Build cache
+.cache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Optional parcel cache
+.cache
+
+# Optional vite cache
+node_modules/.vite
+
+# Optional testing library cache
+testing-library
+
+# Optional local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

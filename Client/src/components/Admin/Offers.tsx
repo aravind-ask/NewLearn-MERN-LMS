@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,12 +22,24 @@ import {
 import { toast } from "@/hooks/use-toast";
 import OfferForm from "./OfferForm";
 
+interface Offer {
+  _id: string;
+  title: string;
+  discountPercentage: number;
+  category?: { name: string };
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+}
+
 const Offers = () => {
   const [page, setPage] = useState(1);
   const [openForm, setOpenForm] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState<any | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const limit = 10;
+  const [offersList, setOffersList] = useState<Offer[]>([]);
+  const [totalOffers, setTotalOffers] = useState(0);
 
   const {
     data: offersData,
@@ -39,11 +51,96 @@ const Offers = () => {
   const [updateOffer, { isLoading: isUpdating }] = useUpdateOfferMutation();
   const [deleteOffer, { isLoading: isDeleting }] = useDeleteOfferMutation();
 
-  const offers = offersData?.data || [];
-  const totalPages = Math.ceil((offersData?.pagination?.total || 0) / limit);
+  const totalPages = Math.ceil(totalOffers / limit) || 1;
+
+  // Update offersList and totalOffers when data changes
+  useEffect(() => {
+    if (offersData?.data) {
+      setOffersList(offersData.data);
+      setTotalOffers(offersData.pagination?.total || 0);
+    }
+  }, [offersData]);
+
+  const handleCreate = async (offerData: any) => {
+    // Optimistically add the new offer
+    const tempId = `temp-${Date.now()}`;
+    const newOffer: Offer = { ...offerData, _id: tempId, isActive: true };
+    const originalOffers = [...offersList];
+    setOffersList([...offersList, newOffer]);
+    setTotalOffers(totalOffers + 1);
+    setOpenForm(false);
+
+    try {
+      const response = await createOffer(offerData).unwrap();
+      // Replace tempId with actual _id
+      setOffersList((prev) =>
+        prev.map((offer) =>
+          offer._id === tempId ? { ...offer, _id: response._id } : offer
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Offer created successfully",
+      });
+    } catch (err: any) {
+      // Revert on error
+      setOffersList(originalOffers);
+      setTotalOffers(totalOffers - 1);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.data?.message || "Failed to create offer",
+      });
+    }
+  };
+
+  const handleUpdate = async (offerData: any) => {
+    if (!selectedOffer) return;
+
+    // Optimistically update the offer
+    const originalOffers = [...offersList];
+    setOffersList((prev) =>
+      prev.map((offer) =>
+        offer._id === selectedOffer._id ? { ...offer, ...offerData } : offer
+      )
+    );
+
+    try {
+      await updateOffer({
+        id: selectedOffer._id,
+        offerData,
+      }).unwrap();
+      toast({
+        title: "Success",
+        description: "Offer updated successfully",
+      });
+      setSelectedOffer(null);
+      setOpenForm(false);
+    } catch (err: any) {
+      // Revert on error
+      setOffersList(originalOffers);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.data?.message || "Failed to update offer",
+      });
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
+
+    // Optimistically remove the offer
+    const originalOffers = [...offersList];
+    setOffersList((prev) =>
+      prev.filter((offer) => offer._id !== deleteConfirm)
+    );
+    setTotalOffers(totalOffers - 1);
+    // Adjust page if necessary
+    if (offersList.length === 1 && page > 1) {
+      setPage(page - 1);
+    }
+
     try {
       await deleteOffer(deleteConfirm).unwrap();
       toast({
@@ -51,16 +148,27 @@ const Offers = () => {
         description: "Offer deleted successfully",
       });
       setDeleteConfirm(null);
-    } catch (err) {
+    } catch (err: any) {
+      // Revert on error
+      setOffersList(originalOffers);
+      setTotalOffers(totalOffers);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete offer",
+        description: err.data?.message || "Failed to delete offer",
       });
     }
   };
 
-  const handleToggleStatus = async (offer: any) => {
+  const handleToggleStatus = async (offer: Offer) => {
+    // Optimistically toggle the status
+    const originalOffers = [...offersList];
+    setOffersList((prev) =>
+      prev.map((o) =>
+        o._id === offer._id ? { ...o, isActive: !o.isActive } : o
+      )
+    );
+
     try {
       await updateOffer({
         id: offer._id,
@@ -72,16 +180,18 @@ const Offers = () => {
           offer.isActive ? "deactivated" : "activated"
         } successfully`,
       });
-    } catch (err) {
+    } catch (err: any) {
+      // Revert on error
+      setOffersList(originalOffers);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update offer status",
+        description: err.data?.message || "Failed to update offer status",
       });
     }
   };
 
-  const handleEdit = (offer: any) => {
+  const handleEdit = (offer: Offer) => {
     setSelectedOffer(offer);
     setOpenForm(true);
   };
@@ -90,34 +200,34 @@ const Offers = () => {
     {
       header: "Title",
       accessor: "title",
-      render: (offer: any) => (
+      render: (offer: Offer) => (
         <span className="font-medium">{offer.title}</span>
       ),
     },
     {
       header: "Discount",
       accessor: "discountPercentage",
-      render: (offer: any) => `${offer.discountPercentage}%`,
+      render: (offer: Offer) => `${offer.discountPercentage}%`,
     },
     {
       header: "Category",
       accessor: "category",
-      render: (offer: any) => offer.category?.name || "All",
+      render: (offer: Offer) => offer.category?.name || "All",
     },
     {
       header: "Start Date",
       accessor: "startDate",
-      render: (offer: any) => new Date(offer.startDate).toLocaleDateString(),
+      render: (offer: Offer) => new Date(offer.startDate).toLocaleDateString(),
     },
     {
       header: "End Date",
       accessor: "endDate",
-      render: (offer: any) => new Date(offer.endDate).toLocaleDateString(),
+      render: (offer: Offer) => new Date(offer.endDate).toLocaleDateString(),
     },
     {
       header: "Status",
       accessor: "isActive",
-      render: (offer: any) => (
+      render: (offer: Offer) => (
         <Button
           variant="outline"
           size="sm"
@@ -129,7 +239,7 @@ const Offers = () => {
     },
     {
       header: "Actions",
-      accessor: (offer: any) => (
+      accessor: (offer: Offer) => (
         <div className="flex gap-2 justify-end">
           <Button
             variant="ghost"
@@ -197,8 +307,8 @@ const Offers = () => {
             <OfferForm
               offer={selectedOffer}
               onClose={() => setOpenForm(false)}
-              createOffer={createOffer}
-              updateOffer={updateOffer}
+              createOffer={handleCreate}
+              updateOffer={handleUpdate}
               isCreating={isCreating}
               isUpdating={isUpdating}
             />
@@ -215,13 +325,13 @@ const Offers = () => {
         <div className="p-6">
           <DataTable
             columns={columns}
-            data={offers}
+            data={offersList}
             isLoading={isLoading}
             page={page}
             totalPages={totalPages}
             onPageChange={setPage}
           />
-          {offers.length === 0 && (
+          {offersList.length === 0 && (
             <div className="text-center py-10 text-gray-500">
               No offers found. Create a new offer to get started.
             </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/common/DataTable";
 import {
@@ -42,8 +42,6 @@ const Category = () => {
   const {
     data: categories,
     isLoading,
-    isError,
-    refetch,
   } = useGetCategoriesQuery({ page, limit });
   const [createCategory, { isLoading: isCreating }] =
     useCreateCategoryMutation();
@@ -52,6 +50,8 @@ const Category = () => {
   const [deleteCategory, { isLoading: isDeleting }] =
     useDeleteCategoryMutation();
 
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [categoryName, setCategoryName] = useState("");
   const [editCategory, setEditCategory] = useState<{
     id: string;
@@ -61,6 +61,13 @@ const Category = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [editErrorMessage, setEditErrorMessage] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (categories?.data?.data) {
+      setCategoriesList(categories.data.data);
+      setTotalPages(categories.data.totalPages || 1);
+    }
+  }, [categories]);
 
   const handleCreateCategory = async () => {
     if (!categoryName.trim()) {
@@ -75,15 +82,29 @@ const Category = () => {
       return;
     }
 
+    const tempId = `temp-${Date.now()}`;
+    const newCategory: Category = { _id: tempId, name: categoryName };
+    const originalCategories = [...categoriesList];
+    setCategoriesList([...categoriesList, newCategory]);
+    setTotalPages(Math.ceil((categoriesList.length + 1) / limit));
+    setCategoryName("");
+    setIsCreateModalOpen(false);
+
     try {
-      await createCategory({ name: categoryName }).unwrap();
+      const response = await createCategory({ name: categoryName }).unwrap();
+      setCategoriesList((prev) =>
+        prev.map((cat) =>
+          cat._id === tempId ? { ...cat, _id: response._id } : cat
+        )
+      );
       toast.success("Category created successfully");
       setCategoryName("");
       setErrorMessage("");
       setIsCreateModalOpen(false);
-      refetch();
     } catch (error) {
-      toast.error("Failed to create category");
+      setCategoriesList(originalCategories);
+      setTotalPages(Math.ceil(originalCategories.length / limit));
+      toast.error(error.data?.message || "Failed to create category");
     }
   };
 
@@ -101,8 +122,12 @@ const Category = () => {
       setEditErrorMessage("Category already exists.");
       return;
     }
-    console.log(editCategory)
-
+    const originalCategories = [...categoriesList];
+    setCategoriesList((prev) =>
+      prev.map((cat) =>
+        cat._id === editCategory.id ? { ...cat, name: editCategory.name } : cat
+      )
+    );
     try {
       await updateCategory({
         id: editCategory.id,
@@ -111,21 +136,30 @@ const Category = () => {
       toast.success("Category updated successfully");
       setEditCategory(null);
       setEditErrorMessage("");
-      refetch();
     } catch (error) {
-      toast.error("Failed to update category");
+      setCategoriesList(originalCategories);
+      toast.error(error.data?.message || "Failed to update category");
     }
   };
 
   const handleDeleteCategory = async () => {
     if (!deleteConfirm) return;
+
+    const originalCategories = [...categoriesList];
+    setCategoriesList((prev) =>
+      prev.filter((cat) => cat._id !== deleteConfirm)
+    );
+    // Update totalPages if needed
+    setTotalPages(Math.ceil((categoriesList.length - 1) / limit) || 1);
+
     try {
       await deleteCategory(deleteConfirm).unwrap();
       toast.success("Category deleted successfully");
       setDeleteConfirm(null);
-      refetch();
     } catch (error) {
-      toast.error("Failed to delete category");
+      setCategoriesList(originalCategories);
+      setTotalPages(Math.ceil(originalCategories.length / limit) || 1);
+      toast.error(error.data?.message || "Failed to delete category");
     }
   };
 
@@ -221,13 +255,13 @@ const Category = () => {
       <CardContent className="p-6">
         <DataTable
           columns={columns}
-          data={categories?.data.data || []}
+          data={categoriesList || []}
           isLoading={isLoading}
           page={page}
-          totalPages={categories?.data.totalPages}
+          totalPages={totalPages}
           onPageChange={setPage}
         />
-        {!isLoading && (!categories?.data || categories.data.length === 0) && (
+        {!isLoading && (!categoriesList || categoriesList.length === 0) && (
           <div className="text-center py-10 text-gray-500">
             No categories found
           </div>

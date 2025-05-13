@@ -13,7 +13,7 @@ export const offerApi = api.injectEndpoints({
         method: "POST",
         body: offerData,
       }),
-      invalidatesTags: ["Offers"],
+      // invalidatesTags: ["Offers"],
     }),
     updateOffer: builder.mutation({
       query: ({ id, offerData }) => ({
@@ -21,14 +21,14 @@ export const offerApi = api.injectEndpoints({
         method: "PUT",
         body: offerData,
       }),
-      invalidatesTags: ["Offers"],
+      // invalidatesTags: ["Offers"],
     }),
     deleteOffer: builder.mutation({
       query: (id) => ({
         url: `/offers/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Offers"],
+      // invalidatesTags: ["Offers"],
     }),
   }),
 });

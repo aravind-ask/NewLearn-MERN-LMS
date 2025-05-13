@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import  default_avatar from "/default-avatar.png";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   _id: string;
@@ -39,14 +40,23 @@ export default function AdminUsers() {
     id: string;
     action: "block" | "unblock";
   } | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const { toast } = useToast();
+
 
   const limit = 2;
   const [blockUser] = useBlockUserMutation();
-  const { data, isLoading, error, refetch } = useGetUsersQuery({
+  const { data, isLoading, error } = useGetUsersQuery({
     page,
     limit,
     search: debouncedSearch,
   });
+
+  useEffect(() => {
+    if (data?.data?.users) {
+      setUsers(data.data.users);
+    }
+  }, [data]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -64,13 +74,37 @@ export default function AdminUsers() {
   };
 
   const confirmAction = async () => {
-    if (selectedUser) {
-      await blockUser({
-        userId: selectedUser.id,
-        isBlocked: selectedUser.action === "block",
+    if (!selectedUser) return;
+
+    const userId = selectedUser.id;
+    const newIsBlocked = selectedUser.action === "block";
+
+    const originalUsers = [...users];
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user._id === userId ? { ...user, isBlocked: newIsBlocked } : user
+      )
+    );
+
+    try {
+      await blockUser({ userId, isBlocked: newIsBlocked }).unwrap();
+      toast({
+        title: "Success",
+        description: `User ${
+          newIsBlocked ? "blocked" : "unblocked"
+        } successfully.`,
       });
-      refetch();
+    } catch (err: any) {
+      setUsers(originalUsers);
+      console.error("Block/Unblock Error:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          err.data?.message || `Failed to ${selectedUser.action} user.`,
+      });
     }
+
     setShowConfirm(false);
     setSelectedUser(null);
   };
@@ -133,7 +167,7 @@ export default function AdminUsers() {
 
       <DataTable
         columns={columns}
-        data={data?.data?.users || []}
+        data={users || []}
         isLoading={isLoading}
         page={page}
         totalPages={data?.data?.totalPages}

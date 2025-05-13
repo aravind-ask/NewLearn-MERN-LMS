@@ -228,12 +228,6 @@ const AllCourses = () => {
                 <SelectItem value="pricing_asc">Price (Low to High)</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              onClick={() => navigate("/instructor/create-new-course")}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Create New Course
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -258,7 +252,7 @@ const AllCourses = () => {
         open={!!deleteConfirm}
         onOpenChange={() => setDeleteConfirm(null)}
       >
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent className="sm:max-w-md bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold">
               Delete Course
