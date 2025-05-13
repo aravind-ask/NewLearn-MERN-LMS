@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { IndianRupee, Users } from "lucide-react";
+import { IndianRupee, Users, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { DataTable } from "../common/DataTable";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 interface Student {
   studentName: string;
@@ -15,8 +16,8 @@ interface Course {
 }
 
 interface InstructorData {
-  data: {
-    courses: Course[];
+  data?: {
+    courses?: Course[];
   };
 }
 
@@ -26,40 +27,48 @@ interface StudentListItem {
   studentEmail: string;
 }
 
-const InstructorDashboard = ({ data }: { data: InstructorData }) => {
+const InstructorDashboard = ({ data }: { data?: InstructorData }) => {
   const [page, setPage] = useState(1);
   const limit = 5; // Number of students per page
 
-  // Calculate totals and student list
+  // Calculate totals and student list with defensive checks
   const calculateTotalStudentsAndProfit = () => {
-    const { totalStudents, totalProfit, studentList } =
-      data.data.courses.reduce(
-        (acc, course) => {
-          const studentCount = course.students.length;
-          acc.totalStudents += studentCount;
-          acc.totalProfit += studentCount * course.pricing;
+    if (!data?.data?.courses || !Array.isArray(data.data.courses)) {
+      return {
+        totalStudents: 0,
+        totalProfit: 0,
+        studentList: [] as StudentListItem[],
+      };
+    }
 
+    return data.data.courses.reduce(
+      (acc, course) => {
+        const studentCount = course.students?.length || 0;
+        acc.totalStudents += studentCount;
+        acc.totalProfit += studentCount * (course.pricing || 0);
+
+        if (course.students) {
           course.students.forEach((student) => {
             acc.studentList.push({
-              courseTitle: course.title,
-              studentName: student.studentName,
-              studentEmail: student.studentEmail,
+              courseTitle: course.title || "Unknown Course",
+              studentName: student.studentName || "Unknown",
+              studentEmail: student.studentEmail || "N/A",
             });
           });
-          return acc;
-        },
-        {
-          totalStudents: 0,
-          totalProfit: 0,
-          studentList: [] as StudentListItem[],
         }
-      );
-    return { totalStudents, totalProfit, studentList };
+        return acc;
+      },
+      {
+        totalStudents: 0,
+        totalProfit: 0,
+        studentList: [] as StudentListItem[],
+      }
+    );
   };
 
   const { totalStudents, totalProfit, studentList } =
     calculateTotalStudentsAndProfit();
-  const totalPages = Math.ceil(studentList.length / limit);
+  const totalPages = Math.ceil(studentList.length / limit) || 1;
 
   // Paginate the student list
   const paginatedStudentList = studentList.slice(
@@ -98,6 +107,20 @@ const InstructorDashboard = ({ data }: { data: InstructorData }) => {
     },
   ];
 
+  // Handle undefined or empty data
+  if (!data || !data.data || !data.data.courses) {
+    return (
+      <div className="space-y-8">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load instructor data. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -111,7 +134,9 @@ const InstructorDashboard = ({ data }: { data: InstructorData }) => {
             </CardHeader>
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-gray-900">
-                {item.label === "Revenue" ? `₹${item.value}` : item.value}
+                {item.label === "Revenue"
+                  ? `₹${item.value.toLocaleString("en-IN")}`
+                  : item.value}
               </div>
             </CardContent>
           </Card>

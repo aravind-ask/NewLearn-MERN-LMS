@@ -18,6 +18,7 @@ import { addMessage } from "@/redux/slices/chatSlice";
 import { Eye, Paperclip, X, Edit, Trash, Smile } from "lucide-react";
 import { useGetPresignedUrlMutation } from "@/redux/services/authApi";
 import EmojiPicker from "emoji-picker-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ChatPreview {
   courseId: string;
@@ -45,6 +46,19 @@ interface Message {
   role?: "student" | "instructor";
 }
 
+interface RawMessage {
+  _id: string;
+  courseId?: { _id: string; title: string } | null;
+  senderId?: { _id: string; name: string } | null;
+  recipientId?: { _id: string; name?: string } | null;
+  message: string;
+  mediaUrl?: string;
+  timestamp: string;
+  isRead: boolean;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+}
+
 export default function InstructorChat() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { messages: allMessages } = useSelector(
@@ -66,11 +80,16 @@ export default function InstructorChat() {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
 
-  const { data: conversationData, refetch } =
-    useGetAllInstructorConversationsQuery(
-      { trainerId: user?.id || "" },
-      { skip: !user }
-    );
+  const {
+    data: conversationData,
+    refetch,
+    isLoading,
+    error,
+  } = useGetAllInstructorConversationsQuery(
+    { trainerId: user?.id || "" },
+    { skip: !user }
+  );
+
   const [sendMessage] = useSendMessageMutation();
   const [markMessageAsRead] = useMarkMessageAsReadMutation();
   const [editMessage] = useEditMessageMutation();
@@ -238,7 +257,6 @@ export default function InstructorChat() {
       }
     };
 
-
     socket.on("connect", onConnect);
     socket.on("onlineUsers", onOnlineUsers);
     socket.on("newMessage", onNewMessage);
@@ -263,30 +281,40 @@ export default function InstructorChat() {
       socket.off("messageDeleted", onMessageDeleted);
       socket.off("messageRead", onMessageRead);
     };
-  }, [
-    user?.id,
-    chatPreviews,
-    selectedChat,
-    scrollToBottom,
-    dispatch,
-  ]);
+  }, [user?.id, chatPreviews, selectedChat, scrollToBottom, dispatch]);
 
   useEffect(() => {
     if (!conversationData?.data) return;
-    const enrichedMessages = conversationData.data.map((msg: any) => ({
-      _id: msg._id,
-      courseId: msg.courseId._id,
-      senderId: msg.senderId._id,
-      recipientId: msg.recipientId._id,
-      message: msg.message,
-      mediaUrl: msg.mediaUrl,
-      timestamp: msg.timestamp,
-      isRead: msg.isRead,
-      isDeleted: msg.isDeleted || false,
-      isEdited: msg.isEdited || false,
-      courseTitle: msg.courseId.title,
-      senderName: msg.senderId.name,
-    }));
+
+    // Filter out invalid messages and enrich valid ones
+    const enrichedMessages = conversationData.data
+      .filter((msg: RawMessage) => {
+        const isValid =
+          msg &&
+          msg._id &&
+          msg.courseId?._id &&
+          msg.senderId?._id &&
+          msg.recipientId?._id;
+        if (!isValid) {
+          console.warn("Invalid message skipped:", msg);
+        }
+        return isValid;
+      })
+      .map((msg: RawMessage) => ({
+        _id: msg._id,
+        courseId: msg.courseId!._id,
+        senderId: msg.senderId!._id,
+        recipientId: msg.recipientId!._id,
+        message: msg.message || "",
+        mediaUrl: msg.mediaUrl,
+        timestamp: msg.timestamp || new Date().toISOString(),
+        isRead: msg.isRead || false,
+        isDeleted: msg.isDeleted || false,
+        isEdited: msg.isEdited || false,
+        courseTitle: msg.courseId?.title || "Unknown Course",
+        senderName: msg.senderId?.name || "Unknown User",
+      }));
+
     dispatch({ type: "chat/setMessages", payload: enrichedMessages });
 
     const previewMap = new Map<string, ChatPreview>();
@@ -296,7 +324,9 @@ export default function InstructorChat() {
       const key = `${studentId}-${msg.courseId}`;
       const studentName =
         msg.senderId === user?.id
-          ? msg.recipientId.name
+          ? msg.recipientId
+            ? "Student" // Fallback if recipientId.name is missing
+            : "Unknown Student"
           : msg.senderName || "Unknown Student";
       if (!previewMap.has(key)) {
         previewMap.set(key, {
@@ -610,6 +640,35 @@ export default function InstructorChat() {
     </div>
   );
 
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-100">
+        <div className="text-gray-600">Loading chats...</div>
+      </div>
+    );
+  }
+
+  if (error || !conversationData) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-100">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load conversations. Please try again later.
+            <Button
+              variant="link"
+              onClick={() => refetch()}
+              className="p-0 ml-2"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-4 p-4 bg-gray-100">
       <Card className="w-1/3 shadow-md rounded-xl border border-gray-200 overflow-hidden">
@@ -620,60 +679,66 @@ export default function InstructorChat() {
         </CardHeader>
         <CardContent className="p-0 h-[calc(100vh-8rem)]">
           <ScrollArea className="h-full">
-            {chatPreviews.map((chat) => (
-              <div
-                key={`${chat.studentId}-${chat.courseId}`}
-                onClick={() => handleSelectChat(chat)}
-                className={`flex items-center p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedChat?.studentId === chat.studentId &&
-                  selectedChat?.courseId === chat.courseId
-                    ? "bg-gray-100"
-                    : ""
-                }`}
-              >
-                <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage
-                    src={`/placeholder-avatar.jpg`}
-                    alt={chat.studentName}
-                  />
-                  <AvatarFallback className="bg-gray-300 text-gray-700">
-                    {chat.studentName?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-800 truncate">
-                        {chat.studentName}
-                      </span>
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          onlineUsers.includes(chat.studentId)
-                            ? "bg-green-500"
-                            : "bg-gray-300"
-                        }`}
-                        title={
-                          onlineUsers.includes(chat.studentId)
-                            ? "Online"
-                            : "Offline"
-                        }
-                      />
-                    </div>
-                    {chat.unreadCount > 0 && (
-                      <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {chat.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 truncate">
-                    {chat.courseTitle}
-                  </p>
-                  <p className="text-xs text-gray-400 truncate">
-                    {chat.lastMessage}
-                  </p>
-                </div>
+            {chatPreviews.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                No conversations yet
               </div>
-            ))}
+            ) : (
+              chatPreviews.map((chat) => (
+                <div
+                  key={`${chat.studentId}-${chat.courseId}`}
+                  onClick={() => handleSelectChat(chat)}
+                  className={`flex items-center p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedChat?.studentId === chat.studentId &&
+                    selectedChat?.courseId === chat.courseId
+                      ? "bg-gray-100"
+                      : ""
+                  }`}
+                >
+                  <Avatar className="h-10 w-10 mr-3">
+                    <AvatarImage
+                      src={`/placeholder-avatar.jpg`}
+                      alt={chat.studentName}
+                    />
+                    <AvatarFallback className="bg-gray-300 text-gray-700">
+                      {chat.studentName?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800 truncate">
+                          {chat.studentName}
+                        </span>
+                        <span
+                          className={`h-2 w-2 rounded-full ${
+                            onlineUsers.includes(chat.studentId)
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                          title={
+                            onlineUsers.includes(chat.studentId)
+                              ? "Online"
+                              : "Offline"
+                          }
+                        />
+                      </div>
+                      {chat.unreadCount > 0 && (
+                        <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 truncate">
+                      {chat.courseTitle}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {chat.lastMessage}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
