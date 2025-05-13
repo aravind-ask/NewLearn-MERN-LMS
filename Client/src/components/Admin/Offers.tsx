@@ -53,7 +53,6 @@ const Offers = () => {
 
   const totalPages = Math.ceil(totalOffers / limit) || 1;
 
-  // Update offersList and totalOffers when data changes
   useEffect(() => {
     if (offersData?.data) {
       setOffersList(offersData.data);
@@ -62,7 +61,6 @@ const Offers = () => {
   }, [offersData]);
 
   const handleCreate = async (offerData: any) => {
-    // Optimistically add the new offer
     const tempId = `temp-${Date.now()}`;
     const newOffer: Offer = { ...offerData, _id: tempId, isActive: true };
     const originalOffers = [...offersList];
@@ -72,7 +70,6 @@ const Offers = () => {
 
     try {
       const response = await createOffer(offerData).unwrap();
-      // Replace tempId with actual _id
       setOffersList((prev) =>
         prev.map((offer) =>
           offer._id === tempId ? { ...offer, _id: response._id } : offer
@@ -83,7 +80,6 @@ const Offers = () => {
         description: "Offer created successfully",
       });
     } catch (err: any) {
-      // Revert on error
       setOffersList(originalOffers);
       setTotalOffers(totalOffers - 1);
       toast({
@@ -97,7 +93,6 @@ const Offers = () => {
   const handleUpdate = async (offerData: any) => {
     if (!selectedOffer) return;
 
-    // Optimistically update the offer
     const originalOffers = [...offersList];
     setOffersList((prev) =>
       prev.map((offer) =>
@@ -117,7 +112,6 @@ const Offers = () => {
       setSelectedOffer(null);
       setOpenForm(false);
     } catch (err: any) {
-      // Revert on error
       setOffersList(originalOffers);
       toast({
         variant: "destructive",
@@ -130,13 +124,11 @@ const Offers = () => {
   const handleDelete = async () => {
     if (!deleteConfirm) return;
 
-    // Optimistically remove the offer
     const originalOffers = [...offersList];
     setOffersList((prev) =>
       prev.filter((offer) => offer._id !== deleteConfirm)
     );
     setTotalOffers(totalOffers - 1);
-    // Adjust page if necessary
     if (offersList.length === 1 && page > 1) {
       setPage(page - 1);
     }
@@ -149,7 +141,6 @@ const Offers = () => {
       });
       setDeleteConfirm(null);
     } catch (err: any) {
-      // Revert on error
       setOffersList(originalOffers);
       setTotalOffers(totalOffers);
       toast({
@@ -161,7 +152,6 @@ const Offers = () => {
   };
 
   const handleToggleStatus = async (offer: Offer) => {
-    // Optimistically toggle the status
     const originalOffers = [...offersList];
     setOffersList((prev) =>
       prev.map((o) =>
@@ -181,7 +171,6 @@ const Offers = () => {
         } successfully`,
       });
     } catch (err: any) {
-      // Revert on error
       setOffersList(originalOffers);
       toast({
         variant: "destructive",
